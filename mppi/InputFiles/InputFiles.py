@@ -24,17 +24,11 @@ class PwIn():
         self.cell_parameters = []
         self.klist = []
 
-        # set variables to some 'standard' values
+        # set some variables to 'standard' values
         self.cell_units = 'angstrom'
-        self.atomic_pos_type = 'angstrom' #'crystal'
-        self.system['ibrav'] = 4 # fcc
         self.control['wf_collect'] = '.true.'
-        self.control['pseudo_dir'] = "'../pseudos'"
         self.control['restart_mode'] = "'from_scratch'"
         self.control['verbosity'] = "'high'"
-        self.control['prefix'] = "'out_dir'"
-        self.ktype = "automatic"
-        self.kpoints = [1,1,1]
         self.shiftk = [0,0,0]
 
         #in case we start from a reference file
@@ -52,15 +46,7 @@ class PwIn():
             self.read_kpoints()   #read K_POINTS
             self.read_cell_parameters()   #read CELL_PARAMETERS
 
-    def read_atomicspecies(self):
-        lines = iter(self.file_lines)
-        #find ATOMIC_SPECIES keyword in file and read next line
-        for line in lines:
-            if "ATOMIC_SPECIES" in line:
-                for i in xrange(int(self.system["ntyp"])):
-                    atype, mass, psp = lines.next().split()
-                    self.atypes[atype] = [mass,psp]
-
+    # get methods
     def get_symmetry_spglib(self):
         """
         get the symmetry group of this system using spglib
@@ -89,9 +75,6 @@ class PwIn():
             masses.append(mass)
         return masses
 
-    def set_path(self,path):
-        self.klist = path.get_klist()
-
     def get_atoms(self):
         """ Get the lattice parameters, postions of the atoms and chemical symbols
         """
@@ -103,26 +86,83 @@ class PwIn():
             pos = car_red(pos,cell)
         return cell, pos, sym
 
-    def set_atoms_string(self,string):
+    # set methods
+    def set_kpoints(self,**kwargs):
         """
-        set the atomic postions using string of the form
-        Si 0.0 0.0 0.0
-        Si 0.5 0.5 0.5
+        Set the numbers of K_POINTS
+        Actually implemented only for ktpye = automatic
         """
-        atoms_str = [line.strip().split() for line in string.strip().split('\n')]
-        self.atoms = []
-        for atype,x,y,z in atoms_str:
-            self.atoms.append([atype,map(float,[x,y,z])])
+        ktype = kwargs['ktype']
+        kpoints = kwargs['kpoints']
+        if ktype == 'automatic':
+            self.ktype = ktype
+            self.kpoints = kpoints
+            if 'shiftk' in kwargs :
+                self.shiftk = kwargs['shiftk']
 
-    def set_atoms(self,atoms):
-        """ set the atomic postions using a Atoms datastructure from ase
+    def set_atoms_type(self,n):
         """
-        # we will write down the cell parameters explicitly
-        self.system['ibrav'] = 0
-        if 'celldm(1)' in self.system: del self.system['celldm(1)']
-        self.cell_parameters = atoms.get_cell()
-        self.atoms = zip(atoms.get_chemical_symbols(),atoms.get_scaled_positions())
-        self.system['nat'] = len(self.atoms)
+        Set the number of atomic species
+        """
+        self.system['ntyp'] = n
+
+    def set_atoms_number(self,n):
+        """
+        Set the number of atoms in the cell
+        """
+        self.system['nat'] = n
+
+    def set_atoms_position(self,pos_type='angstrom',pos_list=[]):
+       """
+       Set the position of atoms in the cell
+       Args:
+            pos_type (str) : unit in which the position are given (angstrom, crystal,...)
+            pos_list (list) : given in the form [['atoms1',[x1,y1,z1]],['atoms2'],[x2,y2,z2],...]
+       """
+       self.atomic_pos_type = pos_type
+       if 'nat' in self.system:
+           if len(pos_list) == self.system['nat']:
+               self.atoms=pos_list
+           else : print('position list does not match with the number of atoms')
+       else : print('provide the number of atoms in the cell')
+
+    def set_energy_cutoff(self,e):
+        """
+        Set the energy cutoff value (in Ry)
+        """
+        self.system['ecutwfc'] = e
+
+    def set_convergence_thr(self,thr):
+        """
+        Set the threshold level to seek convergence
+        """
+        self.electrons['conv_thr'] = thr
+
+    def set_prefix(self,prefix):
+        """
+        Set the prefix pf the .save folder.
+        The path starts from the position of the input file.
+        """
+        self.control['prefix'] = "'"+prefix+"'"
+
+    def set_pseudo_dir(self,pseudo_dir):
+        """
+        Set the location of the folder with the pseudopotential.
+        The path starts from the position of the input file.
+        """
+        self.control['pseudo_dir'] = "'"+pseudo_dir+"'"
+
+    def set_path(self,path):
+        self.klist = path.get_klist()
+
+    def read_atomicspecies(self):
+        lines = iter(self.file_lines)
+        #find ATOMIC_SPECIES keyword in file and read next line
+        for line in lines:
+            if "ATOMIC_SPECIES" in line:
+                for i in range(int(self.system["ntyp"])):
+                    atype, mass, psp = next(lines).split()
+                    self.atypes[atype] = [mass,psp]
 
     def read_atoms(self):
         lines = iter(self.file_lines)
@@ -131,8 +171,8 @@ class PwIn():
             if "ATOMIC_POSITIONS" in line:
                 atomic_pos_type = line
                 self.atomic_pos_type = re.findall('([A-Za-z]+)',line)[-1]
-                for i in xrange(int(self.system["nat"])):
-                    atype, x,y,z = lines.next().split()
+                for i in range(int(self.system["nat"])):
+                    atype, x,y,z = next(lines).split()
                     self.atoms.append([atype,[float(i) for i in (x,y,z)]])
         self.atomic_pos_type = atomic_pos_type.replace('{','').replace('}','').strip().split()[1]
 
@@ -146,10 +186,11 @@ class PwIn():
             lines = iter(self.file_lines)
             for line in lines:
                 if "CELL_PARAMETERS" in line:
-                    self.cell_units = line.translate(None, '{}()').split()[1]
+                    #self.cell_units = line.translate(None, '{}()').split()[1]
+                    self.cell_units = line.translate(str.maketrans('','','{}()')).split()[1]
                     self.cell_parameters = [[1,0,0],[0,1,0],[0,0,1]]
-                    for i in xrange(3):
-                        self.cell_parameters[i] = [ float(x)*a for x in lines.next().split() ]
+                    for i in range(3):
+                        self.cell_parameters[i] = [ float(x)*a for x in next(lines).split() ]
             if self.cell_units == 'angstrom' or self.cell_units == 'bohr':
                 if 'celldm(1)' in self.system: del self.system['celldm(1)']
         elif ibrav == 4:
@@ -181,7 +222,7 @@ class PwIn():
                 #check if the type is automatic
                 if "automatic" in line:
                     self.ktype = "automatic"
-                    vals = map(float, lines.next().split())
+                    vals = list(map(float, next(lines).split()))
                     self.kpoints, self.shiftk = vals[0:3], vals[3:6]
                 #otherwise read a list
                 else:

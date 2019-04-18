@@ -1,3 +1,8 @@
+"""
+This module defines a class to perform and manage several calculations.
+The module is (deeply) inspired from the Dataset class of BigDFT
+"""
+
 from copy import deepcopy
 
 # This __init__ file used to load this module allows us to call thi methods also
@@ -69,7 +74,7 @@ class Dataset():
         """
         self._post_processing_function=None
 
-    def append_run(self,id,runner,input):
+    def append_run(self,id,calculator,input):
         """
         Add a run into the dataset.
 
@@ -79,7 +84,7 @@ class Dataset():
         Args:
           id (dict): the id of the run, useful to identify the run in the dataset. It has to be a dictionary and,
           typically its elements are used to build the associated input.
-          runner (Runner): the runner class to which the remaining keyword arguments will be passed at the input.
+          calculator : the calculator class to which the remaining keyword arguments will be passed at the input.
 
         Raises:
           ValueError: if the provided id is identical to another previously appended run.
@@ -99,12 +104,12 @@ class Dataset():
         #search if the calculator already exists
         found = False
         for calc in self.calculators:
-            if calc['calc'] == runner:
+            if calc['calc'] == calculator:
                 calc['runs'].append(irun)
                 found=True
                 break
         if not found:
-            self.calculators.append({'calc': runner, 'runs':[irun]})
+            self.calculators.append({'calc': calculator, 'runs':[irun]})
 
     def run(self,post_processing=True):
         """

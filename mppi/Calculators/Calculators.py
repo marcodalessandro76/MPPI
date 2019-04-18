@@ -1,5 +1,6 @@
 """
-This module defines a class to perform a calculations using QuantumESPRESSO
+This module defines a class to perform a calculations using QuantumESPRESSO.
+The module is (deeply) inspired from the SystemCalculator class of BigDFT
 """
 
 import os
@@ -42,6 +43,7 @@ class QeCalculator():
         """
         Set the proper dir and run the computation. If skip=True run the computations
         only if the .log file is not present in the folder
+        The skip could be imposed on the .xml file that has the same name of the prefix
         """
         string = 'cd %s ; '%kwargs['run_dir']
         input=kwargs['name'] + '.in'
@@ -62,10 +64,15 @@ class QeCalculator():
         Use the pw_out() method os qepppy.qe to parse the xml file
         that contains the results of the computation
         """
-        prefix = kwargs['input'].control['prefix'].strip("'")
-        xml_out = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
-        self.verbose : print('parse file :'+xml_out)
-        results= qe.pw_out(xml=xml_out)
+        input = kwargs['input']
+        results = None
+        if 'prefix' in input.control:
+            prefix = input.control['prefix'].strip("'")
+            xml_out = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
+            self.verbose : print('parse file :'+xml_out)
+            results= qe.pw_out(xml=xml_out)
+        else:
+            print('.save folder not provided. Cannot read xml file')
         return results
 
     def run(self,run_dir='run',input=None,name='test',post_processing=True):
