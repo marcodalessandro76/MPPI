@@ -26,9 +26,9 @@ class PwIn():
 
         # set some variables to 'standard' values
         self.cell_units = 'angstrom'
-        self.control['wf_collect'] = '.true.'
-        self.control['restart_mode'] = "'from_scratch'"
         self.control['verbosity'] = "'high'"
+        self.ktype = 'automatic'
+        self.kpoints = [1,1,1]
         self.shiftk = [0,0,0]
 
         #in case we start from a reference file
@@ -144,6 +144,19 @@ class PwIn():
         The path starts from the position of the input file.
         """
         self.control['prefix'] = "'"+prefix+"'"
+
+    def set_calculation(self,calc):
+        """
+        Set the calculation type (scf,nscf,...).
+        """
+        self.control['calculation'] = "'"+calc+"'"
+
+    def set_occupations(self,occ):
+        """
+        Set the electron occupatopns (fixed,smearing,...).
+        """
+        self.system['occupations'] = "'"+occ+"'"
+
 
     def set_pseudo_dir(self,pseudo_dir):
         """

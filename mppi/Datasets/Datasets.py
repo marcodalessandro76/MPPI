@@ -3,9 +3,10 @@ This module defines a class to perform and manage several calculations.
 The module is (deeply) inspired from the Dataset class of BigDFT
 """
 
+import os
 from copy import deepcopy
 
-# This __init__ file used to load this module allows us to call thi methods also
+# The __init__ file used to load this module allows us to call this methods also
 # outside from the class. It can be used, for instance, for setting the prefix in
 # the qe input file from the id dictionary that identify the computation
 def name_from_id(id):
@@ -42,9 +43,7 @@ class Dataset():
         """
         self.label=label
         self.run_dir=run_dir
-        new_kwargs=deepcopy(kwargs)
-
-        #Runner.__init__(self,label=label,run_dir=run_dir,**newkwargs)
+        self.kwargs=deepcopy(kwargs)
 
         self.runs=[]
         """List of the runs which have to be treated by the dataset these runs contain the input
@@ -72,7 +71,13 @@ class Dataset():
         """
         List of run names, needed for distinguishing the logfiles and input files.
         """
-        self._post_processing_function=None
+
+        self.pre_processing = None
+        if 'pre_processing' in self.kwargs :
+            self.pre_processing = self.kwargs['pre_processing']
+        """
+        Specifies the tpye of pre_processing_function to be call before running the dataset.
+        """
 
     def append_run(self,id,calculator,input):
         """
@@ -111,9 +116,48 @@ class Dataset():
         if not found:
             self.calculators.append({'calc': calculator, 'runs':[irun]})
 
-    def run(self,post_processing=True):
+    def nscf_pre_processing(self):
+        """
+        Define the pre_processing function for a nscf dataset.
+        Identify the .save folder of the associated scf computations and copy
+        the .save folders (only if the are not already found in the run_dir of
+        the dataset, otherwise previous nscf data could be erased)
+        """
+        source_dir = self.kwargs['source_dir']
+        if not os.path.isdir(self.run_dir):
+            os.mkdir(self.run_dir)
+        for id in self.ids:
+            source = source_dir + '/' + name_from_id(id) + '.save'
+            dest = self.run_dir + '/' + name_from_id(id) + '.save'
+            # check if the source folder exists
+            if not os.path.isdir(source): print('source folder : ',source,'not found')
+            else :
+                # copy the source folder only if the dest is not present
+                if not os.path.isdir(dest):
+                    string = 'cp -r %s %s'%(source,dest)
+                    print('execute : ',string)
+                    os.system(string)
+                else : print('nscf save folder already exsists. Save folder NOT COPIED')
+
+    def yambo_pre_processing(self):
+        """
+        Define the pre_processing function for a Yambo dataset.
+        To be done.....
+        """
+        print('yambo pre_process')
+
+    def pre_processing_function(self):
+        """
+        Choose a pre_processing function among the ones provided in the dataset.
+        """
+        if self.pre_processing == 'nscf': self.nscf_pre_processing()
+        if self.pre_processing == 'yambo': self.yambo_pre_processing()
+
+    def process_run(self,post_processing):
         """
         Run the dataset, by performing explicit run of each of the item of the runs_list.
+        If post_processing is True apply the post_processing function so that self.results
+        contains the results of all the element of the dataset.
         """
         for c in self.calculators:
             calc=c['calc']
@@ -121,10 +165,17 @@ class Dataset():
                 input=self.runs[r]
                 name=self.names[r]
                 self.results[r] = calc.run(input=input,name=name,run_dir=self.run_dir,post_processing=post_processing)
-        return {}
+
+    def run(self,post_processing=True):
+        """
+        Apply the pre_processing and execute process_run
+        """
+        self.pre_processing_function()
+        self.process_run(post_processing)
 
     def fetch_results(self,id=None,attribute=None):
-        """Retrieve some attribute from some of the results.
+        """
+        Retrieve some attribute from some of the results.
 
         Selects out of the results the objects which have in their ``id``
         at least the dictionary specified as input. May return an attribute
@@ -144,7 +195,7 @@ class Dataset():
            >>> #append other runs if needed
            >>> study.run()  #run the calculations
            >>> # returns a list of the energies of first and the third result in this example
-           >>> data=study.fetch_results(id={'cr': 3},attribute='energy')
+           >>> data=study.fetch_results(id={'cr': 3},attribute='E_tot')
         """
         name='' if id is None else name_from_id(id)
         data=[]
