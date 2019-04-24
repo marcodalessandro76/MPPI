@@ -90,15 +90,19 @@ class PwIn():
     def set_kpoints(self,**kwargs):
         """
         Set the numbers of K_POINTS
-        Actually implemented only for ktpye = automatic
+        If ktpye = automatic needs kpoints = [kx,ky,kz]
+        If ktype = tpiba_b   needs klist = [P1+[numStep1],P2+[numStep2],...]
+        where Pi is the i-th point of the path and numStepi is the number of step
+        from Pi to Pi+1
         """
         ktype = kwargs['ktype']
-        kpoints = kwargs['kpoints']
+        self.ktype = ktype
         if ktype == 'automatic':
-            self.ktype = ktype
-            self.kpoints = kpoints
+            self.kpoints = kwargs['kpoints']
             if 'shiftk' in kwargs :
                 self.shiftk = kwargs['shiftk']
+        if ktype == 'tpiba_b':
+            self.klist = kwargs['klist']
 
     def set_atoms_type(self,n):
         """

@@ -19,6 +19,7 @@ class QeCalculator():
         self.executable=executable
         self.skip=skip
         self.verbose=verbose
+        self.xml_file = ''
         self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run + ' ' + executable).strip()
         print('Initialize a qe calculator with command %s' %self.command)
 
@@ -68,9 +69,10 @@ class QeCalculator():
         results = None
         if 'prefix' in input.control:
             prefix = input.control['prefix'].strip("'")
-            xml_out = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
-            self.verbose : print('parse file :'+xml_out)
-            results= qe.pw_out(xml=xml_out)
+            self.xml_file = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
+            #self.xml_file = kwargs['run_dir'] + '/' + prefix + '.xml'
+            self.verbose : print('parse file :'+self.xml_file)
+            results= qe.pw_out(xml=self.xml_file)
         else:
             print('.save folder not provided. Cannot read xml file')
         return results

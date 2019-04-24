@@ -188,10 +188,8 @@ class Dataset():
 
         Example:
            >>> study=Dataset()
-           >>> study.append_run(id={'cr': 3},input={'dft':{'rmult':[3,8]}})
-           >>> study.append_run(id={'cr': 4},input={'dft':{'rmult':[4,8]}})
-           >>> study.append_run(id={'cr': 3, 'h': 0.5},
-           >>>                  input={'dft':{'hgrids': 0.5, 'rmult':[4,8]}})
+           >>> study.append_run(id={'cr': 3},input=input1)
+           >>> study.append_run(id={'cr': 4},input=input2)
            >>> #append other runs if needed
            >>> study.run()  #run the calculations
            >>> # returns a list of the energies of first and the third result in this example
