@@ -1,4 +1,7 @@
-
+"""
+This module performs a parsing pf the Yambo output file. It builds a dictionary with the results.
+The keys are read from the line that contains "K-point"
+"""
 
 def _parserArrayFromFile(fname):
     """"
@@ -25,6 +28,8 @@ def _parserArrayFromFile(fname):
 
 def _build_keys(fname):
     """
+    Seek for the line that contains the string 'K-points' and build a list with the names of the
+    columns of data.
     """
     line_keys = []
     with open(fname) as f:
@@ -35,8 +40,9 @@ def _build_keys(fname):
     keys = line_keys[0].split()[1:]
     return keys
 
-def YamboOut(fname):
+def YamboParser(fname):
     """
+    Build the dictionary from the output file in the form key:value.
     """
     keys = _build_keys(fname)
     larray = _parserArrayFromFile(fname)

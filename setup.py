@@ -4,14 +4,14 @@ from os import path
 
 # Package meta-data.
 NAME = 'mppi'
-DESCRIPTION = 'Multi Purpose Python Interface, a python package for managing computations and performing \
+DESCRIPTION = 'Multi Purpose Python Interface. A python package for managing computations and performing \
 post-processing in QuantumESPRESSO and Yambo'
 URL = 'https://github.com/........'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
 REQUIRES_PYTHON = '>=3.5.2'
 VERSION = '1.0'
-REQUIRED = ['numpy','matplotlib','qepppy']
+REQUIRED = ['numpy','qepppy']
 #-----------------------------------------------
 
 here = path.abspath(path.dirname(__file__))

@@ -1,16 +1,17 @@
 """
 This module defines a class to perform a calculations using Yambo.
-The module is (deeply) inspired from the SystemCalculator class of BigDFT
+The module is (deeply) inspired from the SystemCalculator class of BigDFT.
 """
 
 import os
-import YamboParser as yp
+from .YamboParser import  YamboParser
 
 class YamboCalculator():
     """
-    Manage a single calculation. Setup the number of omp and mpi.
-    Prepare the folder in which the computation is run. Peform the computation
-    and apply a post processing function to extract the results
+    Manage a single yambo calculation.: setup the number of omp and mpi, apply a pre processing
+    to chek that the SAVE folder is present and peform the computation.
+    Lastyl, it apply a post processing function to extract the results. The post processing
+    is defined in the module YamboParser.
 
     The Class assumes that the run_dir where yambo is executed exists and that
     it contains the SAVE folder with the p2y postprocessing of a QE computation.
@@ -29,8 +30,9 @@ class YamboCalculator():
 
     def pre_processing(self,**kwargs):
         """
-        This method checks if the run_dir and the SAVE folder exists, and write the yambo input file
-        in the run_dir. The setup of the SAVE folder is managed by the pre_processing features of Dataset.
+        This method checks if the run_dir and the SAVE folder exists, and write the yambo
+        input file in the run_dir. The construction of the run_dir and the setup of the SAVE
+        folder is managed by the pre_processing features of Dataset.
         """
         run_dir=kwargs['run_dir']
         if not os.path.isdir(run_dir):
@@ -94,16 +96,17 @@ class YamboCalculator():
 
     def post_processing(self):
         """
+        Apply the post processing method of YamboParser to self.output
         """
         results = None
         if not (self.output is None):
-            results = yp.YamboOut(self.output)
+            results = YamboParser(self.output)
         return results
 
     def run(self,run_dir='run',input=None,name='test',post_processing=True):
         """
         Prepare the run, perform the computation and apply the post_processing
-        function to extract the results
+        function to extract the results. It returns the dictionary built by YamboParser.
         Args:
             run_dir (str) : the folder in which the simulation is performed
             input : the object the contain the instance of the input file

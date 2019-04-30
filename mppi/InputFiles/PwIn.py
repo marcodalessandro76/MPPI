@@ -1,5 +1,10 @@
 
-# PwIn class of YamboPy, Modified for compliance with python 3
+"""
+PwIn class of YamboPy, Modified for compliance with python 3.
+This module allows us to create and manipulate an input file for pw.x.
+The input object can be created from scratch or can be init from an existing
+file
+"""
 
 import os
 import re
@@ -136,6 +141,12 @@ class PwIn():
         """
         self.system['ecutwfc'] = e
 
+    def set_num_bands(self,nb):
+        """
+        Set the number of bands
+        """
+        self.system['nbnd'] = nb
+
     def set_convergence_thr(self,thr):
         """
         Set the threshold level to seek convergence
@@ -160,7 +171,6 @@ class PwIn():
         Set the electron occupatopns (fixed,smearing,...).
         """
         self.system['occupations'] = "'"+occ+"'"
-
 
     def set_pseudo_dir(self,pseudo_dir):
         """

@@ -25,20 +25,18 @@ class QeCalculator():
 
     def pre_processing(self,**kwargs):
         """
-        Create the run_dir folder and write the input file. Assumes that
-        the object that contains the input has a write method to write
-        the input on file
+        Check if the run_dir folder exists and write the input file.
         """
         run_dir=kwargs['run_dir']
         if not os.path.isdir(run_dir):
-            os.mkdir(run_dir)
-            if self.verbose : print('Create folder %s'%run_dir)
-        input=kwargs['input']
-        name=kwargs['name'] + '.in'
-        if not (input is None):
-            input.write(run_dir + '/' + name)
-        else :
-            print('input not provided')
+            print('Run_dir %s does not exists'%run_dir)
+        else:
+            input=kwargs['input']
+            name=kwargs['name'] + '.in'
+            if not (input is None):
+                input.write(run_dir + '/' + name)
+            else :
+                print('input not provided')
 
     def process_run(self,**kwargs):
         """
@@ -71,7 +69,7 @@ class QeCalculator():
             prefix = input.control['prefix'].strip("'")
             self.xml_file = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
             #self.xml_file = kwargs['run_dir'] + '/' + prefix + '.xml'
-            self.verbose : print('parse file :'+self.xml_file)
+            if self.verbose : print('parse file :'+self.xml_file)
             results= qe.pw_out(xml=self.xml_file)
         else:
             print('.save folder not provided. Cannot read xml file')

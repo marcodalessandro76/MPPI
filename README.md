@@ -28,7 +28,6 @@ Requirements
 - Quantum Espresso (tested with 6.3): http://www.quantum-espresso.org/
 - yambo (tested with 4.4 devel): http://www.yambo-code.org/
 - numpy: http://www.numpy.org/
-- matplotlib: http://matplotlib.org/
 - qepppy: 
 
 Authors
