@@ -1,6 +1,7 @@
 """
-This module performs a parsing pf the Yambo output file. It builds a dictionary with the results.
-The keys are read from the line that contains "K-point"
+This module performs a parsing pf the Yambo output file. The method dict_parser builds a dictionary with the results.
+The keys are read from the line that contains 'K-point'. The class AttributeDict convert the dictionary in a object and
+allows us to access to its attribute in the form AttributeDict.attr. 
 """
 
 def _parserArrayFromFile(fname):
@@ -40,7 +41,7 @@ def _build_keys(fname):
     keys = line_keys[0].split()[1:]
     return keys
 
-def YamboParser(fname):
+def dict_parser(fname):
     """
     Build the dictionary from the output file in the form key:value.
     """
@@ -52,3 +53,26 @@ def YamboParser(fname):
         for line in larray:
             results[key].append(line[ind])
     return(results)
+
+class AttributeDict(object):
+    """
+    A class to convert a nested Dictionary into an object with key-values
+    accessibly using attribute notation (AttributeDict.attribute) instead of
+    key notation (Dict["key"]). This class recursively sets Dicts to objects,
+    allowing you to recurse down nested dicts (like: AttributeDict.attr.attr)
+    """
+    def __init__(self, **entries):
+        self.add_entries(**entries)
+
+    def add_entries(self, **entries):
+        for key, value in entries.items():
+            if type(value) is dict:
+                self.__dict__[key] = AttributeDict(**value)
+            else:
+                self.__dict__[key] = value
+
+    def getAttibutes(self):
+        """
+        Return all the attributes of the object
+        """
+        return self.__dict__.keys()

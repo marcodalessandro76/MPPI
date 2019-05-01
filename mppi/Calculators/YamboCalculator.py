@@ -4,11 +4,11 @@ The module is (deeply) inspired from the SystemCalculator class of BigDFT.
 """
 
 import os
-from .YamboParser import  YamboParser
+from .YamboParser import dict_parser, AttributeDict
 
 class YamboCalculator():
     """
-    Manage a single yambo calculation.: setup the number of omp and mpi, apply a pre processing
+    Manage a single yambo calculation: setup the number of omp and mpi, apply a pre processing
     to chek that the SAVE folder is present and peform the computation.
     Lastyl, it apply a post processing function to extract the results. The post processing
     is defined in the module YamboParser.
@@ -21,10 +21,26 @@ class YamboCalculator():
         self.omp=omp
         self.mpi_run=mpi_run
         self.executable=executable
+        """
+        Choose the executable called by run
+        """
+
         self.skip=skip
+        """
+        Set if skip the run if the file self.output is found. Default is False
+        """
+
         self.verbose=verbose
-        #the o-*.hf or o-*.qp file (with its complete path)
+        """
+        Set the verbosity option
+        """
+
         self.output = None
+        """
+        The o-*.hf or o-*.qp file (with its complete path) used both for post_processing and to
+        establish if the run can be skipped.
+        """
+
         self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run + ' ' + executable).strip()
         print('Initialize a Yambo calculator with command %s' %self.command)
 
@@ -57,8 +73,10 @@ class YamboCalculator():
         outfile_qp = run_dir+'/'+jobname+'/o-'+jobname+'.qp'
         if os.path.isfile(outfile_hf):
             self.output = outfile_hf
-        if os.path.isfile(outfile_qp):
+        elif os.path.isfile(outfile_qp):
             self.output = outfile_qp
+        else:
+            self.output = None
 
     def process_run(self,**kwargs):
         """
@@ -75,6 +93,7 @@ class YamboCalculator():
         outfolder = run_dir+'/'+jobname
         string +=  self.command + ' -F %s -J %s -C %s'%(input,jobname,jobname)
 
+        # seek the output file to establish if the run can be skipped
         self._seek_output_file(run_dir,jobname)
 
         if self.skip:
@@ -91,8 +110,8 @@ class YamboCalculator():
             if self.verbose: print('execute : '+string)
             os.system(string)
 
+        # set self.output for post_processing
         self._seek_output_file(run_dir,jobname)
-        if self.verbose:print('output in : ',self.output)
 
     def post_processing(self):
         """
@@ -100,13 +119,15 @@ class YamboCalculator():
         """
         results = None
         if not (self.output is None):
-            results = YamboParser(self.output)
+            if self.verbose : print('parse file : '+self.output)
+            results_dic = dict_parser(self.output)
+            results = AttributeDict(**results_dic)
         return results
 
     def run(self,run_dir='run',input=None,name='test',post_processing=True):
         """
         Prepare the run, perform the computation and apply the post_processing
-        function to extract the results. It returns the dictionary built by YamboParser.
+        function to extract the results. It returns the object built by YamboParser.
         Args:
             run_dir (str) : the folder in which the simulation is performed
             input : the object the contain the instance of the input file

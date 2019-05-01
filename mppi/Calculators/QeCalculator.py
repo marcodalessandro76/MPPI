@@ -17,9 +17,26 @@ class QeCalculator():
         self.omp=omp
         self.mpi_run=mpi_run
         self.executable=executable
+        """
+        Choose the executable called by run
+        """
+
         self.skip=skip
+        """
+        Set if skip the run if the file self.xml_file is found. Default is False
+        """
+
         self.verbose=verbose
+        """
+        Set the verbosity option
+        """
+
         self.xml_file = ''
+        """
+        The xml file (with its complete path) used both for post_processing and to
+        establish if the run can be skipped.
+        """
+
         self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run + ' ' + executable).strip()
         print('Initialize a qe calculator with command %s' %self.command)
 
@@ -68,8 +85,7 @@ class QeCalculator():
         if 'prefix' in input.control:
             prefix = input.control['prefix'].strip("'")
             self.xml_file = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
-            #self.xml_file = kwargs['run_dir'] + '/' + prefix + '.xml'
-            if self.verbose : print('parse file :'+self.xml_file)
+            if self.verbose : print('parse file : '+self.xml_file)
             results= qe.pw_out(xml=self.xml_file)
         else:
             print('.save folder not provided. Cannot read xml file')

@@ -51,6 +51,7 @@ class Dataset():
         Set the dataset ready for appending new runs
         """
         self.label=label
+
         self.run_dir=run_dir
 
         self.runs=[]
@@ -120,16 +121,19 @@ class Dataset():
     def yambo_pre_processing(self,**kwargs):
         """
         Define the pre_processing function for a Yambo dataset.
-        The method build the run_dir folder if it does not exists,then runs p2y in the
-        source_dir and copy the SAVE folder in the run_dir. Lastly, executes yambo
-        (without arguments) in the run_dir to build the r_setup
+        The method build the run_dir folder if it does not exists.Then check if the SAVE
+        folder exists, if not runs p2y in the source_dir and copy the SAVE folder in the run_dir.
+        Lastly, executes yambo (without arguments) in the run_dir to build the r_setup
         """
         source = kwargs['source_dir']
         if not os.path.isdir(self.run_dir):
             os.mkdir(self.run_dir)
             print('Create folder %s'%self.run_dir)
-        if not os.path.isdir(source): print('source folder : ',source,'not found')
-        else :
+        if not os.path.isdir(source):
+            print('source folder : ',source,' not found')
+        elif os.path.isdir(self.run_dir +'/SAVE'):
+            print('SAVE folder already present in %s'%self.run_dir)
+        else:
             # run p2 y
             string = 'cd %s;p2y'%source
             print('execute : ',string)
