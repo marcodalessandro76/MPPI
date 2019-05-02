@@ -1,0 +1,3 @@
+numpy
+nbsphinx
+guzzle_sphinx_theme
