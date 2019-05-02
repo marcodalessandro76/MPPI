@@ -1,0 +1,403 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="../../../_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="../../../_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>mppi.Datasets.Datasets &#8212; mppi 1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  
+   
+
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mppi 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar">
+        <a href="
+    ../../../index.html" class="text-logo">MPPI</a>
+        
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../pwIn.html">PwIn module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../yamboIn.html">YamboIn module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../qeCalc.html">QeCalculator module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../yamboCalc.html">YamboCalculator module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../yamboParser.html">YamboParser module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../datasets.html">Datasets module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">MPPI Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+        
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="../../../search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="../../../index.html">Docs</a></li>
+              
+                <li><a href="../../index.html">Module code</a></li>
+              
+              <li>mppi.Datasets.Datasets</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <h1>Source code for mppi.Datasets.Datasets</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module defines a class to perform and manage several calculations.</span>
+<span class="sd">The module is (deeply) inspired from the Dataset class of BigDFT.</span>
+
+<span class="sd">A major difference with respect to the Dataset class in BigDFT is given by the</span>
+<span class="sd">usage of the pre_processing function. In the present case this function performs</span>
+<span class="sd">different operation dependending of the type of simulation managed by the dataset</span>
+<span class="sd">(scf, nscf, yambo,...). The pre_processing is called independently from the run</span>
+<span class="sd">method, this is important in particular for Yambo. Indeed the pre_processing manage</span>
+<span class="sd">the building of the run_dir with the SAVE folder, and the YamboIn needs this folder</span>
+<span class="sd">to init its object so the pre_processing in this case _has to_ be called before</span>
+<span class="sd">append_run.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+
+<span class="c1"># The __init__ file used to load this module allows us to call this methods also</span>
+<span class="c1"># outside from the class. It can be used, for instance, for setting the prefix in</span>
+<span class="c1"># the qe input file from the id dictionary that identify the computation</span>
+<div class="viewcode-block" id="name_from_id"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.name_from_id">[docs]</a><span class="k">def</span> <span class="nf">name_from_id</span><span class="p">(</span><span class="nb">id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hash the id into a run name</span>
+<span class="sd">    Construct the name of the run from the id dictionary</span>
+<span class="sd">    Args:</span>
+<span class="sd">        id (dict): id associated to the run</span>
+<span class="sd">    Returns:</span>
+<span class="sd">       str: name of the run associated to the dictionary ``id``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">id</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">+=</span> <span class="n">k</span><span class="o">+</span><span class="s1">&#39;:&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39;,&#39;</span>
+    <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to manage a set of calculations.</span>
+
+<span class="sd">    This class contains the various instances of a set of calculations specified by the their calculator object.</span>
+<span class="sd">    The different calculations are labelled by the values of some relevant parameters given as a dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      label (str): The label of the dataset. It will be needed to identify the instance for example</span>
+<span class="sd">          in plot titles or in the running directory.</span>
+<span class="sd">      run_dir (str): path of the directory where the runs will be performed.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;dataset&#39;</span><span class="p">,</span><span class="n">run_dir</span><span class="o">=</span><span class="s1">&#39;dataset_runs&#39;</span><span class="p">,</span><span class="n">pre_processing</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the dataset ready for appending new runs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">=</span><span class="n">label</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="o">=</span><span class="n">run_dir</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="o">=</span><span class="p">[]</span>
+        <span class="sd">&quot;&quot;&quot;List of the runs which have to be treated by the dataset these runs contain the input</span>
+<span class="sd">        parameter to be passed to the various runners.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculators</span><span class="o">=</span><span class="p">[]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculators which will be used by the run method, useful to gather the inputs in the case of a</span>
+<span class="sd">        multiple run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">=</span><span class="p">{}</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set of the results of each of the runs. The set is not ordered as the runs may be executed</span>
+<span class="sd">        asynchronously.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="o">=</span><span class="p">[]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of run ids, to be used in order to classify and fetch the results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">=</span><span class="p">[]</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of run names, needed for distinguishing the logfiles and input files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_processing</span> <span class="o">=</span> <span class="n">pre_processing</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specifies the type of pre_processing_function to be call before running the dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Dataset.scf_pre_processing"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.scf_pre_processing">[docs]</a>    <span class="k">def</span> <span class="nf">scf_pre_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the pre_processing function for a scf dataset.</span>
+<span class="sd">        The method build the run_dir folder if it does not exists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Create folder </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.nscf_pre_processing"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.nscf_pre_processing">[docs]</a>    <span class="k">def</span> <span class="nf">nscf_pre_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the pre_processing function for a nscf dataset.</span>
+<span class="sd">        The method build the run_dir folder if it does not exists. Then, for each id of</span>
+<span class="sd">        the dataset copy the source_dir with name name_from_id(id).save.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;source_dir&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Create folder </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">name_from_id</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.save&#39;</span>
+            <span class="c1"># check if the source folder exists</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">source</span><span class="p">):</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;source folder : &#39;</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="s1">&#39;not found&#39;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">:</span>
+                <span class="c1"># copy the source folder only if the dest is not present</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+                    <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;cp -r </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">dest</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;execute : &#39;</span><span class="p">,</span><span class="n">string</span><span class="p">)</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+                <span class="k">else</span> <span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nscf save folder already exsists. Source .save NOT COPIED&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.yambo_pre_processing"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.yambo_pre_processing">[docs]</a>    <span class="k">def</span> <span class="nf">yambo_pre_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the pre_processing function for a Yambo dataset.</span>
+<span class="sd">        The method build the run_dir folder if it does not exists.Then check if the SAVE</span>
+<span class="sd">        folder exists, if not runs p2y in the source_dir and copy the SAVE folder in the run_dir.</span>
+<span class="sd">        Lastly, executes yambo (without arguments) in the run_dir to build the r_setup</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;source_dir&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Create folder </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;source folder : &#39;</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="s1">&#39; not found&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span> <span class="o">+</span><span class="s1">&#39;/SAVE&#39;</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;SAVE folder already present in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># run p2 y</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;cd </span><span class="si">%s</span><span class="s1">;p2y&#39;</span><span class="o">%</span><span class="n">source</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;execute : &#39;</span><span class="p">,</span><span class="n">string</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+            <span class="c1"># copy the SAVE folder</span>
+            <span class="n">savef</span> <span class="o">=</span> <span class="n">source</span> <span class="o">+</span> <span class="s1">&#39;/SAVE&#39;</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;cp -r </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">savef</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;execute : &#39;</span><span class="p">,</span><span class="n">string</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+            <span class="c1"># build the r_setup</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;cd </span><span class="si">%s</span><span class="s1">;OMP_NUM_THREADS=1 yambo&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;execute : &#39;</span><span class="p">,</span><span class="n">string</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">string</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.pre_processing_function"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.pre_processing_function">[docs]</a>    <span class="k">def</span> <span class="nf">pre_processing_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Choose a pre_processing function among the ones provided in the dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_processing</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Specify a pre_processing for the dataset&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_processing</span> <span class="o">==</span> <span class="s1">&#39;scf&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scf_pre_processing</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_processing</span> <span class="o">==</span> <span class="s1">&#39;nscf&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nscf_pre_processing</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_processing</span> <span class="o">==</span> <span class="s1">&#39;yambo&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">yambo_pre_processing</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.append_run"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.append_run">[docs]</a>    <span class="k">def</span> <span class="nf">append_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">id</span><span class="p">,</span><span class="n">calculator</span><span class="p">,</span><span class="nb">input</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a run into the dataset.</span>
+
+<span class="sd">        Append to the list of runs to be performed the corresponding calculator and the arguments which are</span>
+<span class="sd">        associated to it.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          id (dict): the id of the run, useful to identify the run in the dataset. It has to be a dictionary and,</span>
+<span class="sd">          typically its elements are used to build the associated input.</span>
+<span class="sd">          calculator : the calculator class to which the remaining keyword arguments will be passed at the input.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          ValueError: if the provided id is identical to another previously appended run.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name_from_id</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The run id&#39;</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="s1">&#39; is already provided, modify the run id.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1">#get the number of this run</span>
+        <span class="n">irun</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">)</span>
+        <span class="c1">#append it to the runs list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="nb">input</span><span class="p">))</span>
+        <span class="c1">#append id and name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="nb">id</span><span class="p">))</span>
+        <span class="c1">#search if the calculator already exists</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">calc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculators</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">calc</span><span class="p">[</span><span class="s1">&#39;calc&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">calculator</span><span class="p">:</span>
+                <span class="n">calc</span><span class="p">[</span><span class="s1">&#39;runs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">irun</span><span class="p">)</span>
+                <span class="n">found</span><span class="o">=</span><span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calculators</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;calc&#39;</span><span class="p">:</span> <span class="n">calculator</span><span class="p">,</span> <span class="s1">&#39;runs&#39;</span><span class="p">:[</span><span class="n">irun</span><span class="p">]})</span></div>
+
+
+<div class="viewcode-block" id="Dataset.process_run"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.process_run">[docs]</a>    <span class="k">def</span> <span class="nf">process_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">post_processing</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the dataset, by performing explicit run of each of the item of the runs_list.</span>
+<span class="sd">        If post_processing is True apply the post_processing function so that self.results</span>
+<span class="sd">        contains the results of all the element of the dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculators</span><span class="p">:</span>
+            <span class="n">calc</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;calc&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;runs&#39;</span><span class="p">]:</span>
+                <span class="nb">input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">run_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_dir</span><span class="p">,</span><span class="n">post_processing</span><span class="o">=</span><span class="n">post_processing</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.run"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">post_processing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute process_run</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#self.pre_processing_function()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_run</span><span class="p">(</span><span class="n">post_processing</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.fetch_results"><a class="viewcode-back" href="../../../datasets.html#mppi.Datasets.Datasets.Dataset.fetch_results">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">attribute</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve some attribute from some of the results.</span>
+
+<span class="sd">        Selects out of the results the objects which have in their ``id``</span>
+<span class="sd">        at least the dictionary specified as input. May return an attribute</span>
+<span class="sd">        of each result if needed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">           id (dict): dictionary of the retrieved id. Return a list of the runs that</span>
+<span class="sd">               have the ``id`` argument inside the provided ``id`` in the order provided by :py:meth:`append_run`.</span>
+<span class="sd">           attribute (str): if present, provide the attribute of each of the results instead of the result object</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">           &gt;&gt;&gt; study=Dataset()</span>
+<span class="sd">           &gt;&gt;&gt; study.append_run(id={&#39;cr&#39;: 3},input=input1)</span>
+<span class="sd">           &gt;&gt;&gt; study.append_run(id={&#39;cr&#39;: 4},input=input2)</span>
+<span class="sd">           &gt;&gt;&gt; #append other runs if needed</span>
+<span class="sd">           &gt;&gt;&gt; study.run()  #run the calculations</span>
+<span class="sd">           &gt;&gt;&gt; # returns a list of the energies of first and the third result in this example</span>
+<span class="sd">           &gt;&gt;&gt; data=study.fetch_results(id={&#39;cr&#39;: 3},attribute=&#39;E_tot&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span> <span class="k">if</span> <span class="nb">id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">name_from_id</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">irun</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">n</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">r</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">irun</span><span class="p">]</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span> <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">attribute</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
+</pre></div>
+
+          </div>
+            
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mppi 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="../../../_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2019, Marco D'Alessandro. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

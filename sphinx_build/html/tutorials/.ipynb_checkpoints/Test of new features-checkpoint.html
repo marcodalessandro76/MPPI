@@ -1,0 +1,1178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="../../_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="../../_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="../../_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="../../_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>Tests of new features &#8212; mppi 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  
+   
+
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mppi 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar">
+        <a href="
+    ../../index.html" class="text-logo">MPPI</a>
+        
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../pwIn.html">PwIn module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../yamboIn.html">YamboIn module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../qeCalc.html">QeCalculator module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../yamboCalc.html">YamboCalculator module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../yamboParser.html">YamboParser module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../datasets.html">Datasets module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">MPPI Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+        
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="../../search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="../../index.html">Docs</a></li>
+              
+              <li>Tests of new features</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput,
+div.nbinput div.prompt,
+div.nbinput div.input_area,
+div.nbinput div[class*=highlight],
+div.nbinput div[class*=highlight] pre,
+div.nboutput,
+div.nbinput div.prompt,
+div.nbinput div.output_area,
+div.nboutput div[class*=highlight],
+div.nboutput div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput,
+div.nboutput {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput,
+    div.nboutput {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput div.prompt,
+div.nboutput div.prompt {
+    min-width: 7ex;
+    padding-top: 0.4em;
+    padding-right: 0.4em;
+    text-align: right;
+    flex: 0;
+}
+@media (max-width: 540px) {
+    div.nbinput div.prompt,
+    div.nboutput div.prompt {
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput div.prompt.empty {
+        padding: 0;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput div.prompt pre,
+div.nboutput div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput div.input_area,
+div.nboutput div.output_area {
+    padding: 0.4em;
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput div.input_area,
+    div.nboutput div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">importlib</span> <span class="k">import</span> <span class="n">reload</span>
+
+<span class="n">basepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="Tests-of-new-features">
+<h1>Tests of new features<a class="headerlink" href="#Tests-of-new-features" title="Permalink to this headline">¶</a></h1>
+<p>Use this notebook to test some modifications on the classes without the need to reinstall the package</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;/home/marco/Applications/MPPI/mppi/InputFiles/&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;/home/marco/Applications/MPPI/mppi/Calculators/&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;/home/marco/Applications/MPPI/mppi/Datasets/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">PwIn</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">reload</span><span class="p">(</span><span class="n">PwIn</span><span class="p">)</span>
+<span class="nb">input</span> <span class="o">=</span> <span class="n">PwIn</span><span class="o">.</span><span class="n">PwIn</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">k</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">ecut</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">a0</span> <span class="o">=</span> <span class="mf">1.42</span>
+<span class="n">planeSep</span>  <span class="o">=</span> <span class="mf">10.0</span>
+<span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+<span class="n">B</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="n">a0</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="p">[</span><span class="n">a0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+<span class="n">a2</span> <span class="o">=</span> <span class="p">[</span><span class="n">a0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">a0</span><span class="o">*</span><span class="mf">3.</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span>
+<span class="n">a3</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="n">planeSep</span><span class="p">]</span>
+
+<span class="nb">input</span><span class="o">.</span><span class="n">set_calculation</span><span class="p">(</span><span class="s1">&#39;nscf&#39;</span><span class="p">)</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">system</span><span class="p">[</span><span class="s1">&#39;nbnd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_pseudo_dir</span><span class="p">(</span><span class="s1">&#39;../pseudos&#39;</span><span class="p">)</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">system</span><span class="p">[</span><span class="s1">&#39;ibrav&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">cell_parameters</span> <span class="o">=</span><span class="p">[</span><span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="p">,</span><span class="n">a3</span><span class="p">]</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_atoms_type</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_atoms_number</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_atoms_position</span><span class="p">(</span><span class="n">pos_type</span><span class="o">=</span><span class="s1">&#39;angstrom&#39;</span><span class="p">,</span><span class="n">pos_list</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="n">A</span><span class="p">],[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="n">B</span><span class="p">]])</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">atypes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">12.011</span><span class="p">,</span><span class="s1">&#39;C_pbe-20082014.UPF&#39;</span><span class="p">]}</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_convergence_thr</span><span class="p">(</span><span class="mf">1e-8</span><span class="p">)</span>
+<span class="c1">#prefix = &#39;k&#39;+str(k)+&#39;_ecut&#39;+str(ecut)</span>
+<span class="c1">#input.set_prefix(prefix)</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_kpoints</span><span class="p">(</span><span class="n">ktype</span><span class="o">=</span><span class="s1">&#39;automatic&#39;</span><span class="p">,</span><span class="n">kpoints</span><span class="o">=</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">input</span><span class="o">.</span><span class="n">set_energy_cutoff</span><span class="p">(</span><span class="n">ecut</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&amp;control
+           verbosity = &#39;high&#39;
+         calculation = &#39;nscf&#39;
+          pseudo_dir = &#39;../pseudos&#39;
+/&amp;end
+&amp;system
+                nbnd = 12
+               ibrav = 0
+                ntyp = 1
+                 nat = 2
+             ecutwfc = 80
+/&amp;end
+&amp;electrons
+            conv_thr = 1e-08
+/&amp;end
+ATOMIC_SPECIES
+   C   12.011   C_pbe-20082014.UPF
+ATOMIC_POSITIONS { angstrom }
+  C   0.0000000000   0.0000000000   0.0000000000
+  C   0.0000000000   1.4200000000   0.0000000000
+K_POINTS { automatic }
+  6  6  1  0  0  0
+CELL_PARAMETERS angstrom
+  2.4595121467   0.0000000000   0.0000000000
+  1.2297560734   2.1300000000   0.0000000000
+  0.0000000000   0.0000000000  10.0000000000
+
+</pre></div></div>
+</div>
+<div class="section" id="pre_processing-for-dataset">
+<h2>pre_processing for dataset<a class="headerlink" href="#pre_processing-for-dataset" title="Permalink to this headline">¶</a></h2>
+<p>In some cases it can be useful to perform some preliminary operations before running a computation. E.g. copy of the scf save folder in the appropriate location before starting with a nscf computation or preparing the SAVE folder before a Yambo computation.</p>
+<p>For this reason we can introduce a pre_processing function</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">QeCalculator</span> <span class="k">as</span> <span class="nn">QeC</span>
+<span class="kn">import</span> <span class="nn">Datasets</span> <span class="k">as</span> <span class="nn">D</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">reload</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>&lt;module &#39;Datasets&#39; from &#39;/home/marco/Applications/MPPI/mppi/Datasets/Datasets.py&#39;&gt;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">code</span> <span class="o">=</span> <span class="n">QeC</span><span class="o">.</span><span class="n">QeCalculator</span><span class="p">(</span><span class="n">omp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">mpi_run</span><span class="o">=</span><span class="s1">&#39;mpirun -np 4&#39;</span><span class="p">,</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pw.x&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">skip</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Initialize a qe calculator with command OMP_NUM_THREADS=1 mpirun -np 4 pw.x
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">study</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;prova&#39;</span><span class="p">,</span><span class="n">run_dir</span><span class="o">=</span><span class="s1">&#39;nscf&#39;</span><span class="p">,</span><span class="n">pre_processing</span><span class="o">=</span><span class="s1">&#39;nscf&#39;</span><span class="p">,</span><span class="n">source_dir</span><span class="o">=</span><span class="s1">&#39;gs_run_dir&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">study</span><span class="o">.</span><span class="n">pre_processing</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>&#39;nscf&#39;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">study</span><span class="o">.</span><span class="n">kwargs</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>{&#39;pre_processing&#39;: &#39;nscf&#39;, &#39;source_dir&#39;: &#39;gs_run_dir&#39;}
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">kpoints</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kpoints</span><span class="p">:</span>
+    <span class="n">idd</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;k&#39;</span> <span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s1">&#39;ecut&#39;</span> <span class="p">:</span> <span class="mi">100</span><span class="p">}</span>
+    <span class="nb">input</span><span class="o">.</span><span class="n">set_prefix</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">name_from_id</span><span class="p">(</span><span class="n">idd</span><span class="p">))</span>
+    <span class="nb">input</span><span class="o">.</span><span class="n">set_kpoints</span><span class="p">(</span><span class="n">ktype</span><span class="o">=</span><span class="s1">&#39;automatic&#39;</span><span class="p">,</span><span class="n">kpoints</span><span class="o">=</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+    <span class="nb">input</span><span class="o">.</span><span class="n">set_energy_cutoff</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">study</span><span class="o">.</span><span class="n">append_run</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">idd</span><span class="p">,</span><span class="n">calculator</span><span class="o">=</span><span class="n">code</span><span class="p">,</span><span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">study</span><span class="o">.</span><span class="n">runs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&amp;control
+           verbosity = &#39;high&#39;
+         calculation = &#39;nscf&#39;
+          pseudo_dir = &#39;../pseudos&#39;
+              prefix = &#39;ecut:100,k:6&#39;
+/&amp;end
+&amp;system
+                nbnd = 12
+               ibrav = 0
+                ntyp = 1
+                 nat = 2
+             ecutwfc = 100
+/&amp;end
+&amp;electrons
+            conv_thr = 1e-08
+/&amp;end
+ATOMIC_SPECIES
+   C   12.011   C_pbe-20082014.UPF
+ATOMIC_POSITIONS { angstrom }
+  C   0.0000000000   0.0000000000   0.0000000000
+  C   0.0000000000   1.4200000000   0.0000000000
+K_POINTS { automatic }
+  6  6  1  0  0  0
+CELL_PARAMETERS angstrom
+  2.4595121467   0.0000000000   0.0000000000
+  1.2297560734   2.1300000000   0.0000000000
+  0.0000000000   0.0000000000  10.0000000000
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[324]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">study</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+nsct save folder already exsists. Save folder NOT COPIED
+nsct save folder already exsists. Save folder NOT COPIED
+execute : cd nscf ; OMP_NUM_THREADS=1 mpirun -np 4 pw.x -inp ecut:100,k:3.in &gt; ecut:100,k:3.log
+execute : cd nscf ; OMP_NUM_THREADS=1 mpirun -np 4 pw.x -inp ecut:100,k:6.in &gt; ecut:100,k:6.log
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Tests-of-YamboIn">
+<h2>Tests of YamboIn<a class="headerlink" href="#Tests-of-YamboIn" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">YamboIn</span> <span class="k">as</span> <span class="nn">YI</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">basepath</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>&#39;/home/marco/Applications/MPPI/tutorials&#39;
+</pre></div>
+</div>
+</div>
+<p>to perform test the SAVE folder is needed by Yambo, so we use the yambo_test folder where a SAVE directory has been copied</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[35]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">reload</span><span class="p">(</span><span class="n">YI</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[35]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>&lt;module &#39;YamboIn&#39; from &#39;/home/marco/Applications/MPPI/mppi/InputFiles/YamboIn.py&#39;&gt;
+</pre></div>
+</div>
+</div>
+<p>The approach used to deal with yambo input files is to call yamboIn with the specific run level. Yambo build a base input file that calls ‘yambo.in’. The parameters of the input can be set and the updated file can be written on disk with its specific name</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[39]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">fold</span> <span class="o">=</span> <span class="s1">&#39;yambo_test&#39;</span>
+<span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;yambo_test.in&#39;</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="n">YI</span><span class="o">.</span><span class="n">YamboIn</span><span class="p">(</span><span class="s1">&#39;yambo -x -V rl&#39;</span><span class="p">,</span><span class="n">folder</span><span class="o">=</span><span class="n">fold</span><span class="p">)</span>
+<span class="n">y</span><span class="p">[</span><span class="s1">&#39;EXXRLvcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1000.0</span><span class="o">*</span><span class="mi">3</span><span class="p">,</span><span class="s1">&#39;mHa&#39;</span><span class="p">]</span>
+<span class="n">krange</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="s1">&#39;QPkrange&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">kbandrange</span> <span class="o">=</span> <span class="n">krange</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span>
+<span class="n">y</span><span class="p">[</span><span class="s1">&#39;QPkrange&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">kbandrange</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
+<span class="n">y</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fold</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[40]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+HF_and_locXC
+FFTGvecs = 941.000000 RL
+SE_Threads = 0.000000e+00
+EXXRLvcs = 3000.000000 mHa
+% QPkrange
+ 1 | 4 | 1 | 10 |
+%
+
+</pre></div></div>
+</div>
+</div>
+<div class="section" id="Tests-of-YamboCalculator">
+<h2>Tests of YamboCalculator<a class="headerlink" href="#Tests-of-YamboCalculator" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[214]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">YamboCalculator</span> <span class="k">as</span> <span class="nn">YbC</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[215]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">reload</span><span class="p">(</span><span class="n">YbC</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[215]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>&lt;module &#39;YamboCalculator&#39; from &#39;/home/marco/Applications/MPPI/mppi/Calculators/YamboCalculator.py&#39;&gt;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[216]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">code</span> <span class="o">=</span> <span class="n">YbC</span><span class="o">.</span><span class="n">YamboCalculator</span><span class="p">(</span><span class="n">omp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">mpi_run</span><span class="o">=</span><span class="s1">&#39;mpirun -np 4&#39;</span><span class="p">,</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;yambo&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">skip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Initialize a Yambo calculator with command OMP_NUM_THREADS=1 mpirun -np 4 yambo
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[217]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">results</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">y</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ybc_test&#39;</span><span class="p">,</span><span class="n">run_dir</span><span class="o">=</span><span class="s1">&#39;yambo_test&#39;</span><span class="p">,</span><span class="n">post_processing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+skip the computation for : yambo_test/ybc_test/o-ybc_test.hf
+output in :  yambo_test/ybc_test/o-ybc_test.hf
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[220]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[220]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>dict_keys([&#39;K-point&#39;, &#39;Band&#39;, &#39;Eo&#39;, &#39;Ehf&#39;, &#39;DFT&#39;, &#39;HF&#39;])
+</pre></div>
+</div>
+</div>
+<p>Il codice del parsing puo essere implementato in un file separato che YamboCalculator importa, esattamente come faccio per il pw_out di QE. Questo modulo che posso chiamare YamboParser puo stare dentro la folder Calculators</p>
+<p>Devo elaborare ulteriormente il parser in modo che mi ridia un dizionario. Per farlo Dìdevo prendere le chiavi dalla riga dell’output che contiene K-points e poi devo costruire il dizionario attribuendo correttamente chiavi e valori</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[192]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;yambo_test/ybc_test/o-ybc_test.hf&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[193]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">line_keys</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;K-point&#39;</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+            <span class="n">line_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+            <span class="k">break</span>
+<span class="n">keys</span> <span class="o">=</span> <span class="n">line_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="n">keys</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[193]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>[&#39;K-point&#39;, &#39;Band&#39;, &#39;Eo&#39;, &#39;Ehf&#39;, &#39;DFT&#39;, &#39;HF&#39;]
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[205]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">parse</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys</span><span class="p">):</span>
+    <span class="n">parse</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">parse</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[208]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">YamboParser</span> <span class="k">as</span> <span class="nn">yp</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[209]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;yambo_test/ybc_test/o-ybc_test.hf&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[212]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">reload</span><span class="p">(</span><span class="n">yp</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">yp</span><span class="o">.</span><span class="n">YamboOut</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[213]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span><span class="n">results</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[213]:
+</pre></div>
+</div>
+<div class="output_area highlight-none"><div class="highlight"><pre>
+<span></span>{&#39;K-point&#39;: [1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  2.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  3.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0],
+ &#39;Band&#39;: [1.0,
+  2.0,
+  3.0,
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0,
+  1.0,
+  2.0,
+  3.0,
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0,
+  1.0,
+  2.0,
+  3.0,
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0,
+  1.0,
+  2.0,
+  3.0,
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0],
+ &#39;Eo&#39;: [-11.88783,
+  -2.027e-05,
+  0.0,
+  0.0,
+  2.565313,
+  2.565343,
+  2.56534,
+  3.17618,
+  7.74153,
+  7.74153,
+  -9.57842,
+  -6.91786,
+  -1.18965,
+  -1.18963,
+  1.486111,
+  3.355662,
+  3.355685,
+  7.7181,
+  10.54694,
+  10.54695,
+  -7.77748,
+  -7.77744,
+  -2.82411,
+  -2.8241,
+  0.740817,
+  0.740843,
+  9.98059,
+  9.98063,
+  10.96007,
+  10.96007,
+  -9.5784,
+  -6.91791,
+  -1.18963,
+  -1.18963,
+  1.48615,
+  3.355678,
+  3.35568,
+  7.71811,
+  10.54695,
+  10.54695],
+ &#39;Ehf&#39;: [-17.74335,
+  -2.61,
+  -1.96785,
+  -1.54064,
+  7.488659,
+  7.687541,
+  7.7565,
+  8.81729,
+  13.78133,
+  13.68595,
+  -14.66745,
+  -10.14034,
+  -3.78242,
+  -2.94007,
+  6.290171,
+  8.265098,
+  8.563054,
+  12.72993,
+  16.75301,
+  17.39897,
+  -11.76619,
+  -12.06433,
+  -5.16013,
+  -5.25937,
+  5.506235,
+  5.040718,
+  16.71961,
+  16.7184,
+  17.2115,
+  17.16894,
+  -14.36776,
+  -10.77228,
+  -3.05488,
+  -3.24603,
+  6.035261,
+  8.30409,
+  9.20062,
+  12.76191,
+  16.63943,
+  17.06854],
+ &#39;DFT&#39;: [-10.42439,
+  -10.83,
+  -11.47596,
+  -11.90318,
+  -9.793085,
+  -9.991936,
+  -10.06089,
+  -10.62355,
+  -10.12245,
+  -10.02706,
+  -10.71535,
+  -10.39173,
+  -10.67606,
+  -11.5184,
+  -9.786038,
+  -9.289845,
+  -9.587768,
+  -7.0014,
+  -9.96471,
+  -10.61067,
+  -10.98786,
+  -10.68967,
+  -10.66169,
+  -10.56244,
+  -8.919391,
+  -8.45384,
+  -10.43907,
+  -10.43782,
+  -10.53624,
+  -10.49367,
+  -11.01501,
+  -9.75986,
+  -11.40359,
+  -11.21243,
+  -9.53105,
+  -9.328822,
+  -10.22536,
+  -7.03337,
+  -9.85111,
+  -10.28022],
+ &#39;HF&#39;: [-16.27991,
+  -13.44,
+  -13.44382,
+  -13.44382,
+  -4.869738,
+  -4.869738,
+  -4.86974,
+  -4.98244,
+  -4.08265,
+  -4.08265,
+  -15.80438,
+  -13.61421,
+  -13.26883,
+  -13.26884,
+  -4.981978,
+  -4.38041,
+  -4.380399,
+  -1.98957,
+  -3.75864,
+  -3.75864,
+  -14.97658,
+  -14.97656,
+  -12.99771,
+  -12.99772,
+  -4.153973,
+  -4.153965,
+  -3.70006,
+  -3.70006,
+  -4.28481,
+  -4.2848,
+  -15.80437,
+  -13.61423,
+  -13.26884,
+  -13.26883,
+  -4.981939,
+  -4.380411,
+  -4.38041,
+  -1.98958,
+  -3.75863,
+  -3.75863]}
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3"><div class="highlight"><pre>
+<span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+            
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mppi 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="../../_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2019, Marco D'Alessandro. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>
