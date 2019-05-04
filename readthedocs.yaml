@@ -17,17 +17,17 @@ python:
   version: 3.6
   install:
     - requirements: sphinx_source/requirements.txt
-    #- path: .
+    - path: ../
 
-python-install:
-  # The path to the project to be installed
-  path: path()
-
-  # Install using python setup.py install or pip
-  # Default: pip
-  method: enum('pip', 'setuptools', required=False)
-
-  # Extra requirements sections to install in addition to the package dependencies.
-  # Only valid when `method` is `pip`.
-  # Default: []
-  extra_requirements: list(str(), required=False)
+# python-install:
+#   # The path to the project to be installed
+#   path: path()
+#
+#   # Install using python setup.py install or pip
+#   # Default: pip
+#   method: enum('pip', 'setuptools', required=False)
+#
+#   # Extra requirements sections to install in addition to the package dependencies.
+#   # Only valid when `method` is `pip`.
+#   # Default: []
+#   extra_requirements: list(str(), required=False)
