@@ -17,7 +17,7 @@ python:
   version: 3.6
   install:
     - requirements: sphinx_source/requirements.txt
-    - path: ..
+    #- path: .
 
 # python-install:
 #   # The path to the project to be installed
