@@ -17,4 +17,4 @@ python:
   version: 3.6
   install:
     - requirements: sphinx_source/requirements.txt
-  #setup_py_install: true
+  setup_py_install: true
