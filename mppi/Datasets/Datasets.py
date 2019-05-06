@@ -73,7 +73,7 @@ class Dataset():
 
         self.ids=[]
         """
-        List of run ids, to be used in order to classify and fetch the results
+        List of run ids, to be used in order to classify and fetch the results.
         """
 
         self.names=[]
@@ -89,7 +89,7 @@ class Dataset():
     def scf_pre_processing(self,**kwargs):
         """
         Define the pre_processing function for a scf dataset.
-        The method build the run_dir folder if it does not exists
+        The method build the run_dir folder if it does not exists.
         """
         if not os.path.isdir(self.run_dir):
             os.mkdir(self.run_dir)
@@ -193,7 +193,6 @@ class Dataset():
                 break
         if not found:
             self.calculators.append({'calc': calculator, 'runs':[irun]})
-
 
     def process_run(self,post_processing):
         """

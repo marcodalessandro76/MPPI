@@ -9,9 +9,10 @@ post-processing in QuantumESPRESSO and Yambo'
 URL = 'https://github.com/........'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
-REQUIRES_PYTHON = '>=3.5.2'
+REQUIRES_PYTHON = '>=3.6'
 VERSION = '1.0'
-REQUIRED = ['numpy','qepppy']
+REQUIRED = ['numpy']
+QEPPPY_URL = 'https://github.com/Crivella/QEPPpy'
 #-----------------------------------------------
 
 here = path.abspath(path.dirname(__file__))
@@ -40,5 +41,6 @@ setup(
     keywords='python post-processing QuantumESPRESSO Yambo',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires=REQUIRES_PYTHON,
-    install_requires=REQUIRED
+    install_requires=REQUIRED,
+    dependency_links=[QEPPPY_URL]
 )

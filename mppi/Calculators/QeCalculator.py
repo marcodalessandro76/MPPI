@@ -1,6 +1,6 @@
 """
 This module defines a class to perform a calculations using QuantumESPRESSO.
-The module is (deeply) inspired from the SystemCalculator class of BigDFT
+The module is (deeply) inspired from the SystemCalculator class of BigDFT.
 """
 
 import os
@@ -18,17 +18,17 @@ class QeCalculator():
         self.mpi_run=mpi_run
         self.executable=executable
         """
-        Choose the executable called by run
+        Choose the executable called by run.
         """
 
         self.skip=skip
         """
-        Set if skip the run if the file self.xml_file is found. Default is False
+        Set if skip the run if the file self.xml_file is found. Default is False.
         """
 
         self.verbose=verbose
         """
-        Set the verbosity option
+        Set the verbosity option.
         """
 
         self.xml_file = ''

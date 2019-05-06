@@ -11,7 +11,7 @@ Multi Purpose Python Interface.
 Python package for managing computations and performing post-processing in QuantumESPRESSO and Yambo.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
 Module Members
@@ -29,12 +29,9 @@ Calculator for QuantumESPRESSO
 
 .. toctree:: qeCalc
 
-Calculator for Yambo
+Calculator for Yambo. The module contain also a parses for the output of Yambo computation
 
 .. toctree:: yamboCalc
-
-Parse for the output of Yambo computation
-
 .. toctree:: yamboParser
 
 Organize runs and analyze output in a dataset
