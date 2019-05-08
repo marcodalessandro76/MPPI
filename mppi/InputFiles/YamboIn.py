@@ -1,5 +1,9 @@
 
-# YamboIn class of YamboPy, Modified for compliance with python 3
+"""
+Class to read, write, create and manipulate yambo input files.
+The class is (deeply) inspired from the YamboIn class of YamboPy and is modified
+for compliance with python 3.
+"""
 
 from subprocess import Popen, PIPE
 import os, json, re
@@ -7,8 +11,6 @@ from sys import exit
 
 class YamboIn():
     """
-    Class to read, write, create and manipulate yambo input files with python.
-
     Examples of use:
 
     Initialize an empty input file:

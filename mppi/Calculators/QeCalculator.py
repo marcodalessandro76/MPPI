@@ -1,6 +1,6 @@
 """
-This module defines a class to perform a calculations using QuantumESPRESSO.
-The module is (deeply) inspired from the SystemCalculator class of BigDFT.
+A class to perform a calculations using QuantumESPRESSO.
+The class is (deeply) inspired from the SystemCalculator class of BigDFT.
 """
 
 import os
@@ -13,7 +13,8 @@ class QeCalculator():
     and apply a post processing function to extract the results
 
     """
-    def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='',skip=False, verbose=True):
+    def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='pw.x',\
+                 skip=False, verbose=True):
         self.omp=omp
         self.mpi_run=mpi_run
         self.executable=executable
@@ -37,7 +38,8 @@ class QeCalculator():
         establish if the run can be skipped.
         """
 
-        self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run + ' ' + executable).strip()
+        self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run +\
+                        ' ' + executable).strip()
         print('Initialize a qe calculator with command %s' %self.command)
 
     def pre_processing(self,**kwargs):
@@ -45,11 +47,12 @@ class QeCalculator():
         Check if the run_dir folder exists and write the input file.
         """
         run_dir=kwargs['run_dir']
+        input=kwargs['input']
+        name=kwargs['name'] + '.in'
+
         if not os.path.isdir(run_dir):
             print('Run_dir %s does not exists'%run_dir)
         else:
-            input=kwargs['input']
-            name=kwargs['name'] + '.in'
             if not (input is None):
                 input.write(run_dir + '/' + name)
             else :
@@ -57,17 +60,20 @@ class QeCalculator():
 
     def process_run(self,**kwargs):
         """
-        Set the proper dir and run the computation. If skip=True run the computations
-        only if the .log file is not present in the folder
-        The skip could be imposed on the .xml file that has the same name of the prefix
+        Set the proper dir and run the computation. If skip=True run the
+        computations only if the .log file is not present in the folder.
+        The skip could be imposed on the .xml file that has the same name of
+        the prefix.
         """
-        string = 'cd %s ; '%kwargs['run_dir']
+        run_dir = kwargs['run_dir']
         input=kwargs['name'] + '.in'
         output=kwargs['name'] + '.log'
+
+        string = 'cd %s ; '%run_dir
         string +=  self.command + ' -inp %s > %s'%(input,output)
         if self.skip:
-            if os.path.isfile(kwargs['run_dir']+'/'+output):
-                if self.verbose : print('skip the computation for : '+output)
+            if os.path.isfile(run_dir+'/'+output):
+                if self.verbose : print('skip the computation for : '+input)
             else:
                 if self.verbose : print('execute : '+string)
                 os.system(string)

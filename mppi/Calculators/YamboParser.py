@@ -1,7 +1,9 @@
 """
-This module performs a parsing pf the Yambo output file. The method dict_parser builds a dictionary with the results.
-The keys are read from the line that contains 'K-point'. The class AttributeDict convert the dictionary in a object and
-allows us to access to its attribute in the form AttributeDict.attr. 
+This module performs a parsing pf the Yambo output file. The method dict_parser
+builds a dictionary with the results. The keys are read from the line that contains
+'K-point'.
+The class AttributeDict convert the dictionary in a object and allows us to access
+to its attribute in the form AttributeDict.attr. 
 """
 
 def _parserArrayFromFile(fname):

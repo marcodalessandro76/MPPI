@@ -17,13 +17,14 @@ Python package for managing computations and performing post-processing in Quant
 Module Members
 --------------
 
-QuantumESPRESSO input file representation and usage from Python
+QuantumESPRESSO input file representation and usage
 
 .. toctree:: pwIn
 
-Yambo input file representation and usage from Python
+Yambo input file representation and usage
 
 .. toctree:: yamboIn
+.. toctree:: yppIn
 
 Calculator for QuantumESPRESSO
 
@@ -34,9 +35,12 @@ Calculator for Yambo. The module contain also a parses for the output of Yambo c
 .. toctree:: yamboCalc
 .. toctree:: yamboParser
 
-Organize runs and analyze output in a dataset
+Organize runs and analyze output in a dataset. A set of pre-processing functions
+needed before launching the various type of datasets are given in the PreProcessings
+module
 
 .. toctree:: datasets
+.. toctree:: preProcessings
 
 MPPI Tutorial page
 

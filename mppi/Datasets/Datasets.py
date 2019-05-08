@@ -14,6 +14,7 @@ append_run.
 
 import os
 from copy import deepcopy
+from .PreProcessings import *
 
 # The __init__ file used to load this module allows us to call this methods also
 # outside from the class. It can be used, for instance, for setting the prefix in
@@ -86,76 +87,25 @@ class Dataset():
         Specifies the type of pre_processing_function to be call before running the dataset.
         """
 
-    def scf_pre_processing(self,**kwargs):
+    def set_pre_processing(pre_proc):
         """
-        Define the pre_processing function for a scf dataset.
-        The method build the run_dir folder if it does not exists.
+        The value of the pre_procissing member can be modified after the init of
+        the Dataset object. This could be useful when more than one pre_processing
+        is needed befor running the dataset.
         """
-        if not os.path.isdir(self.run_dir):
-            os.mkdir(self.run_dir)
-            print('Create folder %s'%self.run_dir)
-
-    def nscf_pre_processing(self,**kwargs):
-        """
-        Define the pre_processing function for a nscf dataset.
-        The method build the run_dir folder if it does not exists. Then, for each id of
-        the dataset copy the source_dir with name name_from_id(id).save.
-        """
-        source = kwargs['source_dir']
-        if not os.path.isdir(self.run_dir):
-            os.mkdir(self.run_dir)
-            print('Create folder %s'%self.run_dir)
-
-        for id in self.ids:
-            dest = self.run_dir + '/' + name_from_id(id) + '.save'
-            # check if the source folder exists
-            if not os.path.isdir(source): print('source folder : ',source,'not found')
-            else :
-                # copy the source folder only if the dest is not present
-                if not os.path.isdir(dest):
-                    string = 'cp -r %s %s'%(source,dest)
-                    print('execute : ',string)
-                    os.system(string)
-                else : print('nscf save folder already exsists. Source .save NOT COPIED')
-
-    def yambo_pre_processing(self,**kwargs):
-        """
-        Define the pre_processing function for a Yambo dataset.
-        The method build the run_dir folder if it does not exists.Then check if the SAVE
-        folder exists, if not runs p2y in the source_dir and copy the SAVE folder in the run_dir.
-        Lastly, executes yambo (without arguments) in the run_dir to build the r_setup
-        """
-        source = kwargs['source_dir']
-        if not os.path.isdir(self.run_dir):
-            os.mkdir(self.run_dir)
-            print('Create folder %s'%self.run_dir)
-        if not os.path.isdir(source):
-            print('source folder : ',source,' not found')
-        elif os.path.isdir(self.run_dir +'/SAVE'):
-            print('SAVE folder already present in %s'%self.run_dir)
-        else:
-            # run p2 y
-            string = 'cd %s;p2y'%source
-            print('execute : ',string)
-            os.system(string)
-            # copy the SAVE folder
-            savef = source + '/SAVE'
-            string = 'cp -r %s %s'%(savef,self.run_dir)
-            print('execute : ',string)
-            os.system(string)
-            # build the r_setup
-            string = 'cd %s;OMP_NUM_THREADS=1 yambo'%self.run_dir
-            print('execute : ',string)
-            os.system(string)
+        self.pre_processing = pre_proc
 
     def pre_processing_function(self,**kwargs):
         """
-        Choose a pre_processing function among the ones provided in the dataset.
+        Choose a pre_processing function among the ones provided in the PreProcessings.py.
         """
-        if self.pre_processing == None: print('Specify a pre_processing for the dataset')
-        if self.pre_processing == 'scf': self.scf_pre_processing(**kwargs)
-        if self.pre_processing == 'nscf': self.nscf_pre_processing(**kwargs)
-        if self.pre_processing == 'yambo': self.yambo_pre_processing(**kwargs)
+        if self.pre_processing not in pre_processing_list :
+        #if self.pre_processing == None:
+            print('Specify a pre_processing for the dataset')
+        else :
+            if self.pre_processing == 'scf': scf_pre_processing(self.run_dir)
+            if self.pre_processing == 'nscf': nscf_pre_processing(self.run_dir,source_dir=kwargs['source_dir'],ids=self.ids)
+            if self.pre_processing == 'yambo': yambo_pre_processing(self.run_dir,source_dir=kwargs['source_dir'])
 
     def append_run(self,id,calculator,input):
         """
