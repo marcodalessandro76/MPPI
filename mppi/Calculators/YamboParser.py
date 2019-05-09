@@ -1,14 +1,15 @@
 """
 This module performs a parsing pf the Yambo output file. The method dict_parser
 builds a dictionary with the results. The keys are read from the line that contains
-'K-point'.
+'K-point' (for hf or qp output files) or '|k|' for the ypp outputs.
 The class AttributeDict convert the dictionary in a object and allows us to access
-to its attribute in the form AttributeDict.attr. 
+to its attribute in the form AttributeDict.attr.
 """
 
 def _parserArrayFromFile(fname):
     """"
-    Build a list that contains the lines of fname avoiding the ones that start with #
+    Build a list that contains the lines of fname avoiding the ones that start
+    with #
     """
     lines = []
     with open(fname) as f:
@@ -19,8 +20,8 @@ def _parserArrayFromFile(fname):
     larray = [[] for i in range(len(lines))]
     for ind,l in enumerate(lines):
         larray[ind] = l.split()
-    #convert the string to double. If some elements is a string (it can happen in the 4.4 Yambo
-    #version in the output file of a bands calculation) remove it
+    #convert the string to double. If some elements is a string (it can happen in
+    #the 4.4 Yambo version in the output file of a bands calculation) remove it
     for row in range(len(larray)):
         for col in range(len(larray[row])):
             try:
@@ -31,16 +32,27 @@ def _parserArrayFromFile(fname):
 
 def _build_keys(fname):
     """
-    Seek for the line that contains the string 'K-points' and build a list with the names of the
-    columns of data.
+    Seek for the line that contains the string 'K-points' or '|k|' and build a
+    list with the names of the columns of data.
     """
-    line_keys = []
+    line_keys = ''
     with open(fname) as f:
         for l in f:
-            if 'K-point' in l:
-                line_keys.append(l)
+            if 'K-point' in l or '|k|' in l:
+                line_keys = l
                 break
-    keys = line_keys[0].split()[1:]
+    keys = line_keys.split()
+    return keys
+
+def _purge_values(keys):
+    """
+    Remove the strings #,(a.u.),(rlu),(alat),(cc) (if present) from the
+    list tha contains the keys.
+    """
+    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)']
+    for k in reversed(keys):
+        if k in purge_list:
+            keys.remove(k)
     return keys
 
 def dict_parser(fname):
@@ -48,6 +60,7 @@ def dict_parser(fname):
     Build the dictionary from the output file in the form key:value.
     """
     keys = _build_keys(fname)
+    keys = _purge_values(keys)
     larray = _parserArrayFromFile(fname)
     results = {}
     for ind,key in enumerate(keys):
@@ -73,7 +86,7 @@ class AttributeDict(object):
             else:
                 self.__dict__[key] = value
 
-    def getAttibutes(self):
+    def getAttributes(self):
         """
         Return all the attributes of the object
         """

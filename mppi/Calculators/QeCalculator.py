@@ -14,28 +14,25 @@ class QeCalculator():
 
     """
     def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='pw.x',\
-                 skip=False, verbose=True):
+                 skip=True, verbose=True):
+
         self.omp=omp
+
         self.mpi_run=mpi_run
+
         self.executable=executable
         """
-        Choose the executable called by run.
+        Choose the executable called by run (pw.x,ph.x,...).
         """
 
         self.skip=skip
         """
-        Set if skip the run if the file self.xml_file is found. Default is False.
+        Set if skip the run if the file self.xml_file is found. Default is True.
         """
 
         self.verbose=verbose
         """
-        Set the verbosity option.
-        """
-
-        self.xml_file = ''
-        """
-        The xml file (with its complete path) used both for post_processing and to
-        establish if the run can be skipped.
+        Set the verbosity option. Default is True.
         """
 
         self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run +\
@@ -44,7 +41,9 @@ class QeCalculator():
 
     def pre_processing(self,**kwargs):
         """
-        Check if the run_dir folder exists and write the input file.
+        Check if the run_dir folder exists and write the input file. The
+        construction of the run_dir is managed by the pre_processing features
+        of Dataset.
         """
         run_dir=kwargs['run_dir']
         input=kwargs['input']
@@ -90,9 +89,9 @@ class QeCalculator():
         results = None
         if 'prefix' in input.control:
             prefix = input.control['prefix'].strip("'")
-            self.xml_file = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
-            if self.verbose : print('parse file : '+self.xml_file)
-            results= qe.pw_out(xml=self.xml_file)
+            xml_file = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
+            if self.verbose : print('parse file : '+xml_file)
+            results= qe.pw_out(xml=xml_file)
         else:
             print('.save folder not provided. Cannot read xml file')
         return results

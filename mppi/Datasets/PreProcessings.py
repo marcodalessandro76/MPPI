@@ -40,8 +40,8 @@ def scf_pre_processing(run_dir):
 def nscf_pre_processing(run_dir,**kwargs):
     """
     Define the pre_processing function for a nscf dataset.
-    The method build the run_dir folder if it does not exists. Then, for each id of
-    the dataset copy the source_dir with name name_from_id(id).save.
+    The method build the run_dir folder if it does not exists. Then, for each id
+    of the dataset copy the source_dir with name name_from_id(id).save.
     """
     source = kwargs['source_dir']
     ids = kwargs['ids']
@@ -54,21 +54,22 @@ def nscf_pre_processing(run_dir,**kwargs):
     for id in ids:
         dest = run_dir + '/' + _name_from_id(id) + '.save'
         # check if the source folder exists
-        if not os.path.isdir(source): print('source folder : ',source,'not found')
+        if not os.path.isdir(source): print('scf .save folder : ',source,'not found')
         else :
             # copy the source folder only if the dest is not present
             if not os.path.isdir(dest):
                 string = 'cp -r %s %s'%(source,dest)
                 print('execute : ',string)
                 os.system(string)
-            else : print('SAVE folder already exsists. Source %s NOT COPIED'%source)
+            else : print('nscf .save folder exsists. %s not copied'%source)
 
 def yambo_pre_processing(run_dir,**kwargs):
     """
     Define the pre_processing function for a Yambo dataset.
-    The method build the run_dir folder if it does not exists.Then check if the SAVE
-    folder exists, if not runs p2y in the source_dir and copy the SAVE folder in the run_dir.
-    Lastly, executes yambo (without arguments) in the run_dir to build the r_setup
+    The method build the run_dir folder if it does not exists.Then check if the
+    SAVE folder exists, if not runs p2y in the source_dir and copy the SAVE folder
+    in the run_dir. Lastly, executes yambo (without arguments) in the run_dir to
+    build the r_setup.
     """
     source = kwargs['source_dir']
     if not os.path.isdir(run_dir):
@@ -80,7 +81,7 @@ def yambo_pre_processing(run_dir,**kwargs):
         print('SAVE folder already present in %s'%run_dir)
     else:
         # run p2 y
-        string = 'cd %s;p2y'%source
+        string = 'cd %s;p2y -a 2'%source
         print('execute : ',string)
         os.system(string)
         # copy the SAVE folder
@@ -92,3 +93,10 @@ def yambo_pre_processing(run_dir,**kwargs):
         string = 'cd %s;OMP_NUM_THREADS=1 yambo'%run_dir
         print('execute : ',string)
         os.system(string)
+
+def break_sym_pre_processing(run_dir,**kwargs):
+    """
+
+    """
+    polarization = kwargs['polarization']
+    print('break symmetries for polarization :',polarization)

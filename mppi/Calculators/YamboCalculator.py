@@ -18,39 +18,38 @@ class YamboCalculator():
     The setup of this folder is managed at the level of Dataset.
     """
     def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='yambo',\
-                 suffix ='',skip=False, verbose=True):
+                 suffix ='',skip=True, verbose=True):
+
         self.omp=omp
+
         self.mpi_run=mpi_run
+
         self.executable=executable
         """
-        Choose the executable called by run.
+        Choose the executable called by run (yambo,ypp,...)
         """
 
         self.skip=skip
         """
-        Set if skip the run if the file self.output is found. Default is False.
+        Set if skip the run if the file self.output is found. Default is True.
         """
 
         self.verbose=verbose
         """
-        Set the verbosity option.
-        """
-
-        self.output = None
-        """
-        The o-*.hf or o-*.qp file (with its complete path) used both for
-        post_processing and to establish if the run can be skipped.
+        Set the verbosity option. Default is True.
         """
 
         self.suffix = suffix
         """
-        The suffix of the output file that is used both to extablish for
-        post_processing and to establish if the run can be skipped.
+        The suffix of the output file (hf,qp,bands_interpolated,...) that is
+        used both to extablish for post_processing and to establish if the run
+        can be skipped.
         """
 
         self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run +\
                         ' ' + executable).strip()
         print('Initialize a Yambo calculator with command %s' %self.command)
+        print('Suffix for post_processing : ',self.suffix)
 
     def pre_processing(self,**kwargs):
         """
@@ -74,20 +73,6 @@ class YamboCalculator():
                 else :
                     print('input not provided')
 
-    def _seek_output_file(self,run_dir,jobname):
-        """
-        Check if one the output file (with both extension .hf or .qp) are inside
-        the jobname folder. Update the class member self.output
-        """
-        outfile_hf = run_dir+'/'+jobname+'/o-'+jobname+'.hf'
-        outfile_qp = run_dir+'/'+jobname+'/o-'+jobname+'.qp'
-        if os.path.isfile(outfile_hf):
-            self.output = outfile_hf
-        elif os.path.isfile(outfile_qp):
-            self.output = outfile_qp
-        else:
-            self.output = None
-
     def process_run(self,**kwargs):
         """
         Set the proper dir and run the computation.
@@ -100,40 +85,39 @@ class YamboCalculator():
         run_dir = kwargs['run_dir']
         jobname = kwargs['name']
         input = jobname+'.in'
-        outfolder = run_dir+'/'+jobname # da togliere
-        output = jobname+'/o-'+jobname+self.suffix
+        outfolder = run_dir+'/'+jobname
+        outfile = outfolder+'/o-'+jobname+'.'+self.suffix
 
         string = 'cd %s ; '%run_dir
         string +=  self.command + ' -F %s -J %s -C %s'%(input,jobname,jobname)
 
-        # seek the output file to establish if the run can be skipped
-        self._seek_output_file(run_dir,jobname)
-
         if self.skip:
-            if not (self.output is None):
+            if os.path.isfile(outfile):
                 if self.verbose : print('skip the computation for : '+input)
             else:
                 if self.verbose : print('execute : '+string)
                 os.system(string)
-
-        if not self.skip:
-            if not (self.output is None):
+        else:
+            if os.path.isdir(outfolder):
                 if self.verbose: print('delete folder : '+outfolder)
                 os.system('rm -r %s'%outfolder)
             if self.verbose: print('execute : '+string)
             os.system(string)
 
-        # set self.output for post_processing
-        self._seek_output_file(run_dir,jobname)
 
-    def post_processing(self):
+    def post_processing(self,**kwargs):
         """
         Apply the post processing method of YamboParser to self.output
         """
+        run_dir = kwargs['run_dir']
+        jobname = kwargs['name']
+        outfolder = run_dir+'/'+jobname
+        outfile = outfolder+'/o-'+jobname+'.'+self.suffix
+
         results = None
-        if not (self.output is None):
-            if self.verbose : print('parse file : '+self.output)
-            results_dic = dict_parser(self.output)
+        if os.path.isfile(outfile):
+            if self.verbose : print('parse file : '+outfile)
+            results_dic = dict_parser(outfile)
             results = AttributeDict(**results_dic)
         return results
 
@@ -145,12 +129,13 @@ class YamboCalculator():
             run_dir (str) : the folder in which the simulation is performed
             input : the object the contain the instance of the input file
             name (str) : the name associated to the input file (without extension).
-            This string is used also as jobname and so it represent the folder in which
-            results are written as well as a part of the name of the output file (o-$name.**)
+            This string is used also as jobname and so it represent the folder in
+            which results are written as well as a part of the name of the output
+            file (o-$name.**)
         """
         self.pre_processing(run_dir=run_dir,input=input,name=name)
         self.process_run(run_dir=run_dir,name=name)
         results = None
         if post_processing:
-            results = self.post_processing()
+            results = self.post_processing(run_dir=run_dir,name=name)
         return results

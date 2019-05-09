@@ -87,7 +87,7 @@ class Dataset():
         Specifies the type of pre_processing_function to be call before running the dataset.
         """
 
-    def set_pre_processing(pre_proc):
+    def set_pre_processing(self,pre_proc):
         """
         The value of the pre_procissing member can be modified after the init of
         the Dataset object. This could be useful when more than one pre_processing
@@ -100,12 +100,12 @@ class Dataset():
         Choose a pre_processing function among the ones provided in the PreProcessings.py.
         """
         if self.pre_processing not in pre_processing_list :
-        #if self.pre_processing == None:
             print('Specify a pre_processing for the dataset')
         else :
             if self.pre_processing == 'scf': scf_pre_processing(self.run_dir)
             if self.pre_processing == 'nscf': nscf_pre_processing(self.run_dir,source_dir=kwargs['source_dir'],ids=self.ids)
             if self.pre_processing == 'yambo': yambo_pre_processing(self.run_dir,source_dir=kwargs['source_dir'])
+            if self.pre_processing == 'break_sym' : break_sym_pre_processing(self.run_dir,polarization=kwargs['polarization'])
 
     def append_run(self,id,calculator,input):
         """
