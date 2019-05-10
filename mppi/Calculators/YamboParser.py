@@ -32,35 +32,51 @@ def _parserArrayFromFile(fname):
 
 def _build_keys(fname):
     """
-    Seek for the line that contains the string 'K-points' or '|k|' and build a
-    list with the names of the columns of data.
+    Seek for the line that contains the proper string and build a list with the
+    names of the columns of data. The value of the string to look for depend on
+    the suffix of fname
     """
+    suffix = fname.split('.')[1]
+    hook_string = None
+    # hf or qp yambo computation
+    if suffix in ['hf','qp']: hook_string = 'K-point'
+    # ypp computation
+    if suffix in  ['bands_interpolated','magnetization_x',\
+                   'magnetization_y','magnetization_z']: hook_string = '|k|'
+    # real time yambo_rt computation
+    if suffix in ['carriers','external_field','current',\
+                  'magnetization','polarization'] : hook_string = 'Time[fs]'
     line_keys = ''
     with open(fname) as f:
         for l in f:
-            if 'K-point' in l or '|k|' in l:
+            if hook_string in l :
                 line_keys = l
                 break
     keys = line_keys.split()
     return keys
 
-def _purge_values(keys):
+def _clean_keys(keys):
     """
-    Remove the strings #,(a.u.),(rlu),(alat),(cc) (if present) from the
-    list tha contains the keys.
+    Remove some spurious elements (if present) from the list that contains the
+    keys. Some names are changed for better usability.
     """
     purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)']
     for k in reversed(keys):
         if k in purge_list:
             keys.remove(k)
+    old_names = ['|k|','Time[fs]']
+    new_names = ['k','time']
+    for ind,k in enumerate(keys):
+        if k in old_names:
+            keys[ind] = new_names[old_names.index(k)]
     return keys
 
 def dict_parser(fname):
     """
-    Build the dictionary from the output file in the form key:value.
+    Build a dictionary from the yambo output file in the form key:value.
     """
     keys = _build_keys(fname)
-    keys = _purge_values(keys)
+    keys = _clean_keys(keys)
     larray = _parserArrayFromFile(fname)
     results = {}
     for ind,key in enumerate(keys):

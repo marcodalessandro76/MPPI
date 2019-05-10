@@ -24,7 +24,7 @@ def _name_from_id(id):
         name += k+':'+str(id[k])+','
     return name.rstrip(',')
 
-pre_processing_list = ['scf','nscf','yambo','break_sym']
+pre_processing_list = ['scf','nscf','yambo']
 
 def scf_pre_processing(run_dir):
     """
@@ -67,8 +67,10 @@ def yambo_pre_processing(run_dir,**kwargs):
     """
     Define the pre_processing function for a Yambo dataset.
     The method build the run_dir folder if it does not exists.Then check if the
-    SAVE folder exists, if not runs p2y in the source_dir and copy the SAVE folder
-    in the run_dir. Lastly, executes yambo (without arguments) in the run_dir to
+    SAVE folder exists, if not runs 'p2y -a 2' in the source_dir and copy the
+    SAVE folder in the run_dir. The option -a 2 ensures that labelling of the
+    high-symmetry kpoints is consistent in both QE and Yambo.
+    Lastly, executes yambo (without arguments) in the run_dir to
     build the r_setup.
     """
     source = kwargs['source_dir']
@@ -93,10 +95,3 @@ def yambo_pre_processing(run_dir,**kwargs):
         string = 'cd %s;OMP_NUM_THREADS=1 yambo'%run_dir
         print('execute : ',string)
         os.system(string)
-
-def break_sym_pre_processing(run_dir,**kwargs):
-    """
-
-    """
-    polarization = kwargs['polarization']
-    print('break symmetries for polarization :',polarization)

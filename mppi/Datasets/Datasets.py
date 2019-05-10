@@ -1,6 +1,6 @@
 """
 This module defines a class to perform and manage several calculations.
-The module is (deeply) inspired from the Dataset class of BigDFT.
+The module is (deeply) inspired from the Dataset class of BigDFT.  
 
 A major difference with respect to the Dataset class in BigDFT is given by the
 usage of the pre_processing function. In the present case this function performs
@@ -105,7 +105,6 @@ class Dataset():
             if self.pre_processing == 'scf': scf_pre_processing(self.run_dir)
             if self.pre_processing == 'nscf': nscf_pre_processing(self.run_dir,source_dir=kwargs['source_dir'],ids=self.ids)
             if self.pre_processing == 'yambo': yambo_pre_processing(self.run_dir,source_dir=kwargs['source_dir'])
-            if self.pre_processing == 'break_sym' : break_sym_pre_processing(self.run_dir,polarization=kwargs['polarization'])
 
     def append_run(self,id,calculator,input):
         """

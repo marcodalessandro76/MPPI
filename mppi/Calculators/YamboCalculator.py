@@ -18,7 +18,7 @@ class YamboCalculator():
     The setup of this folder is managed at the level of Dataset.
     """
     def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='yambo',\
-                 suffix ='',skip=True, verbose=True):
+                 suffix ='',skip=True,verbose=True):
 
         self.omp=omp
 
