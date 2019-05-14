@@ -1,4 +1,4 @@
-yppIn module
+YppIn module
 ------------
 
 .. automodule:: mppi.InputFiles.YppIn

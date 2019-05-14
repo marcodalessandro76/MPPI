@@ -8,7 +8,7 @@ different operation dependending of the type of simulation managed by the datase
 (scf, nscf, yambo,...). The pre_processing is called independently from the run
 method, this is important in particular for Yambo. Indeed the pre_processing manage
 the building of the run_dir with the SAVE folder, and the YamboIn needs this folder
-to init its object so the pre_processing in this case _has to_ be called before
+to init its object so the pre_processing in this case has to be called before
 append_run.
 """
 
@@ -22,11 +22,12 @@ from .PreProcessings import *
 def name_from_id(id):
     """
     Hash the id into a run name. If id is a string, set name = id, if it is a
-    dictionary build the name of the run from the id dictionary.
+    dictionary build the name string of the run from the id dictionary.
+
     Args:
         id : id associated to the run
     Returns:
-       str: name of the run associated to the dictionary ``id``
+       name (str): name of the run associated to the dictionary ``id``
     """
     if type(id) is str :
         name = id
@@ -44,7 +45,6 @@ def name_from_id(id):
 class Dataset():
     """
     Class to manage a set of calculations.
-
     This class contains the various instances of a set of calculations specified
     by the their calculator object. The different calculations are labelled by
     the values of some relevant parameters given as a dictionary.
@@ -105,9 +105,9 @@ class Dataset():
 
     def pre_processing_function(self,**kwargs):
         """
-        Choose a pre_processing function among the ones provided in the
-         PreProcessings.py.
+        Choose a pre_processing function among the ones provided in the PreProcessings.py.
         """
+
         if self.pre_processing not in pre_processing_list :
             print('Specify a pre_processing for the dataset')
         else :
@@ -123,15 +123,13 @@ class Dataset():
         and the arguments which are associated to it.
 
         Args:
-          id (dict): the id of the run, useful to identify the run in the dataset.
-          It has to be a dictionary and, typically its elements are used to build
-          the associated input.
-          calculator : the calculator class to which the remaining keyword
-                    arguments will be passed at the input.
+          id (dict): the id of the run, useful to identify the run in the dataset. It has to be a dictionary and,
+              typically its elements are used to build the associated input.
+          calculator : the calculator class to which the remaining keyword arguments
+               will be passed at the input.
 
         Raises:
-          ValueError: if the provided id is identical to another previously
-          appended run.
+          ValueError: if the provided id is identical to another previously appended run.
         """
         name=name_from_id(id)
         if name in self.names:
@@ -177,17 +175,16 @@ class Dataset():
 
     def fetch_results(self,id=None,attribute=None):
         """
-        Retrieve some attribute from some of the results.
+        Retrieve the given attribute from some of the results.
 
         Selects out of the results the objects which have in their ``id``
         at least the dictionary specified as input. May return an attribute
         of each result if needed.
 
         Args:
-           id (dict): dictionary of the retrieved id. Return a list of the runs
-           that have the ``id`` argument inside the provided ``id`` in the order
-           provided by :py:meth:`append_run`. attribute (str): if present, provide
-           the attribute of each of the results instead of the result object
+           id (dict): dictionary of the retrieved id. Return a list of the runs that have the ``id`` argument inside
+              the provided ``id``.
+           attribute (str): if present, provide the attribute of each of the results instead of the result object.
 
         Example:
            >>> study=Dataset()
@@ -197,6 +194,7 @@ class Dataset():
            >>> study.run()  #run the calculations
            >>> # returns a list of the energies of first and the third result in this example
            >>> data=study.fetch_results(id={'cr': 3},attribute='E_tot')
+
         """
         name='' if id is None else name_from_id(id)
         data=[]
