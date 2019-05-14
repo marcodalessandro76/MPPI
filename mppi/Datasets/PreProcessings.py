@@ -11,18 +11,25 @@ import os
 # Datasets module
 def _name_from_id(id):
     """
-    Hash the id into a run name
-    Construct the name of the run from the id dictionary
+    Hash the id into a run name. If id is a string, set name = id, if it is a
+    dictionary build the name of the run from the id dictionary.
     Args:
-        id (dict): id associated to the run
+        id : id associated to the run
     Returns:
        str: name of the run associated to the dictionary ``id``
     """
-    keys=sorted(id.keys())
-    name=''
-    for k in keys:
-        name += k+':'+str(id[k])+','
-    return name.rstrip(',')
+    if type(id) is str :
+        name = id
+    elif type(id) is dict :
+        keys=sorted(id.keys())
+        name=''
+        for k in keys:
+            name += k+'_'+str(id[k])+'-'
+        name = name.rstrip('-')
+    else :
+        print('id type not recognized')
+        name = None
+    return name
 
 pre_processing_list = ['scf','nscf','yambo']
 
@@ -82,7 +89,7 @@ def yambo_pre_processing(run_dir,**kwargs):
     elif os.path.isdir(run_dir +'/SAVE'):
         print('SAVE folder already present in %s'%run_dir)
     else:
-        # run p2 y
+        # run p2y -a 2
         string = 'cd %s;p2y -a 2'%source
         print('execute : ',string)
         os.system(string)

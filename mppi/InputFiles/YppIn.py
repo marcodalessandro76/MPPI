@@ -52,8 +52,12 @@ class YppIn():
         The pre_processing of YamboCalculator calls write with the argument
         'folder' + '/' + 'filename' so we split it here to apply the self.command
         """
-        run_dir = file_path.split('/')[0]
-        filename = file_path.split('/')[1]
+        #print('file_path',file_path)
+        filename = file_path.split('/')[-1]
+        #print('filename',filename)
+        run_dir = file_path.rstrip(filename)
+        run_dir = run_dir.rstrip('/')
+        #print('run_dir',run_dir)
         self.input.write(file_path)
         string = 'cd %s; %s -F %s'%(run_dir,self.command,filename)
         print('execute : ',string)

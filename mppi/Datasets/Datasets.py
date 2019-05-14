@@ -1,6 +1,6 @@
 """
 This module defines a class to perform and manage several calculations.
-The module is (deeply) inspired from the Dataset class of BigDFT.  
+The module is (deeply) inspired from the Dataset class of BigDFT.
 
 A major difference with respect to the Dataset class in BigDFT is given by the
 usage of the pre_processing function. In the present case this function performs
@@ -21,29 +21,37 @@ from .PreProcessings import *
 # the qe input file from the id dictionary that identify the computation
 def name_from_id(id):
     """
-    Hash the id into a run name
-    Construct the name of the run from the id dictionary
+    Hash the id into a run name. If id is a string, set name = id, if it is a
+    dictionary build the name of the run from the id dictionary.
     Args:
-        id (dict): id associated to the run
+        id : id associated to the run
     Returns:
        str: name of the run associated to the dictionary ``id``
     """
-    keys=sorted(id.keys())
-    name=''
-    for k in keys:
-        name += k+':'+str(id[k])+','
-    return name.rstrip(',')
+    if type(id) is str :
+        name = id
+    elif type(id) is dict :
+        keys=sorted(id.keys())
+        name=''
+        for k in keys:
+            name += k+'_'+str(id[k])+'-'
+        name = name.rstrip('-')
+    else :
+        print('id type not recognized')
+        name = None
+    return name
 
 class Dataset():
     """
     Class to manage a set of calculations.
 
-    This class contains the various instances of a set of calculations specified by the their calculator object.
-    The different calculations are labelled by the values of some relevant parameters given as a dictionary.
+    This class contains the various instances of a set of calculations specified
+    by the their calculator object. The different calculations are labelled by
+    the values of some relevant parameters given as a dictionary.
 
     Args:
-      label (str): The label of the dataset. It will be needed to identify the instance for example
-          in plot titles or in the running directory.
+      label (str): The label of the dataset. It will be needed to identify the
+                instance for example in plot titles or in the running directory.
       run_dir (str): path of the directory where the runs will be performed.
 
     """
@@ -56,20 +64,20 @@ class Dataset():
         self.run_dir=run_dir
 
         self.runs=[]
-        """List of the runs which have to be treated by the dataset these runs contain the input
-        parameter to be passed to the various runners.
+        """List of the runs which have to be treated by the dataset these runs
+        contain the input parameter to be passed to the various runners.
         """
 
         self.calculators=[]
         """
-        Calculators which will be used by the run method, useful to gather the inputs in the case of a
-        multiple run.
+        Calculators which will be used by the run method, useful to gather the
+        inputs in the case of a multiple run.
         """
 
         self.results={}
         """
-        Set of the results of each of the runs. The set is not ordered as the runs may be executed
-        asynchronously.
+        Set of the results of each of the runs. The set is not ordered as the
+        runs may be executed asynchronously.
         """
 
         self.ids=[]
@@ -82,22 +90,23 @@ class Dataset():
         List of run names, needed for distinguishing the logfiles and input files.
         """
 
-        self.pre_processing = pre_processing
+        self.jobnames=[]
         """
-        Specifies the type of pre_processing_function to be call before running the dataset.
+        List of jobnames. Contains the values of the jobname for Yambo computations.
+        For instance, in ypp_rt analysis it is useful to specify this parameter
+        to set the value of folder used as input in the post-processing.
         """
 
-    def set_pre_processing(self,pre_proc):
+        self.pre_processing = pre_processing
         """
-        The value of the pre_procissing member can be modified after the init of
-        the Dataset object. This could be useful when more than one pre_processing
-        is needed befor running the dataset.
+        Specifies the type of pre_processing_function to be call before running
+        the dataset.
         """
-        self.pre_processing = pre_proc
 
     def pre_processing_function(self,**kwargs):
         """
-        Choose a pre_processing function among the ones provided in the PreProcessings.py.
+        Choose a pre_processing function among the ones provided in the
+         PreProcessings.py.
         """
         if self.pre_processing not in pre_processing_list :
             print('Specify a pre_processing for the dataset')
@@ -106,26 +115,29 @@ class Dataset():
             if self.pre_processing == 'nscf': nscf_pre_processing(self.run_dir,source_dir=kwargs['source_dir'],ids=self.ids)
             if self.pre_processing == 'yambo': yambo_pre_processing(self.run_dir,source_dir=kwargs['source_dir'])
 
-    def append_run(self,id,calculator,input):
+    def append_run(self,id,calculator,input,jobname=None):
         """
         Add a run into the dataset.
 
-        Append to the list of runs to be performed the corresponding calculator and the arguments which are
-        associated to it.
+        Append to the list of runs to be performed the corresponding calculator
+        and the arguments which are associated to it.
 
         Args:
-          id (dict): the id of the run, useful to identify the run in the dataset. It has to be a dictionary and,
-          typically its elements are used to build the associated input.
-          calculator : the calculator class to which the remaining keyword arguments will be passed at the input.
+          id (dict): the id of the run, useful to identify the run in the dataset.
+          It has to be a dictionary and, typically its elements are used to build
+          the associated input.
+          calculator : the calculator class to which the remaining keyword
+                    arguments will be passed at the input.
 
         Raises:
-          ValueError: if the provided id is identical to another previously appended run.
-
+          ValueError: if the provided id is identical to another previously
+          appended run.
         """
         name=name_from_id(id)
         if name in self.names:
             raise ValueError('The run id',name,' is already provided, modify the run id.')
         self.names.append(name)
+        self.jobnames.append(jobname)
 
         #get the number of this run
         irun=len(self.runs)
@@ -154,13 +166,13 @@ class Dataset():
             for r in c['runs']:
                 input=self.runs[r]
                 name=self.names[r]
-                self.results[r] = calc.run(input=input,name=name,run_dir=self.run_dir,post_processing=post_processing)
+                jobname=self.jobnames[r]
+                self.results[r] = calc.run(input=input,name=name,jobname=jobname,run_dir=self.run_dir,post_processing=post_processing)
 
     def run(self,post_processing=True):
         """
         Execute process_run
         """
-        #self.pre_processing_function()
         self.process_run(post_processing)
 
     def fetch_results(self,id=None,attribute=None):
@@ -172,9 +184,10 @@ class Dataset():
         of each result if needed.
 
         Args:
-           id (dict): dictionary of the retrieved id. Return a list of the runs that
-               have the ``id`` argument inside the provided ``id`` in the order provided by :py:meth:`append_run`.
-           attribute (str): if present, provide the attribute of each of the results instead of the result object
+           id (dict): dictionary of the retrieved id. Return a list of the runs
+           that have the ``id`` argument inside the provided ``id`` in the order
+           provided by :py:meth:`append_run`. attribute (str): if present, provide
+           the attribute of each of the results instead of the result object
 
         Example:
            >>> study=Dataset()

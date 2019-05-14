@@ -77,19 +77,29 @@ class YamboCalculator():
         """
         Set the proper dir and run the computation.
 
-        If skip=True run the computations only if the output file (o-$name) is
-        not present in the jobname folder. The skip search both for output with
-        extension .hf and .qp. If skip is False delete the jobname folder
+        If skip=True run the computations only if the output file o-$name.suffx
+        is not present in the jobname folder. If skip is False delete the ourfolder
         (if found) before the run.
         """
+        #run_dir = kwargs['run_dir']
+        #jobname = kwargs['name']
+        #input = jobname+'.in'
+        #outfolder = run_dir+'/'+jobname
+        #outfile = outfolder+'/o-'+jobname+'.'+self.suffix
+
         run_dir = kwargs['run_dir']
-        jobname = kwargs['name']
-        input = jobname+'.in'
-        outfolder = run_dir+'/'+jobname
+        name = kwargs['name']
+        input = name+'.in'
+        outfolder = run_dir+'/'+name
+        # set jobname = name if kwargs['jobname'] is None
+        if kwargs['jobname'] is None :
+            jobname=name
+        else :
+            jobname = kwargs['jobname']
         outfile = outfolder+'/o-'+jobname+'.'+self.suffix
 
         string = 'cd %s ; '%run_dir
-        string +=  self.command + ' -F %s -J %s -C %s'%(input,jobname,jobname)
+        string +=  self.command + ' -F %s -J %s -C %s'%(input,jobname,name)
 
         if self.skip:
             if os.path.isfile(outfile):
@@ -104,14 +114,24 @@ class YamboCalculator():
             if self.verbose: print('execute : '+string)
             os.system(string)
 
-
     def post_processing(self,**kwargs):
         """
-        Apply the post processing method of YamboParser to self.output
+        Apply the post processing method of YamboParser. The output file is in
+        the -C folder and has the name o-jobname.suffix.
         """
+        # run_dir = kwargs['run_dir']
+        # name = kwargs['name']
+        # outfolder = run_dir+'/'+name
+        # outfile = outfolder+'/o-'+name+'.'+self.suffix
+
         run_dir = kwargs['run_dir']
-        jobname = kwargs['name']
-        outfolder = run_dir+'/'+jobname
+        name = kwargs['name']
+        outfolder = run_dir+'/'+name
+        # set jobname = name if kwargs['jobname'] is None
+        if kwargs['jobname'] is None :
+            jobname=name
+        else :
+            jobname = kwargs['jobname']
         outfile = outfolder+'/o-'+jobname+'.'+self.suffix
 
         results = None
@@ -119,9 +139,11 @@ class YamboCalculator():
             if self.verbose : print('parse file : '+outfile)
             results_dic = dict_parser(outfile)
             results = AttributeDict(**results_dic)
+        else:
+            if self.verbose : print ('file : ',outfile,' not found. Parsing not performed')
         return results
 
-    def run(self,run_dir='run',input=None,name='test',post_processing=True):
+    def run(self,run_dir='run',input=None,name='test',jobname=None,post_processing=True):
         """
         Prepare the run, perform the computation and apply the post_processing
         function to extract the results. It returns the object built by YamboParser.
@@ -129,13 +151,14 @@ class YamboCalculator():
             run_dir (str) : the folder in which the simulation is performed
             input : the object the contain the instance of the input file
             name (str) : the name associated to the input file (without extension).
-            This string is used also as jobname and so it represent the folder in
-            which results are written as well as a part of the name of the output
-            file (o-$name.**)
+            This string is used also as the radical of the folder in which results
+            are written as well as a part of the name of the output file.
+            jobname (str) : the value of the jobname. If it left to None the
+            value of name is attributed to jobname by process_run.
         """
         self.pre_processing(run_dir=run_dir,input=input,name=name)
-        self.process_run(run_dir=run_dir,name=name)
+        self.process_run(run_dir=run_dir,name=name,jobname=jobname)
         results = None
         if post_processing:
-            results = self.post_processing(run_dir=run_dir,name=name)
+            results = self.post_processing(run_dir=run_dir,name=name,jobname=jobname)
         return results

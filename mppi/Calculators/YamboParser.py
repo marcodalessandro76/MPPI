@@ -36,7 +36,7 @@ def _build_keys(fname):
     names of the columns of data. The value of the string to look for depend on
     the suffix of fname
     """
-    suffix = fname.split('.')[1]
+    suffix = fname.split('.')[-1]
     hook_string = None
     # hf or qp yambo computation
     if suffix in ['hf','qp']: hook_string = 'K-point'
@@ -46,6 +46,9 @@ def _build_keys(fname):
     # real time yambo_rt computation
     if suffix in ['carriers','external_field','current',\
                   'magnetization','polarization'] : hook_string = 'Time[fs]'
+    # ypp_rt computations
+    if suffix in ['YPP-RT_occupations_DATA','YPP-RT_occupations_dn_DATA',\
+                  'YPP-RT_occupations_up_DATA'] : hook_string = 'E [eV]'
     line_keys = ''
     with open(fname) as f:
         for l in f:
@@ -60,7 +63,7 @@ def _clean_keys(keys):
     Remove some spurious elements (if present) from the list that contains the
     keys. Some names are changed for better usability.
     """
-    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)']
+    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)','[eV]','@']
     for k in reversed(keys):
         if k in purge_list:
             keys.remove(k)

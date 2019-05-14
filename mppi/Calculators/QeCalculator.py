@@ -96,7 +96,7 @@ class QeCalculator():
             print('.save folder not provided. Cannot read xml file')
         return results
 
-    def run(self,run_dir='run',input=None,name='test',post_processing=True):
+    def run(self,run_dir='run',input=None,name='test',jobname=None,post_processing=True):
         """
         Prepare the run, perform the computation and apply the post_processing
         function to extract the results
@@ -104,6 +104,7 @@ class QeCalculator():
             run_dir (str) : the folder in which the simulation is performed
             input : the object the contain the instance of the input file
             name (str) : the name associated to the input file (without extension)
+            jobname : this variable is not used in QE calculator. 
         """
         self.pre_processing(run_dir=run_dir,input=input,name=name)
         self.process_run(run_dir=run_dir,name=name)
