@@ -14,7 +14,7 @@ class YamboCalculator():
     results. The post processing is defined in the module YamboParser.
 
     The Class assumes that the run_dir where yambo is executed exists and that
-    it contains the SAVE folder with the p2y postprocessing of a QE computation.
+    it contains the SAVE folder built with the p2y postprocessing of a QE computation.
     The setup of this folder is managed at the level of Dataset.
     """
     def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='yambo',\
@@ -81,11 +81,6 @@ class YamboCalculator():
         is not present in the jobname folder. If skip is False delete the ourfolder
         (if found) before the run.
         """
-        #run_dir = kwargs['run_dir']
-        #jobname = kwargs['name']
-        #input = jobname+'.in'
-        #outfolder = run_dir+'/'+jobname
-        #outfile = outfolder+'/o-'+jobname+'.'+self.suffix
 
         run_dir = kwargs['run_dir']
         name = kwargs['name']
@@ -119,10 +114,6 @@ class YamboCalculator():
         Apply the post processing method of YamboParser. The output file is in
         the -C folder and has the name o-jobname.suffix.
         """
-        # run_dir = kwargs['run_dir']
-        # name = kwargs['name']
-        # outfolder = run_dir+'/'+name
-        # outfile = outfolder+'/o-'+name+'.'+self.suffix
 
         run_dir = kwargs['run_dir']
         name = kwargs['name']

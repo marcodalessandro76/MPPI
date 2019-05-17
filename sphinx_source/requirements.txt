@@ -1,3 +1,4 @@
 numpy
 nbsphinx
 guzzle_sphinx_theme
+-e git+https://github.com/Crivella/QEPPpy
