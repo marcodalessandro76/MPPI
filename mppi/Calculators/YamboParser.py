@@ -40,6 +40,8 @@ def _build_keys(fname):
     hook_string = None
     # hf or qp yambo computation
     if suffix in ['hf','qp']: hook_string = 'K-point'
+    # yambo optics computation
+    if suffix in ['eps_q1_ip','eel_q1_ip']: hook_string = 'E/ev'
     # ypp computation
     if suffix in  ['bands_interpolated','magnetization_x',\
                    'magnetization_y','magnetization_z']: hook_string = '|k|'
@@ -67,8 +69,8 @@ def _clean_keys(keys):
     for k in reversed(keys):
         if k in purge_list:
             keys.remove(k)
-    old_names = ['|k|','Time[fs]']
-    new_names = ['k','time']
+    old_names = ['|k|','Time[fs]','E/ev[1]','EPS-Im[2]','EPS-Re[3]','EEL-Im[2]','EEL-Re[3]']
+    new_names = ['k','time','E','Im','Re','Im','Re']
     for ind,k in enumerate(keys):
         if k in old_names:
             keys[ind] = new_names[old_names.index(k)]
