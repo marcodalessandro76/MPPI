@@ -96,9 +96,12 @@ class PwIn():
         """
         Set the numbers of K_POINTS
         If ktpye = automatic needs kpoints = [kx,ky,kz]
-        If ktype = tpiba_b   needs klist = [P1+[numStep1],P2+[numStep2],...]
-        where Pi is the i-th point of the path and numStepi is the number of step
-        from Pi to Pi+1
+        if ktype = tpiba needs klist = [P1+[weight1],P2+[weight2],...]
+        where P-i is the i-th point of the grid and weight-i is the associated weight.
+        In a non-scf calculation, weights do not affect the results.
+        If ktype = tpiba_b needs klist = [P1+[numStep1],P2+[numStep2],...]
+        where P-i is the i-th point of the path and numStep-i is the number of step
+        from P-i to P-i+1
         """
         ktype = kwargs['ktype']
         self.ktype = ktype
@@ -106,7 +109,7 @@ class PwIn():
             self.kpoints = kwargs['kpoints']
             if 'shiftk' in kwargs :
                 self.shiftk = kwargs['shiftk']
-        if ktype == 'tpiba_b':
+        if ktype in ['tpiba','tpiba_b']:
             self.klist = kwargs['klist']
 
     def set_atoms_type(self,n):
