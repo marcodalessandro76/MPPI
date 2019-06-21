@@ -47,7 +47,8 @@ def _build_keys(fname):
                    'magnetization_y','magnetization_z']: hook_string = '|k|'
     # real time yambo_rt computation
     if suffix in ['carriers','external_field','current',\
-                  'magnetization','polarization'] : hook_string = 'Time[fs]'
+                  'polarization'] : hook_string = 'Time[fs]'
+    if suffix in ['magnetization'] : hook_string = 'Ms_x'
     # ypp_rt computations
     if suffix in ['YPP-RT_occupations_DATA','YPP-RT_occupations_dn_DATA',\
                   'YPP-RT_occupations_up_DATA'] : hook_string = 'E [eV]'
@@ -65,7 +66,7 @@ def _clean_keys(keys):
     Remove some spurious elements (if present) from the list that contains the
     keys. Some names are changed for better usability.
     """
-    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)','[eV]','@']
+    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)','[eV]','@','[fs]']
     for k in reversed(keys):
         if k in purge_list:
             keys.remove(k)

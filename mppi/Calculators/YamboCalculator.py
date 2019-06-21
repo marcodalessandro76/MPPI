@@ -10,7 +10,7 @@ class YamboCalculator():
     """
     Manage a single yambo calculation: setup the number of omp and mpi, apply a
     pre processing to check that the SAVE folder is present and peform the
-    computation. Lastyl, it apply a post processing function to extract the
+    computation. Lastly, applies a post processing function to extract the
     results. The post processing is defined in the module YamboParser.
 
     The Class assumes that the run_dir where yambo is executed exists and that
@@ -42,8 +42,7 @@ class YamboCalculator():
         self.suffix = suffix
         """
         The suffix of the output file (hf,qp,bands_interpolated,...) that is
-        used both to extablish for post_processing and to establish if the run
-        can be skipped.
+        used both for post_processing and to establish if the run can be skipped.
         """
 
         self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run +\
