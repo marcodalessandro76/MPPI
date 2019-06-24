@@ -48,7 +48,7 @@ def _build_keys(fname):
     # real time yambo_rt computation
     if suffix in ['carriers','external_field','current',\
                   'polarization'] : hook_string = 'Time[fs]'
-    if suffix in ['magnetization'] : hook_string = 'Ms_x'
+    if suffix in ['magnetization','spin_magnetization'] : hook_string = 'Ms_x'
     # ypp_rt computations
     if suffix in ['YPP-RT_occupations_DATA','YPP-RT_occupations_dn_DATA',\
                   'YPP-RT_occupations_up_DATA'] : hook_string = 'E [eV]'
