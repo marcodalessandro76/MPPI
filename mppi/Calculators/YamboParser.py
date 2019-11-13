@@ -66,7 +66,7 @@ def _clean_keys(keys):
     Remove some spurious elements (if present) from the list that contains the
     keys. Some names are changed for better usability.
     """
-    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)','[eV]','@','[fs]']
+    purge_list = ['#','(a.u.)','(rlu)','(alat)','(cc)','[eV]','@','[fs]','[kW/cm^2]']
     for k in reversed(keys):
         if k in purge_list:
             keys.remove(k)
