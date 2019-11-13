@@ -3,7 +3,7 @@ Class to read, write, create and manipulate ypp input files.
 """
 
 import os
-from .YamboIn import YamboIn
+from .YamboInput import YamboInput
 
 class YppIn():
     """

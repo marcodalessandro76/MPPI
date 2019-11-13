@@ -1,7 +1,7 @@
-YamboIn module
+YamboInput module
 --------------
 
-.. automodule:: mppi.InputFiles.YamboIn
+.. automodule:: mppi.InputFiles.YamboInput
     :members:
     :undoc-members:
     :show-inheritance:
