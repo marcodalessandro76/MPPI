@@ -10,7 +10,7 @@ URL = 'https://github.com/........'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
 REQUIRES_PYTHON = '>=3.6'
-VERSION = '1.0'
+VERSION = '1.1'
 REQUIRED = ['numpy']
 QEPPPY_URL = 'https://github.com/Crivella/QEPPpy'
 #-----------------------------------------------
