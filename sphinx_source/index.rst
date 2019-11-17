@@ -19,11 +19,11 @@ Module Members
 
 QuantumESPRESSO input file representation and usage
 
-.. toctree:: pwIn
+.. toctree:: qeInput
 
 Yambo input file representation and usage
 
-.. toctree:: yamboIn
+.. toctree:: yamboInput
 .. toctree:: yppIn
 
 Calculator for QuantumESPRESSO

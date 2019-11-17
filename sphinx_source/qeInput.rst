@@ -1,7 +1,7 @@
-PwIn module
+QeInput module
 -----------
 
-.. automodule:: mppi.InputFiles.PwIn
+.. automodule:: mppi.InputFiles.QeInput
     :members:
     :undoc-members:
     :show-inheritance:

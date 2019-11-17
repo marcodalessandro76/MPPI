@@ -8,7 +8,7 @@ Documentation
 -------------
 You can read the documentation in:  
 
-https://mppi.readthedocs.io/en/latest/
+https://mppi.readthedocs.io/en/devel/
 
 Features
 --------
