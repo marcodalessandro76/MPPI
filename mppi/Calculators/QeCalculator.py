@@ -3,112 +3,166 @@ A class to perform a calculations using QuantumESPRESSO.
 The class is (deeply) inspired from the SystemCalculator class of BigDFT.
 """
 
-import os
+from .Runner import Runner
 from qepppy import qe
+import os
 
-class QeCalculator():
+class QeCalculator(Runner):
     """
-    Manage a single calculation. Setup the number of omp and mpi.
+    Manage a single  QuantumESPRESSO calculation. Setup the number of omp and mpi.
     Prepare the folder in which the computation is run. Peform the computation
-    and apply a post processing function to extract the results
+    and apply a post processing function to extract the results.
 
     """
-    def __init__(self,omp=1,mpi_run='mpirun -np 4',executable='pw.x',\
-                 skip=True, verbose=True):
 
-        self.omp=omp
+    def __init__(self,
+                 omp=os.environ.get('OMP_NUM_THREADS', '1'),
+                 mpi_run='mpirun -np 4',executable='pw.x',
+                 skip=False, verbose=True):
+        # Use the initialization from the Runner class (all options inside _global_options)
+        Runner.__init__(self, omp=str(omp), mpi_run=mpi_run, executable=executable,
+                        skip=skip, verbose=verbose)
+        self.command = (self._global_options['mpi_run'] + ' ' + executable).strip()
+        print('Initialize a QuantumESPRESSO calculator with OMP_NUM_THREADS=%s and command %s' %
+            (self._global_options['omp'], self.command))
 
-        self.mpi_run=mpi_run
+    def pre_processing(self):
+        """
+        Process local run dictionary to create the run directory and input file.
+        If the 'source_dir' key is passed to the run method copy the source folder in
+        the run_dir with the name 'name'.
 
-        self.executable=executable
-        """
-        Choose the executable called by run (pw.x,ph.x,...).
-        """
+        Returns:
+            :py:class:`dict`: dictionary containing the command to be passed to
+            :meth:`process_run`
 
-        self.skip=skip
         """
-        Set if skip the run if the file self.xml_file is found. Default is True.
-        """
+        self._ensure_run_directory()
 
-        self.verbose=verbose
-        """
-        Set the verbosity option. Default is True.
-        """
-
-        self.command = ('OMP_NUM_THREADS='+ str(self.omp) + ' ' + self.mpi_run +\
-                        ' ' + executable).strip()
-        print('Initialize a qe calculator with command %s' %self.command)
-
-    def pre_processing(self,**kwargs):
-        """
-        Check if the run_dir folder exists and write the input file. The
-        construction of the run_dir is managed by the pre_processing features
-        of Dataset.
-        """
-        run_dir=kwargs['run_dir']
-        input=kwargs['input']
-        name=kwargs['name'] + '.in'
-
-        if not os.path.isdir(run_dir):
-            print('Run_dir %s does not exists'%run_dir)
+        # Create the input file
+        run_dir = self.run_options.get('run_dir', '.')
+        inp = self.run_options.get('input')
+        name = self.run_options.get('name','default')
+        if inp is not None:
+            inp.write(os.path.join(run_dir,name)+'.in')
         else:
-            if not (input is None):
-                input.write(run_dir + '/' + name)
-            else :
-                print('input not provided')
+            print('input not provided')
 
-    def process_run(self,**kwargs):
-        """
-        Set the proper dir and run the computation. If skip=True run the
-        computations only if the .log file is not present in the folder.
-        The skip could be imposed on the .xml file that has the same name of
-        the prefix.
-        """
-        run_dir = kwargs['run_dir']
-        input=kwargs['name'] + '.in'
-        output=kwargs['name'] + '.log'
+        # Copy the source folder in the run_dir
+        source_dir = self.run_options.get('source_dir')
+        if source_dir is not None:
+            print('copy source_dir')
+            # to be implemented....
 
-        string = 'cd %s ; '%run_dir
-        string +=  self.command + ' -inp %s > %s'%(input,output)
-        if self.skip:
-            if os.path.isfile(run_dir+'/'+output):
-                if self.verbose : print('skip the computation for : '+input)
+        return {'command': self._get_command()}
+
+    def process_run(self,command):
+        """Launch the code.
+
+        Routine associated to the running of the executable. It evaluates if the
+        computation can be skipped. For the QuantumESPRESSO computation we use the
+        $prefix.xml file in the run_dir which coincides with the xml file that collect
+        the results.
+
+        The amount of information provided on terminal is set by the verbose key
+        of the run.
+
+        Arguments:
+           command (str): the command as it is set by the ``pre_processing``
+             method.
+
+        Returns:
+           :py:class:`dict`: The dictionary `results`
+             values to be passed to `post_processing` function
+        """
+
+        verbose = self.run_options['verbose']
+        skip = self.run_options['skip']
+        run_dir = self.run_options['run_dir']
+        name = self.run_options['name']
+        skipfile = self._get_results_name()
+
+        # Set the number of omp threads only if the variable is not present
+        # in the environment
+        if 'OMP_NUM_THREADS' not in os.environ:
+            os.environ['OMP_NUM_THREADS'] = self.run_options['omp']
+
+        # Run the command
+        if verbose:
+            if run_dir != '.':
+                print('Run directory', run_dir)
+        comm_str = 'cd ' + run_dir + '; ' + command
+        if skip:
+            if os.path.isfile(skipfile):
+                if verbose: print('Skip the computation for input ',name)
             else:
-                if self.verbose : print('execute : '+string)
-                os.system(string)
+                if verbose: print('Executing command: ', command)
+                os.system(comm_str)
         else:
-            if self.verbose : print('execute : '+string)
-            os.system(string)
+            if verbose: print('Executing command: ', command)
+            os.system(comm_str)
 
-    def post_processing(self,**kwargs):
+        return {'results_name': self._get_results_name()}
+
+    def post_processing(self, command, results_name):
         """
-        Use the pw_out() method os qepppy.qe to parse the xml file
-        that contains the results of the computation
+        Parse the xml file that contains the results of the computation.
+        Check the existence and the result_name file and return an instance
+        of Qe Parser?.
+
+        Returns:
+               (QeParser) Instance of the QeParser class associated to the run
+               which has been just performed.
+               If the run failed for some reasons and the result_name file does
+               not exists or it cannot be parsed it returns `None`.
         """
-        input = kwargs['input']
-        results = None
-        if 'prefix' in input.control:
-            prefix = input.control['prefix'].strip("'")
-            xml_file = kwargs['run_dir'] + '/' + prefix + '.save/data-file-schema.xml'
-            if self.verbose : print('parse file : '+xml_file)
-            results= qe.pw_out(xml=xml_file)
+
+        verbose = self.run_options['verbose']
+        if os.path.isfile(results_name):
+            if verbose: print('parse file : ',command)
+            #results = 'perform parsing'
+            results= qe.pw_out(xml=results_name)
         else:
-            print('.save folder not provided. Cannot read xml file')
+            if verbose: print('ERROR: The file %s does not exists'%command)
+            results = None
         return results
 
-    def run(self,run_dir='run',input=None,name='test',jobname=None,post_processing=True):
-        """
-        Prepare the run, perform the computation and apply the post_processing
-        function to extract the results
-        Args:
-            run_dir (str) : the folder in which the simulation is performed
-            input : the object the contain the instance of the input file
-            name (str) : the name associated to the input file (without extension)
-            jobname : this variable is not used in QE calculator. 
-        """
-        self.pre_processing(run_dir=run_dir,input=input,name=name)
-        self.process_run(run_dir=run_dir,name=name)
-        results = None
-        if post_processing:
-            results = self.post_processing(run_dir=run_dir,input=input)
-        return results
+    def _get_command(self):
+        name = self.run_options.get('name','default')
+        input = name + '.in'
+        output = name + '.log'
+
+        comm_str =  self.command + ' -inp %s > %s'%(input,output)
+        return comm_str
+
+    def _get_results_name(self):
+        run_dir = self.run_options['run_dir']
+        input = self.run_options['input']
+        prefix = input['control']['prefix']
+        # remove the first and last character that are ' in the qe input file format
+        prefix = prefix[1:-1]
+        results_name = prefix+'.xml'
+        return os.path.join(run_dir,results_name)
+
+    def _ensure_run_directory(self):
+        from mppi.Utilities import Futile_utils as f
+        run_dir = self.run_options.get('run_dir', '.')
+        # Restrict run_dir to a sub-directory
+        if ("/" in run_dir or run_dir == ".."):
+            raise ValueError(
+                "run_dir '%s' must be a sub-directory"% run_dir)
+        # Create the run_dir if not exist
+        if f.ensure_dir(run_dir) and self.run_options['verbose']:
+            print("Create the sub-directory '%s'" % run_dir)
+
+        #self.run_dir = run_dir
+        # """Run directory.
+        # str: the directory where the inputfile has been copied to.
+        #       Might be useful to associate to each of the calculation of a
+        #       given run a different directory. Note that this is different than
+        #       setting the ``outdir`` or the ``name`` arguments at it refers
+        #       to the directory of the inputfile.
+        # Note:
+        #     This is not a global property of the calculator, as the same
+        #     calculator instance can be used for various workflows.
+        # """
