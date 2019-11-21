@@ -1,5 +1,5 @@
 YamboInput module
---------------
+-----------------
 
 .. automodule:: mppi.InputFiles.YamboInput
     :members:

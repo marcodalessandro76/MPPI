@@ -17,11 +17,11 @@ Python package for managing computations and performing post-processing in Quant
 Module Members
 --------------
 
-QuantumESPRESSO input file representation and usage
+Class to create and modify the pw input file of QuantumESPRESSO
 
-.. toctree:: qeInput
+.. toctree:: pwInput
 
-Yambo input file representation and usage
+Class to create and modify the Yambo input file
 
 .. toctree:: yamboInput
 .. toctree:: yppIn

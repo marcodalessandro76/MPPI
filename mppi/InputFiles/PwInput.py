@@ -1,0 +1,365 @@
+
+"""
+Module to create and manipulate an input file for pw.x computations of QuantumESPRESSO.
+The input can be created from scratch or can be initialized from an existing input file.
+"""
+
+class PwInput(dict):
+    """
+    Class to generate an manipulate the pw.x input files.
+    Can be initialized either reading from a file or starting from scratch.
+    All the elements that belong to the possible namelist of pw are parsed.
+    Instead, among the possible pw cards the actual implementation considers
+    only : ATOMIC_SPECIES, ATOMIC_POSITIONS, K_POINTS, CELL_PARAMETERS.
+    """
+
+    _namelist = ['control','system','electrons','ions','cell']
+    _cards =['atomic_species','atomic_positions','kpoints','cell_parameters']
+
+    def __init__(self,file=None,**kwargs):
+        """
+        Initialized the keys of self with the namelist and cards and update the
+        dictionaries with the kwargs passed as input parameters. If the file is
+        provided parse it and add the 'file' key.
+        """
+        dict.__init__(self)
+
+        for key in self._namelist:
+            self[key] = dict()
+        for key in self._cards:
+            self[key] = dict()
+        self.update(kwargs)
+
+        if file is not None:
+            self['file'] = file
+            self.parseInputFile(file)
+
+    def parseInputFile(self,file):
+        """
+        Read the arguments and variables from the input file.
+        All the elements that belong to the possible namelist of pw are parsed.
+        Instead, among the possible pw cards the actual implementation considers
+        only : ATOMIC_SPECIES, ATOMIC_POSITIONS, K_POINTS, CELL_PARAMETERS
+        """
+        f = open(file,"r")
+
+        self.file_lines = f.readlines()
+        for group in self._namelist:
+            self._store(group)
+
+        self._read_atomic_species()
+        self._read_atomic_positions()
+        self._read_cell_parameters()
+        self._read_kpoints()
+
+    def write(self,file):
+        """
+        Write the QE input on file.
+        """
+        f = open(file,'w')
+        f.write(self.convert_string())
+        f.close()
+
+    def convert_string(self):
+        """
+        Convert the input object into a string
+        """
+        lines = []
+
+        for group in self._namelist:
+            if self[group] != {}:
+                lines.append(self._stringify_group(group))
+
+        self._stringify_atomic_species(lines)
+        self._stringify_atomic_positions(lines)
+        self._stringify_cell_parameters(lines)
+        self._stringify_kpoints(lines)
+
+        return '\n'.join(lines)
+
+    def _slicefile(self, group):
+        """
+        Return a list that contains the variables associated to the group
+        key of the input file
+        """
+        import re
+        lines = re.findall('&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
+        return lines
+
+    def _store(self,group):
+        """
+        Look for the namelist (control, system, electrons,...) in the file and
+        attribute the associated variables in the dictionary
+        """
+        import re
+        for file_slice in self._slicefile(group):
+            for key, value in re.findall('([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
+                self[group][key.strip()]=value.strip()
+
+    def _read_atomic_species(self):
+        """
+        Look for the ATOMIC_SPECIES field in the input file and attribute the
+        associated variables in the dictionary
+        """
+        lines = iter(self.file_lines)
+        for line in lines:
+            if "ATOMIC_SPECIES" in line:
+                for i in range(int(self['system']['ntyp'])):
+                    atype, mass, psp = next(lines).split()
+                    self['atomic_species'][atype] = [mass,psp]
+
+    def _read_atomic_positions(self):
+        """
+        Look for the ATOMIC_POSITIONS field in the input file and attribute the
+        associated variables in the dictionary
+        """
+        lines = iter(self.file_lines)
+        for line in lines:
+            if "ATOMIC_POSITIONS" in line:
+                type = line.replace('{','').replace('}','').strip().split()[1]
+                self['atomic_positions']['type'] = type
+                self['atomic_positions']['values'] = []
+                for i in range(int(self['system']['nat'])):
+                    atype, x,y,z = next(lines).split()
+                    self['atomic_positions']['values'].append([atype,[float(i) for i in (x,y,z)]])
+
+    def _read_cell_parameters(self):
+        """
+        If ibrav == 0 look for the CELL_PARAMETERS field in the input file and
+        attribute the associated variables in the dictionary.
+        If the units are angstrom or bohr alat is the norm of the first lattice
+        vector, so celldm(1) is removed. If the units are alat then the lattice
+        vectors are in units of the lattice parameter celldm(1).
+
+        Check the behavior of the code when 'celldm(1)' is provided.
+        It seems that the most safe approach is to do not set 'celldm(1)' and
+        express the units in angstrom or bohr.
+        """
+        def rmchar(string,symbols): return ''.join([c for c in string if c not in symbols])
+        ibrav = int(self['system']['ibrav'])
+        if ibrav == 0:
+            if 'celldm(1)' in list(self['system'].keys()):
+                a = float(self['system']['celldm(1)'])
+            else:
+                a = 1
+            cell = self['cell_parameters']
+            lines = iter(self.file_lines)
+            for line in lines:
+                if "CELL_PARAMETERS" in line:
+                    units = rmchar(line.strip(),'{}()').split()
+                    cell_parameters = [[],[],[]]
+                    if len(units) > 1:
+                        cell['type'] = units[1]
+                    else:
+                        cell['type'] = 'bohr'
+                    for i in range(3):
+                        cell_parameters[i] = [ float(x)*a for x in next(lines).split() ]
+            if cell['type'] == 'angstrom' or cell['type'] == 'bohr':
+                if 'celldm(1)' in self['system']: del self['system']['celldm(1)']
+            cell['values'] = cell_parameters
+
+    def _read_kpoints(self):
+        """
+        Look for the K_POINTS field in the input file and attribute the
+        associated variables in the dictionary
+        """
+        lines = iter(self.file_lines)
+        for line in lines:
+            if "K_POINTS" in line:
+                kp = self['kpoints']
+                if "automatic" in line:
+                    kp['type'] = 'automatic'
+                    vals = list(map(float, next(lines).split()))
+                    kp['values'] = (vals[0:3],vals[3:6])
+                else:
+                    nkpoints = int(lines.__next__().split()[0])
+                    kp['type'] = line.split()[2]
+                    kp['values'] = []
+                    try:
+                        lines_list = list(lines)
+                        for n in range(nkpoints):
+                            vals = lines_list[n].split()[:4]
+                            kp['values'].append( list(map(float,vals)) )
+                    except IndexError:
+                        print('wrong k-points list format')
+                        exit()
+
+    # Methods that convert the object attributes into a string with the
+    # correct QuantumESPRESSO format.
+
+    def _stringify_group(self,group):
+        variables = self[group]
+        string='&%s\n' %group
+        for var in sorted(variables):
+            string += "%20s = %s\n" % (var, variables[var])
+        string += "/&end"
+        return string
+
+    def _stringify_atomic_species(self,line):
+        if self['atomic_species'] != {}:
+            line.append( 'ATOMIC_SPECIES' )
+            for atom in self['atomic_species']:
+                line.append(" %3s %8s %20s" % (atom, self['atomic_species'][atom][0],
+                self['atomic_species'][atom][1]))
+
+    def _stringify_atomic_positions(self,line):
+        if self['atomic_positions'] != {}:
+            line.append('ATOMIC_POSITIONS { %s }'%self['atomic_positions']['type'])
+            for atom in self['atomic_positions']['values']:
+                line.append('%3s %14.10lf %14.10lf %14.10lf'%
+                (atom[0], atom[1][0], atom[1][1], atom[1][2]))
+
+    def _stringify_kpoints(self,line):
+        if self['kpoints'] != {}:
+            line.append("K_POINTS { %s }" % self['kpoints']['type'])
+            if self['kpoints']['type'] == 'automatic':
+                line.append(("%3d"*6)%(tuple(self['kpoints']['values'][0]) +
+                    tuple(self['kpoints']['values'][1])))
+            else:
+                line.append( "%d" % len(self['kpoints']['values']))
+                for kpt in self['kpoints']['values']:
+                    line.append( ("%12.8lf "*4)%tuple(kpt))
+
+    def _stringify_cell_parameters(self,line):
+        if self['cell_parameters'] != {}:
+            if int(self['system']['ibrav']) == 0:
+                line.append("CELL_PARAMETERS %s"%self['cell_parameters']['type'])
+                line.append(("%14.10lf "*3)%tuple(self['cell_parameters']['values'][0]))
+                line.append(("%14.10lf "*3)%tuple(self['cell_parameters']['values'][1]))
+                line.append(("%14.10lf "*3)%tuple(self['cell_parameters']['values'][2]))
+
+    # Set methods
+
+    def set_prefix(self,prefix):
+        """
+        Set the value of prefix
+        """
+        self['control']['prefix'] = "'%s'"%prefix
+
+    def set_pseudo_dir(self,pseudo_dir='../pseudos'):
+        """
+        Set the value of the pseudo_folder. The default is '../pseudos'
+        because usually the pw input is written in the run_dir folder by
+        the QeCalculator or Dataset.
+        """
+        self['control']['pseudo_dir'] = "'%s'"%pseudo_dir
+
+    def set_scf(self,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
+        """
+        Set the variables for a scf calculation
+
+        Args:
+            conv_thr(float): the convergence threshold value
+            diago_full_acc(boolean)
+            force_symmorphic(boolean)
+        """
+        from mppi.Utilities.Utils import fortran_bool
+        self['control']['calculation'] = "'scf'"
+        self['electrons']['conv_thr'] = conv_thr
+        self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
+        self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
+
+    def set_nscf(self,nbnd,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
+        """
+        Set the variables for a nscf calculation
+
+        Args:
+            nbnd(int): number of bands
+            conv_thr(float): the convergence threshold value
+            diago_full_acc(boolean)
+            force_symmorphic(boolean)
+        """
+        from mppi.Utilities.Utils import fortran_bool
+        self['control']['calculation'] = "'nscf'"
+        self['system']['nbnd'] = nbnd
+        self['electrons']['conv_thr'] = conv_thr
+        self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
+        self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
+
+    # def set_bands(self,nbnd,path_kpoints=None,conv_thr=1e-8,
+    #              diago_full_acc=True,force_symmorphic=True):
+    #     """
+    #     set the calculation to be bands
+    #     """
+    #     self.control['calculation'] = "'bands'"
+    #     self.electrons['conv_thr'] = conv_thr
+    #     self.system['nbnd'] = nbnd
+    #     self.electrons['diago_full_acc'] = fortran_bool(diago_full_acc)
+    #     self.system['force_symmorphic'] = fortran_bool(force_symmorphic)
+
+    def add_atom(self,atom,pseudo_name,mass = '1.0'):
+        """
+        Update the self['atomic_species'] dictionary
+
+        Args:
+            atom(str)
+            mass(str) : is used only for molecular dynamics run
+            pseudo_name(str)
+        """
+        at = {atom : [mass,pseudo_name]}
+        self['atomic_species'].update(at)
+
+    def set_atoms_number(self,nat):
+        """
+        Set the self['control']['ntyp'] using the self['atomic_species']
+        dictionary and set the number of atoms in the cell.
+        If the number of atoms in the cell is lower than the number of atomic
+        species write an alert and set nat = ntyp.
+
+        Args:
+            nat(int): number of atoms in the cell
+        """
+        ntyp = len(set(self['atomic_species'].keys()))
+        if nat < ntyp:
+            print('Number of atoms in the cell cannot be lower than number of atomic species')
+            nat = ntyp
+        self['control']['ntyp'] = str(ntyp)
+        self['control']['nat'] = str(nat)
+
+    def set_atomic_positions(self,positions,type='alat'):
+        """
+        Define the the positions of the atoms in the lattice.
+
+        Args:
+            type(str) : units for the positions (alat,angstrom,crystal,...)
+            positions(list) : a list with the structure
+                    [['atom1' : [x,y,z]],['atom2' : [x,y,z]],...]}
+        """
+        pos = {'type' : type, 'values' : positions}
+        self['atomic_positions'] = pos
+
+    def set_kpoints(self,type='automatic',points=[1.,1.,1.],shift=[0.,0.,0.],path=[]):
+        """
+        Define the sampling of the Brillouin zone.
+
+        Args:
+            type(str) : type of sampling (automatic, tpiba, tpiba_b,...)
+            points(list) : number of kpoints in the x,y,z direction. Used only is
+                       type is automatic
+            shift(list) : shifts in the x,y,z direction. Used only is
+                       type is automatic
+            path(list) : list with the structure:
+                       [[k1x,k1y,k1z,w1],[k2x,k2y,k2z,w2],....]
+                       Used only if type is not automatic
+        """
+        if type == 'automatic':
+            k = {'type' : type, 'values' : (points,shift)}
+        else:
+            k = {'type' : type, 'values' : path}
+        self['kpoints'] = k
+
+    def set_spinorbit(self):
+        """
+        Set the lspinorb and noncolin to True .
+        """
+        self['system']['lspinorb'] = '.true.'
+        self['system']['noncolin'] = '.true.'
+
+    def set_spinpolarized(self):
+        """
+        Set the value of nspin to 2. Useful to treat collinear spin polarized
+        systems.
+        """
+        self['system']['lspinorb'] = '.false.'
+        self['system']['noncolin'] = '.false.'
+        self['system']['nspin']    = 2
