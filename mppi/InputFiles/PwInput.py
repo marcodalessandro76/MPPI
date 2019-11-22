@@ -244,6 +244,12 @@ class PwInput(dict):
         """
         self['control']['pseudo_dir'] = "'%s'"%pseudo_dir
 
+    def set_occupations(self):
+        """
+        TODO : set the type of orbital occupations (fixed, smearing)
+        """
+        pass
+
     def set_scf(self,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
         """
         Set the variables for a scf calculation
@@ -334,9 +340,9 @@ class PwInput(dict):
 
         Args:
             type(str) : type of sampling (automatic, tpiba, tpiba_b,...)
-            points(list) : number of kpoints in the x,y,z direction. Used only is
+            points(list) : number of kpoints in the x,y,z directions. Used only is
                        type is automatic
-            shift(list) : shifts in the x,y,z direction. Used only is
+            shift(list) : shifts in the x,y,z directions. Used only is
                        type is automatic
             path(list) : list with the structure:
                        [[k1x,k1y,k1z,w1],[k2x,k2y,k2z,w2],....]
