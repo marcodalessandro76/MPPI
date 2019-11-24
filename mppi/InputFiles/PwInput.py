@@ -1,6 +1,6 @@
 
 """
-Module to create and manipulate an input file for pw.x computations of QuantumESPRESSO.
+Class to create and manipulate an input file for pw.x computations of QuantumESPRESSO.
 The input can be created from scratch or can be initialized from an existing input file.
 """
 

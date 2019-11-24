@@ -35,6 +35,10 @@ Calculator for Yambo. The module contain also a parses for the output of Yambo c
 .. toctree:: yamboCalc
 .. toctree:: yamboParser
 
+Parser for the output file
+
+.. toctree:: pwParser
+
 Organize runs and analyze output in a dataset. A set of pre-processing functions
 needed before launching the various type of datasets are given in the PreProcessings
 module

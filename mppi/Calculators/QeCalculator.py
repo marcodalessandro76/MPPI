@@ -139,7 +139,7 @@ class QeCalculator(Runner):
         run_dir = self.run_options['run_dir']
         input = self.run_options['input']
         prefix = input['control']['prefix']
-        # remove the first and last character that are ' in the qe input file format
+        # remove the first and last character that are in the qe input file format
         prefix = prefix[1:-1]
         results_name = prefix+'.xml'
         return os.path.join(run_dir,results_name)
