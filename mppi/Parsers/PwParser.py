@@ -1,9 +1,11 @@
 """
 Class to perform the parsing of a QuantumESPRESSO XML file. Makes usage of the
 data-file-schema.xml file that is found in the run_dir/prefix.save folder.
+
+Maybe is better to init by passing the complete name of the xml including the path
 """
 
-HaToEv = 27.211386
+HaToeV = 27.211386
 
 class PwParser():
 
@@ -57,8 +59,8 @@ class PwParser():
             self.atomic_species[atype_string]=[atype_mass,atype_pseudo]
 
         #number of kpoints and bands
-        self.nkpoints = int(self.data.findall("output/band_structure/nks")[0].text.strip())
-        self.nbands = int(self.data.findall("output/band_structure/nbnd")[0].text.strip())
+        self.nkpoints = int(self.data.findall('output/band_structure/nks')[0].text.strip())
+        self.nbands = int(self.data.findall('output/band_structure/nbnd')[0].text.strip())
 
         #total energy
         self.energy = float(self.data.findall('output/total_energy/etot')[0].text)
@@ -68,24 +70,22 @@ class PwParser():
 
         kstates = self.data.findall('output/band_structure/ks_energies')
 
-        #list with the kpoints
+        #lists with the kpoints and the associated weights,
+        #arrays with the ks energies and with the occupations
         self.kpoints = []
-        for i in range(self.nkpoints):
-            kpoint = [float(x) for x in kstates[i].findall('k_point')[0].text.strip().split()]
-            self.kpoints.append(kpoint)
-
-        #list with the ks energies for each kpoint
+        self.weights = []
         self.evals = []
-        for k in kstates:
-            eval = [float(x) for x in k.findall('eigenvalues')[0].text.strip().split()]
-            self.evals.append(eval)
-        self.evals = np.array(self.evals)
-
-        #occupations of the ks states for each kpoint
         self.occupations = []
         for k in kstates:
+            kpoint = [float(x) for x in k.findall('k_point')[0].text.strip().split()]
+            weight = [float(x) for x in k.findall('k_point')[0].get('weight').strip().split()]
+            eval = [float(x) for x in k.findall('eigenvalues')[0].text.strip().split()]
             occ = [float(x) for x in k.findall('occupations')[0].text.strip().split()]
+            self.kpoints.append(kpoint)
+            self.weights.append(weight)
+            self.evals.append(eval)
             self.occupations.append(occ)
+        self.evals = np.array(self.evals)
         self.occupations = np.array(self.occupations)
 
     def get_energy(self,convert_eV = True):
@@ -94,7 +94,7 @@ class PwParser():
         is provided in eV other the Hartree units are used.
         """
         if convert_eV:
-            return HaToEv*self.energy
+            return HaToeV*self.energy
         else:
             return self.energy
 
@@ -104,6 +104,80 @@ class PwParser():
         is provided in eV other the Hartree units are used.
         """
         if convert_eV:
-            return HaToEv*self.fermi
+            return HaToeV*self.fermi
         else:
-            return self.fermi 
+            return self.fermi
+
+    def get_kpath(self):
+        """
+        Assumes that self.kpoints contains a sampling of kpoints along a path.
+        Compute the curvilinear ascissa along the path.
+
+        Returns:
+        kpath(array) : array the value of the curvilinear ascissa along the path
+        """
+        import numpy as np
+        kpoints = np.array(self.kpoints)
+        kpath = [0]
+        distance = 0
+        for nk in range(1,len(kpoints)):
+            distance += np.linalg.norm(kpoints[nk-1]-kpoints[nk])
+            kpath.append(distance)
+        return np.array(kpath)
+
+    def get_bands(self,convert_eV=True):
+        """
+        Convert the array self.evals into the the array bands, where bands[i] gives
+        the energies of the i-th band along the path.
+        The fermi level is used as the reference energy and the results are
+        expressed in eV if convert_eV = True
+        """
+        import numpy as np
+        bands = []
+        for b in range(len(self.evals[0])): #number of bands
+            bands.append(self.evals[:,b])
+        bands = np.array(bands) - self.fermi
+        if convert_eV: bands *= HaToeV
+        return bands
+
+    def Dos(self,Emin=-20, Emax=20, deltaE=0.001, deg=0.00):
+        """
+        Compute the DOS.
+        DOS(E) = sum_{n,K} [delta(E - E_{n}(K)) * weight(K)]
+
+        Todo:
+            Transform this function into a class. In this way one could compute
+            a dos also starting from something different from a PwParser object.
+            Moreover, it could be possible to combine the data of several different
+            object into a single dos.
+
+        Note:
+            What happens if I do not specify the weight of the kpoints????
+
+        Args:
+            Emin:   Starting energy for the DOS (in eV)
+            Emax:   Final energy for the DOS (in eV)
+            deltaE: Tick separation on the X axis
+            deg:    Sigma to be used for a gaussian broadening.
+		            Default = 0.0: Does not apply any broadening.
+
+        Return:
+            :py:class:`array`: The first column runs over the energies, the second
+            one contain the corresponding value of the DOS
+        """
+        import numpy as np
+        #from ..tools.broad import broad
+        res = np.linspace(Emin, Emax, (Emax-Emin)/deltaE+1).reshape(1,-1)
+        res = np.pad(res, ((0,1),(0,0)), 'constant')
+        energies = self.evals*HaToeV - self.get_fermi()
+
+        for n,egv in enumerate(energies):
+            i = np.floor((egv - Emin) / deltaE +0.5).astype(dtype='int')
+            i = i[np.where( (0 <= i) & (i < res[0].size))]
+            res[1,i] += self.weights[n]
+        res[1:] /= deltaE
+
+        if deg > 0:
+            res = broad(res, t='gauss', deg=deg, axis=1)
+
+        return res.T

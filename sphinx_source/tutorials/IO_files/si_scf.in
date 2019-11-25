@@ -2,7 +2,7 @@
            verbosity = 'high'
           pseudo_dir = '../pseudos'
          calculation = 'scf'
-              prefix = 'ecut_10-k_3'
+              prefix = 'si_scf'
 /&end
 &system
     force_symmorphic = .true.
@@ -11,7 +11,7 @@
            celldm(1) = 10.3
                 ntyp = 1
                  nat = 2
-             ecutwfc = 10
+             ecutwfc = 40
 /&end
 &electrons
             conv_thr = 1e-08
@@ -22,4 +22,5 @@ ATOMIC_POSITIONS { crystal }
  Si   0.1250000000   0.1250000000   0.1250000000
  Si  -0.1250000000  -0.1250000000  -0.1250000000
 K_POINTS { automatic }
-  3  3  3  0  0  0
+  4  4  4  0  0  0
+

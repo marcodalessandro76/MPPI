@@ -1,10 +1,10 @@
 """
 A class to perform a calculations using QuantumESPRESSO.
-The class is (deeply) inspired from the SystemCalculator class of BigDFT.
 """
 
 from .Runner import Runner
-from qepppy import qe
+#from qepppy import qe
+from mppi.Parsers import PwParser
 import os
 
 class QeCalculator(Runner):
@@ -111,21 +111,28 @@ class QeCalculator(Runner):
         of Qe Parser?.
 
         Returns:
-               (QeParser) Instance of the QeParser class associated to the run
-               which has been just performed.
-               If the run failed for some reasons and the result_name file does
-               not exists or it cannot be parsed it returns `None`.
+            PwParser: Instance of the PwParser class associated to the run
+            which has been just performed. If the run failed for some reasons
+            and the result_name file does not exists or it cannot be parsed it
+            returns `None`.
         """
 
         verbose = self.run_options['verbose']
-        if os.path.isfile(results_name):
-            if verbose: print('parse file : ',command)
-            #results = 'perform parsing'
-            results= qe.pw_out(xml=results_name)
-        else:
-            if verbose: print('ERROR: The file %s does not exists'%command)
-            results = None
+
+        run_dir = self.run_options['run_dir']
+        input = self.run_options['input']
+        prefix = input['control']['prefix'].strip("'")
+        results = PwParser(prefix,path=run_dir,verbose=verbose)
         return results
+
+        # if os.path.isfile(results_name):
+        #     if verbose: print('parse file : ',command)
+        #     #results = 'perform parsing'
+        #     results= qe.pw_out(xml=results_name)
+        # else:
+        #     if verbose: print('ERROR: The file %s does not exists'%command)
+        #     results = None
+        # return results
 
     def _get_command(self):
         name = self.run_options.get('name','default')
@@ -155,6 +162,7 @@ class QeCalculator(Runner):
         if f.ensure_dir(run_dir) and self.run_options['verbose']:
             print("Create the sub-directory '%s'" % run_dir)
 
+        # the run_dir attribute has been removed...
         #self.run_dir = run_dir
         # """Run directory.
         # str: the directory where the inputfile has been copied to.

@@ -299,7 +299,7 @@ class PwInput(dict):
 
         Args:
             atom(str)
-            mass(str) : is used only for molecular dynamics run
+            mass(str): is used only for molecular dynamics run
             pseudo_name(str)
         """
         at = {atom : [mass,pseudo_name]}

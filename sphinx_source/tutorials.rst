@@ -9,6 +9,7 @@ In this page you find some tutorials and examples that explain the usage of the 
 
    tutorials/Tutorial_PwInput.ipynb
    tutorials/Tutorial_YamboInput.ipynb
+   tutorials/Tutorial_PwParser.ipynb
    tutorials/Tutorial_QeCalculator.ipynb
    tutorials/Tutorial_Datasets.ipynb
 
