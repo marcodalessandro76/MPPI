@@ -1,5 +1,5 @@
-YamboCalculator module
-----------------------
+YamboCalculator
+---------------
 
 .. automodule:: mppi.Calculators.YamboCalculator
     :members:

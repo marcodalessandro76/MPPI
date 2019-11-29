@@ -1,5 +1,5 @@
-Datasets module
----------------
+Datasets
+--------
 
 .. automodule:: mppi.Datasets.Datasets
     :members:

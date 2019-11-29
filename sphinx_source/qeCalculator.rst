@@ -1,5 +1,5 @@
-QeCalculator module
--------------------
+QeCalculator
+------------
 
 .. automodule:: mppi.Calculators.QeCalculator
     :members:

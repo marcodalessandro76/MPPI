@@ -1,27 +1,28 @@
 """
 Class to perform the parsing of a QuantumESPRESSO XML file. Makes usage of the
 data-file-schema.xml file that is found in the run_dir/prefix.save folder.
-
-Maybe is better to init by passing the complete name of the xml including the path
 """
 
 HaToeV = 27.211386
 
 class PwParser():
 
-    def __init__(self,prefix,path='.',verbose=True):
+    def __init__(self,file,verbose=True):
         """
         Initialize the data member of the class. If the parsing of the XML file
-        does not succeeds data contains the name of the XML file.
+        does not succeeds the data attribute is set to None.
+
+        Args:
+            file(str): The name, including the pathm of the data-file-schema.xml
         """
-        self.file = "%s/%s.save/data-file-schema.xml"%(path, prefix)
+        self.file = file
 
         if verbose: print("Parse file : %s"%self.file)
         try:
             self.parseXML(self.file)
         except FileNotFoundError:
-            self.data = self.file
-            print('Failed to read data-file-schema.xml in %s/%s.save'%(path,prefix))
+            if verbose: print('Failed to read %s'%self.file)
+            self.data = None
 
     def parseXML(self,file):
         """

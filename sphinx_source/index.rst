@@ -26,18 +26,19 @@ Class to create and modify the Yambo input file
 .. toctree:: yamboInput
 .. toctree:: yppIn
 
-Calculator for QuantumESPRESSO
+Calculator for QuantumESPRESSO. This Class can manage the execution of all the
+programs (pw.x,ph.x,...) of the suite
 
-.. toctree:: qeCalc
+.. toctree:: qeCalculator
 
-Calculator for Yambo. The module contain also a parses for the output of Yambo computation
+Calculator for Yambo.
 
-.. toctree:: yamboCalc
-.. toctree:: yamboParser
+.. toctree:: yamboCalculator
 
-Parser for the output file
+Parser to manage the results of the QuantumESPRESSO and Yambo computations
 
 .. toctree:: pwParser
+.. toctree:: yamboParser
 
 Organize runs and analyze output in a dataset. A set of pre-processing functions
 needed before launching the various type of datasets are given in the PreProcessings

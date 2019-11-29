@@ -1,5 +1,5 @@
-PwParser module
----------------
+PwParser
+--------
 
 .. automodule:: mppi.Parsers.PwParser
     :members:

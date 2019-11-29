@@ -1,5 +1,5 @@
-PwInput module
---------------
+PwInput
+-------
 
 .. automodule:: mppi.InputFiles.PwInput
     :members:

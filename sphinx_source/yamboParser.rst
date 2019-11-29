@@ -1,5 +1,5 @@
-YamboParser module
-------------------
+YamboParser
+-----------
 
 .. automodule:: mppi.Calculators.YamboParser
     :members:
