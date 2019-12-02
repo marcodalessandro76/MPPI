@@ -16,6 +16,15 @@ class QeCalculator(Runner):
         The argument self.run_dir has been removed. The value of the run_dir is
         extracted directly from the run_options. Evaluate if it can be better to
         introduce again and also to add the attribute self.prefix.
+
+    Example:
+     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True)
+     >>> code.run(input = ..., run_dir = ...,name = ...)
+
+    Args:
+        run_dir (str) : the folder in which the simulation is performed
+        input : the object the contain the instance of the input file
+        name (str) : the name associated to the input file (without extension).
     """
 
     def __init__(self,
@@ -81,7 +90,8 @@ class QeCalculator(Runner):
         Note:
             It could happens that the '$file self.run_options['name'].xml' is present
             but the 'data-file-schema.xml' is not, so the computations is skipped but
-            the parsing is not performed.
+            the parsing is not performed. Maybe is better to directly use the
+            data-file-schema to establish if the run can be skipped.
         """
 
         verbose = self.run_options['verbose']
@@ -108,7 +118,7 @@ class QeCalculator(Runner):
 
         return {'results_name': self._get_results_name()}
 
-    def post_processing(self, command, results_name):
+    def post_processing(self, results_name):
         """
         Parse the xml file that contains the results of the computation.
 
@@ -118,6 +128,8 @@ class QeCalculator(Runner):
             and the result_name file does not exists or it cannot be parsed it
             the attribute data of the PwParser object is set to None.
         """
+        # version used if the parse is performed later....
+        #return {'xml_data': self._get_output_names()}
         results = PwParser(results_name,verbose=self.run_options['verbose'])
         return results
 
@@ -157,9 +169,9 @@ class QeCalculator(Runner):
         the name $prefix
 
         Args:
-            source_dir: the name of the source_dir including its relative path,
-            since it can be used a source_dir outer respect to the actual run_dir
-            of the instance of QeCalculator.
+            source_dir: the name of the source_dir including its relative path.
+            A source_dir outer respect to the actual run_dir of the instance of
+            QeCalculator can be used.
         """
         from shutil import copytree
         verbose = self.run_options['verbose']

@@ -17,8 +17,21 @@ class YamboCalculator(Runner):
     QuantumESPRESSO computation.
 
     Note:
-        If skip is False the class delete the folder with the o-* files (if found)
-        before the run. Is this choice correct or is it better to keep the folder?
+        If skip is False the class delete the folders with the o-* files and with
+        the ndb database (if found) before the run.
+
+    Example:
+     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True)
+     >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ...)
+
+    Args:
+        run_dir (str) : the folder in which the simulation is performed
+        input : the object the contain the instance of the input file
+        name (str) : the name associated to the input file (without extension).
+            This string is used also as the radical of the folder in which results
+            are written as well as a part of the name of the output file.
+        jobname (str) : the value of the jobname. If it left to None the
+            value of name is attributed to jobname by process_run.
 
     """
     def __init__(self,
@@ -110,7 +123,7 @@ class YamboCalculator(Runner):
                 if verbose: print('Executing command:', command)
                 os.system(comm_str)
         else:
-            # delete the out_dir and run_dir (if found) before running the code
+            # delete the out_dir and ndb_dir (if found) before running the code
             if os.path.isdir(out_dir):
                 if verbose: print('delete folder:',out_dir)
                 os.system('rm -r %s'%out_dir)
@@ -123,7 +136,7 @@ class YamboCalculator(Runner):
         return {'output_names': self._get_output_names(),
                 'ndb_names': self._get_ndb_names() }
 
-    def post_processing(self, command, output_names, ndb_names):
+    def post_processing(self, output_names, ndb_names):
         """
         In the actual implementation return a dictionary with the names
         of the o- file(s) and ndb database.
@@ -182,24 +195,3 @@ class YamboCalculator(Runner):
                     ndb_names.append(os.path.join(ndb_dir,file))
 
         return ndb_names
-
-
-    # def run(self,run_dir='run',input=None,name='test',jobname=None,post_processing=True):
-    #     """
-    #     Prepare the run, perform the computation and apply the post_processing
-    #     function to extract the results. It returns the object built by YamboParser.
-    #     Args:
-    #         run_dir (str) : the folder in which the simulation is performed
-    #         input : the object the contain the instance of the input file
-    #         name (str) : the name associated to the input file (without extension).
-    #         This string is used also as the radical of the folder in which results
-    #         are written as well as a part of the name of the output file.
-    #         jobname (str) : the value of the jobname. If it left to None the
-    #         value of name is attributed to jobname by process_run.
-    #     """
-    #     self.pre_processing(run_dir=run_dir,input=input,name=name)
-    #     self.process_run(run_dir=run_dir,name=name,jobname=jobname)
-    #     results = None
-    #     if post_processing:
-    #         results = self.post_processing(run_dir=run_dir,name=name,jobname=jobname)
-    #     return results
