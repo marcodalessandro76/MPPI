@@ -6,31 +6,6 @@ before running a dataset.
 import os
 #from .Datasets import *
 
-# This function is already defined in Datasets. Its definition is repetead here
-# with the underscore symbol because there is a problem of visibility from the
-# Datasets module
-def _name_from_id(id):
-    """
-    Hash the id into a run name. If id is a string, set name = id, if it is a
-    dictionary build the name of the run from the id dictionary.
-    Args:
-        id : id associated to the run
-    Returns:
-       str: name of the run associated to the dictionary ``id``
-    """
-    if type(id) is str :
-        name = id
-    elif type(id) is dict :
-        keys=sorted(id.keys())
-        name=''
-        for k in keys:
-            name += k+'_'+str(id[k])+'-'
-        name = name.rstrip('-')
-    else :
-        print('id type not recognized')
-        name = None
-    return name
-
 pre_processing_list = ['scf','nscf','yambo']
 
 def scf_pre_processing(run_dir):

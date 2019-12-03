@@ -230,6 +230,12 @@ class PwInput(dict):
 
     # Set methods
 
+    def set_energy_cutoff(self,e):
+        """
+        Set the value of the kinetic energy cutoff (Ry) for wavefunctions
+        """
+        self['system']['ecutwfc'] = e
+
     def set_prefix(self,prefix):
         """
         Set the value of prefix

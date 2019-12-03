@@ -13,7 +13,7 @@ class PwParser():
         does not succeeds the data attribute is set to None.
 
         Args:
-            file(str): The name, including the pathm of the data-file-schema.xml
+            file(str): The name, including the path of the data-file-schema.xml
         """
         self.file = file
 

@@ -3,7 +3,7 @@ A class to perform a calculations using QuantumESPRESSO.
 """
 
 from .Runner import Runner
-from mppi.Parsers import PwParser
+#from mppi.Parsers import PwParser
 import os
 
 class QeCalculator(Runner):
@@ -116,9 +116,9 @@ class QeCalculator(Runner):
             if verbose: print('Executing command:', command)
             os.system(comm_str)
 
-        return {'results_name': self._get_results_name()}
+        return {'results_name': self._get_results()}
 
-    def post_processing(self, results_name):
+    def post_processing(self, command, results_name):
         """
         Parse the xml file that contains the results of the computation.
 
@@ -129,9 +129,9 @@ class QeCalculator(Runner):
             the attribute data of the PwParser object is set to None.
         """
         # version used if the parse is performed later....
-        #return {'xml_data': self._get_output_names()}
-        results = PwParser(results_name,verbose=self.run_options['verbose'])
-        return results
+        return {'xml_data': results_name}
+        #results = PwParser(results_name,verbose=self.run_options['verbose'])
+        #return results
 
     def _get_command(self):
         name = self.run_options.get('name','default')
@@ -141,7 +141,7 @@ class QeCalculator(Runner):
         comm_str =  self.command + ' -inp %s > %s'%(input,output)
         return comm_str
 
-    def _get_results_name(self):
+    def _get_results(self):
         """
         Return the name, including the path, of the data-file-schema.xml
         file build by pw

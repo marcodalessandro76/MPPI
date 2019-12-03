@@ -136,7 +136,7 @@ class YamboCalculator(Runner):
         return {'output_names': self._get_output_names(),
                 'ndb_names': self._get_ndb_names() }
 
-    def post_processing(self, output_names, ndb_names):
+    def post_processing(self, command, output_names, ndb_names):
         """
         In the actual implementation return a dictionary with the names
         of the o- file(s) and ndb database.

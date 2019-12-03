@@ -1,7 +1,7 @@
 """
 This module performs a parsing pf the Yambo output file. The method dict_parser
 builds a dictionary with the results. The keys are read from the line that contains
-'K-point' (for hf or qp output files) or '|k|' for the ypp outputs.
+K-point (for hf or qp output files) or '|k|' for the ypp outputs.
 The class AttributeDict convert the dictionary in a object and allows us to access
 to its attribute in the form AttributeDict.attr.
 """
@@ -91,7 +91,7 @@ def dict_parser(fname):
             results[key].append(line[ind])
     return(results)
 
-class AttributeDict(object):
+class Attribute_dict_converter(object):
     """
     A class to convert a nested Dictionary into an object with key-values
     accessibly using attribute notation (AttributeDict.attribute) instead of

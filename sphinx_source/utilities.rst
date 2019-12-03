@@ -1,7 +1,7 @@
-Dataset
--------
+Utilities
+---------
 
-.. automodule:: mppi.Datasets.Dataset
+.. automodule:: mppi.Utilities.Utils
     :members:
     :undoc-members:
     :show-inheritance:

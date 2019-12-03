@@ -17,35 +17,33 @@ Python package for managing computations and performing post-processing in Quant
 Module Members
 --------------
 
-Class to create and modify the pw input file of QuantumESPRESSO
+Manage the input files with classes able create and modify the input files of QuantumESPRESSO
+and Yambo
 
 .. toctree:: pwInput
-
-Class to create and modify the Yambo input file
-
 .. toctree:: yamboInput
 .. toctree:: yppIn
 
-Calculator for QuantumESPRESSO. This Class can manage the execution of all the
-programs (pw.x,ph.x,...) of the suite
+Run a single calculation in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
+the programs (pw.x,ph.x,...) of the suite.
+
+The YamboCalculator object manage the yambo and ypp executables and also their time-dependent variants
 
 .. toctree:: qeCalculator
-
-Calculator for Yambo.
-
 .. toctree:: yamboCalculator
 
-Parser to manage the results of the QuantumESPRESSO and Yambo computations
+Parsers to manage the results of the QuantumESPRESSO and Yambo computations
 
 .. toctree:: pwParser
 .. toctree:: yamboParser
 
-Organize runs and analyze output in a dataset. A set of pre-processing functions
-needed before launching the various type of datasets are given in the PreProcessings
-module
+Organize runs and analyze output in a dataset
 
 .. toctree:: datasets
-.. toctree:: preProcessings
+
+Utilities and some useful low-level functions are codified in the Utilities Module
+
+.. toctree:: utilities.rst
 
 MPPI Tutorial page
 
