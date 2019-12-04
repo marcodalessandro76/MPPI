@@ -1,2 +1,2 @@
 from .PwParser import PwParser
-#from .YamboParser import dict_parser, AttributeDict
+#from .YamboParser import dict_parser

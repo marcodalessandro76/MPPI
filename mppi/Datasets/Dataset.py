@@ -63,9 +63,9 @@ class Dataset(Runner):
            the arguments which are associated to it.
 
         Args:
-          id (dict): the id of the run, useful to identify the run in the
-             dataset. It has to be a dictionary as it may contain
-             different keyword. For example a run might be classified as
+          id : the id of the run, useful to identify the run in the
+             dataset. It can be a dictionary or a string, as it may contain
+             different keyword. For example a run can be classified as
              ``id = {'energy_cutoff':60, 'kpoints': 6}``.
           runner (Runner): the runner class to which the remaining keyword
              arguments will be passed at the input.
@@ -113,7 +113,7 @@ class Dataset(Runner):
         This is the methods that has to be modified if we want to perform parallel
         runs of the elements of Dataset.
 
-        Which is the meaning of selection?
+        The argument selection is used by the fetch_results method
         """
         for c in self.calculators:
             calc = c['calc']
@@ -164,13 +164,15 @@ class Dataset(Runner):
            run_if_not_present (bool): If the run has not yet been performed
                in the dataset then perform it.
 
-        Example:
+        Example (from PyBigDFT):
            >>> study=Dataset()
            >>> study.append_run(id={'cr': 3},input={'dft':{'rmult':[3,8]}})
            >>> study.append_run(id={'cr': 4},input={'dft':{'rmult':[4,8]}})
            >>> study.append_run(id={'cr': 3, 'h': 0.5},
-           >>>                  input={'dft':{'hgrids': 0.5, 'rmult':[4,8]}})
+           >>>                  input={'dft':{'hgrids': 0.5, 'rmult':[3,8]}})
            >>> #append other runs if needed
+           >>> #set a post processing function that perform a parsing of the rsesults
+           >>>>#and contains 'energy' as an attribute of the results object
            >>> #run the calculations (optional if run_if_not_present=True)
            >>> study.run()
            >>> # returns a list of the energies of first and the third result
@@ -181,9 +183,12 @@ class Dataset(Runner):
         fetch_indices = []
         selection_to_run = []
         for irun, name in enumerate(self.names):
-            # add the separator ',' to have the proper value of a key
+            #check if all the names(i.e. the selected id) are inside the name
+            #associated to the present element of the dataset
             if not all([(n in name+',') for n in names]):
                 continue
+            #if irun is not inside the kyes of self.results the computation associated
+            #to its append has not been performed
             if run_if_not_present and irun not in self.results:
                 selection_to_run.append(irun)
             fetch_indices.append(irun)
@@ -228,21 +233,20 @@ class Dataset(Runner):
                loosened.
         """
         from numpy import allclose
-        from futile.Utils import write
         to_get = self.ids if selection is None else selection
 
         id_ref = to_get[0]
-        write('Fetching results for id "', id_ref, '"')
+        print('Fetching results for id "', id_ref, '"')
         ref = self.fetch_results(id=id_ref, **kwargs)
         ref = ref[0]
         for id in to_get[1:]:
-            write('Fetching results for id "', id, '"')
+            print('Fetching results for id "', id, '"')
             val = self.fetch_results(id=id, **kwargs)
             val = val[0]
             if allclose(ref, val, rtol=rtol, atol=atol):
                 res = self.fetch_results(id=id_ref)
                 label = self.get_global_option('label')
-                write('Convergence reached in Dataset "' +
+                print('Convergence reached in Dataset "' +
                       label+'" for id "', id_ref, '"')
                 return (id_ref, res[0])
             ref = val

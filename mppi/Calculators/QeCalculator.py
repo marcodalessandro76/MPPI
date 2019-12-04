@@ -25,6 +25,9 @@ class QeCalculator(Runner):
         run_dir (str) : the folder in which the simulation is performed
         input : the object the contain the instance of the input file
         name (str) : the name associated to the input file (without extension).
+            Usually we set the name equal to the prefix of the input object so
+            the name of the input file and the prefix folder built by QuantumESPRESSO
+            are equal.
     """
 
     def __init__(self,
@@ -108,7 +111,7 @@ class QeCalculator(Runner):
         comm_str = 'cd ' + run_dir + '; ' + command
         if skip:
             if os.path.isfile(skipfile):
-                if verbose: print('Skip the computation for input ',name)
+                if verbose: print('Skip the computation for input',name)
             else:
                 if verbose: print('Executing command:', command)
                 os.system(comm_str)

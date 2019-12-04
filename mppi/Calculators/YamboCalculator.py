@@ -4,25 +4,22 @@ A class to perform a calculations using Yambo.
 
 from .Runner import Runner
 import os
-#from .YamboParser import dict_parser, AttributeDict
 
 class YamboCalculator(Runner):
     """
-    Manage a single yambo calculation: setup the number of omp and mpi, check
-    that the SAVE folder is present and perform the computation.
-    Lastly perform a parsing of the results.
-
-    In this cases, the calculator assumes that the run_dir exists and that
-    it contains the SAVE folder built with the p2y postprocessing of a
-    QuantumESPRESSO computation.
+    Manage a single yambo calculation.The class can be used to perform computations
+    using all the executables of the Yambo package. It allows to setup the number of
+    omp and the mpi_run, and check that the SAVE folder is present.
 
     Note:
         If skip is False the class delete the folders with the o-* files and with
         the ndb database (if found) before the run.
 
     Example:
-     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True)
+     >>> code = YamboCalculator(omp=1,mpi_run='mpirun -np 4',executable='yambo',skip=True,verbose=True)
      >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ...)
+
+    The parameters of the run method are:
 
     Args:
         run_dir (str) : the folder in which the simulation is performed
@@ -33,6 +30,8 @@ class YamboCalculator(Runner):
         jobname (str) : the value of the jobname. If it left to None the
             value of name is attributed to jobname by process_run.
 
+    When the run method is called the class runs the command:
+                executable_name -F name.in -J jobname -C name
     """
     def __init__(self,
                  omp=os.environ.get('OMP_NUM_THREADS', 1),
@@ -107,8 +106,7 @@ class YamboCalculator(Runner):
 
         # Check if (at least) a file o-* is found in the out_dir
         outfile_found = False
-        num_outfiles = len(self._get_output_names())
-        if num_outfiles != 0: outfile_found = True
+        if len(self._get_output_names()) > 0: outfile_found = True
 
         # Set the OMP_NUM_THREADS variable in the environment
         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
@@ -118,7 +116,7 @@ class YamboCalculator(Runner):
         comm_str = 'cd ' + run_dir + '; ' + command
         if skip:
             if outfile_found:
-                if verbose: print('Skip the computation for input ',name)
+                if verbose: print('Skip the computation for input',name)
             else:
                 if verbose: print('Executing command:', command)
                 os.system(comm_str)
@@ -167,7 +165,6 @@ class YamboCalculator(Runner):
             for file in os.listdir(out_dir):
                 if 'o-' in file:
                     output_names.append(os.path.join(out_dir,file))
-
         return output_names
 
     def _get_ndb_names(self):
@@ -176,7 +173,7 @@ class YamboCalculator(Runner):
 
         Note:
             This method needs to be modified to extract only the database
-            that we need.
+            that we really need.
 
         Return:
             :py:class:`list`: A list with the names, including the path, of the
@@ -193,5 +190,4 @@ class YamboCalculator(Runner):
             for file in os.listdir(ndb_dir):
                 if 'ndb' in file:
                     ndb_names.append(os.path.join(ndb_dir,file))
-
         return ndb_names

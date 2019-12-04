@@ -95,7 +95,7 @@ def build_SAVE(source_dir,run_dir,command = 'p2y -a 2'):
         print('Executing command:', comm_str)
         os.system(comm_str)
 
-class Object_dict_converter(object):
+class Dict_to_attribute(object):
     """
     A class to convert a nested Dictionary into an object with key-values
     accessibly using attribute notation (AttributeDict.attribute) instead of
