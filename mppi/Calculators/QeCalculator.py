@@ -3,31 +3,33 @@ A class to perform a calculations using QuantumESPRESSO.
 """
 
 from .Runner import Runner
-#from mppi.Parsers import PwParser
 import os
 
 class QeCalculator(Runner):
     """
-    Manage a single  QuantumESPRESSO calculation. Setup the number of omp and mpi.
-    Prepare the folder in which the computation is run. Peform the computation
-    and apply a post processing function to extract the results.
+    Manage a single  QuantumESPRESSO calculation. Setup the number of omp and mpi,
+    prepare the folder in which the computation is run and perform the computation.
 
     Note:
-        The argument self.run_dir has been removed. The value of the run_dir is
-        extracted directly from the run_options. Evaluate if it can be better to
-        introduce again and also to add the attribute self.prefix.
+        If skip is False the class delete the name.log and name.xml files and the
+        run_dir/prefix.save folder before execute the run.
 
     Example:
-     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True)
-     >>> code.run(input = ..., run_dir = ...,name = ...)
+     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True,verbose=True)
+     >>> code.run(input = ..., run_dir = ...,name = ..., source_dir = ...)
 
     Args:
         run_dir (str) : the folder in which the simulation is performed
-        input : the object the contain the instance of the input file
-        name (str) : the name associated to the input file (without extension).
-            Usually we set the name equal to the prefix of the input object so
+        input (PwInput) : the object the contain the instance of the input file
+        name (str) : the name associated to the input file (without extension)
+            Usually you can set the name equal to the prefix of the input object so
             the name of the input file and the prefix folder built by QuantumESPRESSO
             are equal.
+        source_dir (str) : location of the scf source folder for a nscf computation.
+        If present the class copies this folder in the run_dir with the name prefix.save.
+        verbose (bool) : set the amount of information provided on terminal
+        skip (bool) : if True evaluate if the computation can be skipped. This is done
+            by checking if the file data-file-schema.xml is present in the prefix folder
     """
 
     def __init__(self,
@@ -44,24 +46,46 @@ class QeCalculator(Runner):
     def pre_processing(self):
         """
         Process local run dictionary to create the run directory and input file.
+        If skip = False delete the log and the xml file and also the folder
+        run_dir/prefix.save.
         If the 'source_dir' key is passed to the run method copy the source folder
-        in the run_dir with the name $prefix.
+        in the run_dir with the name $prefix. This procedure has to be performed
+        after the deletion run_dir/prefix.save since otherwise the copy of the
+        source_dir is deleted.
 
         Returns:
             :py:class:`dict`: dictionary containing the command to be passed to
             :meth:`process_run`
 
         """
-        self._ensure_run_directory()
-
-        # Create the input file
         run_dir = self.run_options.get('run_dir', '.')
-        inp = self.run_options.get('input')
+        input = self.run_options.get('input')
         name = self.run_options.get('name','default')
-        if inp is not None:
-            inp.write(os.path.join(run_dir,name)+'.in')
+        verbose = self.run_options['verbose']
+
+        # Create the run_dir and write the input file
+        self._ensure_run_directory()
+        if input is not None:
+            input.write(os.path.join(run_dir,name)+'.in')
         else:
             print('input not provided')
+
+        # if skip = False delete the name.log, name.xml and prefix.save (if found)
+        skip = self.run_options['skip']
+        if not skip:
+            logfile = os.path.join(run_dir,name)+'.log'
+            xmlfile = os.path.join(run_dir,name)+'.xml'
+            prefix = input['control']['prefix'].strip("'")
+            outdir = os.path.join(run_dir,prefix)+'.save'
+            if os.path.isfile(logfile):
+                if verbose: print('delete log file:',logfile)
+                os.system('rm %s'%logfile)
+            if os.path.isfile(xmlfile):
+                if verbose: print('delete xml file:',xmlfile)
+                os.system('rm %s'%xmlfile)
+            if os.path.isdir(outdir):
+                if verbose: print('delete folder:',outdir)
+                os.system('rm -r %s'%outdir)
 
         # Copy the source folder in the run_dir
         source_dir = self.run_options.get('source_dir')
@@ -71,16 +95,13 @@ class QeCalculator(Runner):
         return {'command': self._get_command()}
 
     def process_run(self,command):
-        """Launch the code.
+        """
+        Launch the code.
 
         Routine associated to the running of the executable.
-        If the skip attribute o run_options is True the method evaluated if
-        the computation can be skipped. This is done by if the
-        '$file self.run_options['name'].xml'
-        is already present in the run_dir.
-
-        The amount of information provided on terminal is set by the verbose key
-        of the run.
+        If the skip attribute of run_options is True the method evaluated if
+        the computation can be skipped. This is done by  checking if the file
+        data-file-schema.xml is already present in the path run_dir/prefix.save
 
         Args:
            command (str): the command as it is set by the ``pre_processing``
@@ -89,65 +110,53 @@ class QeCalculator(Runner):
         Returns:
            :py:class:`dict`: The dictionary `results`
              values to be passed to `post_processing` function
-
-        Note:
-            It could happens that the '$file self.run_options['name'].xml' is present
-            but the 'data-file-schema.xml' is not, so the computations is skipped but
-            the parsing is not performed. Maybe is better to directly use the
-            data-file-schema to establish if the run can be skipped.
         """
-
         verbose = self.run_options['verbose']
         skip = self.run_options['skip']
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
-        skipfile = os.path.join(run_dir,name)+'.xml'
+        skipfile = self._get_result_file()
 
         # Set the OMP_NUM_THREADS variable in the environment
         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
 
-        # Run the command
+        # Set the run the command
         if verbose: print('Run directory', run_dir)
         comm_str = 'cd ' + run_dir + '; ' + command
-        if skip:
-            if os.path.isfile(skipfile):
-                if verbose: print('Skip the computation for input',name)
-            else:
-                if verbose: print('Executing command:', command)
-                os.system(comm_str)
+
+        # check if the computation can be skipped and run
+        can_skip = all([skip,os.path.isfile(skipfile)])
+        if can_skip:
+            if verbose: print('Skip the computation for input',name)
         else:
             if verbose: print('Executing command:', command)
             os.system(comm_str)
 
-        return {'results_name': self._get_results()}
+        return {'result_file': self._get_result_file()}
 
-    def post_processing(self, command, results_name):
+    def post_processing(self, command, result_file):
         """
-        Parse the xml file that contains the results of the computation.
-
-        Returns:
-            PwParser: Instance of the PwParser class associated to the run
-            which has been just performed. If the run failed for some reasons
-            and the result_name file does not exists or it cannot be parsed it
-            the attribute data of the PwParser object is set to None.
+        Return results_name (if the file exists) otherwise return None.
+        This check allows us to understand if the computation has been correctly
+        performed.
         """
-        # version used if the parse is performed later....
-        return {'xml_data': results_name}
-        #results = PwParser(results_name,verbose=self.run_options['verbose'])
-        #return results
+        if os.path.isfile(result_file):
+            return result_file
+        else:
+            return None
 
     def _get_command(self):
         name = self.run_options.get('name','default')
-        input = name + '.in'
-        output = name + '.log'
+        input_name = name + '.in'
+        output_name = name + '.log'
 
-        comm_str =  self.command + ' -inp %s > %s'%(input,output)
+        comm_str =  self.command + ' -inp %s > %s'%(input_name,output_name)
         return comm_str
 
-    def _get_results(self):
+    def _get_result_file(self):
         """
         Return the name, including the path, of the data-file-schema.xml
-        file build by pw
+        file build by pw.
         """
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options['input']
@@ -182,6 +191,7 @@ class QeCalculator(Runner):
         input = self.run_options['input']
         prefix = input['control']['prefix'].strip("'")
         dest_dir = os.path.join(run_dir,prefix)+'.save'
+
         if not os.path.isdir(dest_dir):
             if verbose: print('Copy source_dir %s in the %s'%(source_dir,dest_dir))
             copytree(source_dir,dest_dir)

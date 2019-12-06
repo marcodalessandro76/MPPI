@@ -6,28 +6,33 @@ data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 HaToeV = 27.211386
 
 class PwParser():
+    """
+    Initialize the data member of the class. The init method is able to manage a
+    TypeError since, if the QeCalculator simulation fails the name of the output
+    file is set to None.
+
+    Args:
+        file (str): The name, including the path of the data-file-schema.xml
+        verbose (bool) : set the amount of information written on terminal
+
+
+    """
 
     def __init__(self,file,verbose=True):
-        """
-        Initialize the data member of the class. If the parsing of the XML file
-        does not succeeds the data attribute is set to None.
 
-        Args:
-            file(str): The name, including the path of the data-file-schema.xml
-        """
         self.file = file
 
-        if verbose: print("Parse file : %s"%self.file)
+        if verbose: print('Parse file : %s'%self.file)
         try:
             self.parseXML(self.file)
-        except FileNotFoundError:
+        except TypeError: #FileNotFoundError or TypeError:
             if verbose: print('Failed to read %s'%self.file)
             self.data = None
 
     def parseXML(self,file):
         """
-        Read the data from the xml file in the new format of quantum espresso.
-        Some variable are extracted from the XML file and stored in the attribute
+        Read the data from the xml file in the new format of QuantumESPRESSO.
+        Some variable are extracted from the XML file and stored in the attributes
         of the object.
         """
         import xml.etree.ElementTree as ET
@@ -153,7 +158,7 @@ class PwParser():
             object into a single dos.
 
         Note:
-            What happens if I do not specify the weight of the kpoints????
+            What happens if we do not specify the weight of the kpoints????
 
         Args:
             Emin:   Starting energy for the DOS (in eV)

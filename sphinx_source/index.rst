@@ -41,7 +41,7 @@ Organize runs and analyze output in a dataset
 
 .. toctree:: datasets
 
-Utilities and some useful low-level functions are codified in the Utilities Module
+Utilities and some useful low-level functions and classes are codified in the Utilities Module
 
 .. toctree:: utilities.rst
 

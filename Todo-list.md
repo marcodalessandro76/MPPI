@@ -2,15 +2,15 @@
 TODO
 ----
 
+- Add some basic intentional methods in the YamboInput class.
+
 - Modify the build_SAVE function of Utils so that a link of the SAVE file (and not a copy) is created.
 
-- The QeCalculator skip the computation looking for the file self.run_options['name'].xml. It is better
-  directly look for data-file-schema.xml which is the file used for parsing.
-
-- In the QeCalculator do not set the results equal to data-file-schema.xml if the computation is not performed.
-  Check if the data-file-schema.xml exists
-
 - Complete the Dos method of the PwParser to add the broadening of the dos.    
+
+- Fix the documentation of the Utilities module.
+
+- Fix the documentation of dataset :  show the docstring of the attributes of the class.
 
 
 FUTURE DEVELOPMENT

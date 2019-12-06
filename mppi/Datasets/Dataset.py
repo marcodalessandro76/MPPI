@@ -6,21 +6,60 @@ instances of the code.
 """
 
 from mppi.Calculators.Runner import Runner
-from mppi.Utilities.Utils import name_from_id, names_from_id
 
-class Dataset(Runner):
-    """A set of calculations.
-
-    This class is able to manage a set of calculations. Each element of the dataset
-    is labelled by parameter values and information that univocally identify each
-    run.
+def name_from_id(id):
+    """
+    Convert the id into a run name. If id is a string, set name = id, if it is a
+    dictionary build the name string of the run from the id dictionary.
 
     Args:
-      label (str): The label of the dataset. It will be needed to identify the
-          instance for example in plot titles or in the running directory.
-      run_dir (str): path of the directory where the runs will be performed.
-      **kwargs : all the parameters that may be used to identify the dataset or
-          to perform a post-processing of the results.
+        id : id associated to the run
+    Returns:
+       name (str): name of the run associated to the dictionary ``id``
+    """
+    if type(id) is str :
+        name = id
+    elif type(id) is dict :
+        keys=sorted(id.keys())
+        name=''
+        for k in keys:
+            name += k+'_'+str(id[k])+'-'
+        name = name.rstrip('-')
+    else :
+        print('id type not recognized')
+        name = None
+    return name
+
+def names_from_id(id):
+    """
+    Convert the id into a list of run names to search with the function id_in_names
+    and add the separator ',' to have the proper value of a key.
+    """
+    if id is None:
+        return ['']
+    else:
+        return [name_from_id({k: v})+',' for k, v in id.items()]
+
+class Dataset(Runner):
+    """
+
+    This class is able to manage a set of calculations
+
+    Example:
+        >>> code = QeCalculator()
+        >>> study=Dataset(label = .., run_dir = ..., **kwargs)
+        >>> study.append_run(id={'ecut': 30, 'kpoints' : 4},input=...,runner=code)
+        >>> study.append_run(id={'ecut': 40, 'kpoints' : 4},input=...,runner=code)
+        >>> study.run()
+
+    Args:
+      label (str): the label of the dataset, it can be useful for instance if more
+      than one istance of the class is present
+      run_dir (str): path of the directory where the runs will be performed
+      **kwargs : all the parameters passed to the dataset and stored in its _global_options.
+      Can be useful, for instance, in performing a post-processing of the results.
+
+
     """
 
     def __init__(self, label='Dataset', run_dir='runs', **kwargs):
@@ -30,15 +69,15 @@ class Dataset(Runner):
         from copy import deepcopy
         newkwargs = deepcopy(kwargs)
         Runner.__init__(self, label=label, run_dir=run_dir, **newkwargs)
+
         self.runs = []
         """
-        List of the runs which have to be treated by the dataset these runs
+        List of the runs which have to be treated by the dataset. The runs
         contain the input parameter to be passed to the various runners.
         """
         self.calculators = []
         """
-        Calculators which will be used by the run method, useful to gather the
-        inputs in the case of a multiple run.
+        Calculators which will be used by the run method
         """
         self.results = {}
         """
@@ -47,20 +86,24 @@ class Dataset(Runner):
         """
         self.ids = []
         """
-        List of run ids, to be used in order to classify and fetch the results
+        List of run ids, to be used in order to identify and fetch the results
         """
         self.names = []
         """
-        List of run names, needed for distinguishing the input files. Each name
-        should be unique to correctly identify a run.
+        List of run names, needed for distinguishing the input files.
         """
         self._post_processing_function = None
 
     def append_run(self, id, runner, **kwargs):
-        """Add a run into the dataset.
+        """
+        Add a run into the dataset.
 
-        Append to the list of runs to be performed the corresponding runner and
-           the arguments which are associated to it.
+        Append to the list of runs to be performed and associated to each appended
+        item the corresponding runner instance. Include also the presence of possible
+        further arguments, provided as kwargs.
+
+        The name of the input file is not directly passed. Instead it is computed
+        from the id of the run using the function name_from_id.
 
         Args:
           id : the id of the run, useful to identify the run in the
@@ -109,16 +152,14 @@ class Dataset(Runner):
 
     def _run_the_calculations(self, selection=None):
         """
-        Method that role the execution of the runs of the Dataset.
-        This is the methods that has to be modified if we want to perform parallel
-        runs of the elements of Dataset.
-
+        Method that manage the execution of the runs of the Dataset.
         The argument selection is used by the fetch_results method
         """
         for c in self.calculators:
             calc = c['calc']
-            # we must here differentiate between a taskgroup run and a
-            # separate run
+            # To be implemented...
+            # if calc is a "parallel calculator" we will pass all the names[calc['runs']]
+            # and all the runs[calc['runs']] together to its "parallel" run method
             for r in c['runs']:
                 if selection is not None and r not in selection:
                     continue
@@ -244,7 +285,7 @@ class Dataset(Runner):
             val = self.fetch_results(id=id, **kwargs)
             val = val[0]
             if allclose(ref, val, rtol=rtol, atol=atol):
-                res = self.fetch_results(id=id_ref)
+                res = self.fetch_results(id=id_ref, **kwargs)
                 label = self.get_global_option('label')
                 print('Convergence reached in Dataset "' +
                       label+'" for id "', id_ref, '"')

@@ -17,6 +17,8 @@ The package is composed by several module each of which contains one ore more cl
 - InputFiles : Create and manage input files for pw.x program of the QuantumEspresso package and for Yambo.
 - Calculators : prepare and run a single QuantumESPRESSO or Yambo computation.
 - Datasets : organize and run several computations for both QuantumESPRESSO and Yambo.
+- Parsers : Classes to extract data from the output files and database QuantumESPRESSO and Yambo.
+    Other parsers, from outer packages, can be also used.
 - Utilities : Collect some useful low-level functions used by the other modules of the package.
 
 Tutorials and examples

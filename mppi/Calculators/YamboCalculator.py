@@ -12,7 +12,7 @@ class YamboCalculator(Runner):
     omp and the mpi_run, and check that the SAVE folder is present.
 
     Note:
-        If skip is False the class delete the folders with the o-* files and with
+        If skip is False the class deletes the folders with the o-* files and with
         the ndb database (if found) before the run.
 
     Example:
@@ -29,10 +29,16 @@ class YamboCalculator(Runner):
             are written as well as a part of the name of the output file.
         jobname (str) : the value of the jobname. If it left to None the
             value of name is attributed to jobname by process_run.
+        verbose (bool) : set the amount of information provided on terminal
+        skip (bool) : if True evaluate if the computation can be skipped. This is done
+            by checking if the output folder contains at least one file o-*
 
     When the run method is called the class runs the command:
                 executable_name -F name.in -J jobname -C name
+
+
     """
+
     def __init__(self,
                  omp=os.environ.get('OMP_NUM_THREADS', 1),
                  mpi_run='mpirun -np 4',executable='yambo',
@@ -49,6 +55,7 @@ class YamboCalculator(Runner):
         Process local run dictionary. Check that the run_dir exists and that it
         contains the SAVE folder. Check that the input object has been provided
         in the run parameters and write it on disk.
+        If skip = False delete the folders with the o- files and the ndb database.
 
         Note:
             If the run_dir and/or the SAVE folder do not exist an alert is
@@ -59,11 +66,13 @@ class YamboCalculator(Runner):
             :meth:`process_run`
 
         """
+        verbose = self.run_options['verbose']
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
         name = self.run_options.get('name','yambo')
         SAVE = os.path.join(run_dir,'SAVE')
 
+        # check if the run_dir and SAVE folder exist and write the input
         if not os.path.isdir(run_dir):
             print('Run_dir %s does not exists'%run_dir)
         elif not os.path.isdir(SAVE):
@@ -73,6 +82,19 @@ class YamboCalculator(Runner):
                 input.write(run_dir,name+'.in')
             else :
                 print('input not provided')
+
+        # if skip = False delete the out_dir and ndb_dir (if found) before running the code
+        skip = self.run_options['skip']
+        if not skip:
+            jobname = self.run_options.get('jobname',name)
+            out_dir = os.path.join(run_dir,name)
+            ndb_dir = os.path.join(run_dir,jobname)
+            if os.path.isdir(out_dir):
+                if verbose: print('delete folder:',out_dir)
+                os.system('rm -r %s'%out_dir)
+            if os.path.isdir(ndb_dir):
+                if verbose: print('delete folder:',ndb_dir)
+                os.system('rm -r %s'%ndb_dir)
 
         return {'command': self._get_command()}
 
@@ -104,30 +126,18 @@ class YamboCalculator(Runner):
         out_dir = os.path.join(run_dir,name)
         ndb_dir = os.path.join(run_dir,jobname)
 
-        # Check if (at least) a file o-* is found in the out_dir
-        outfile_found = False
-        if len(self._get_output_names()) > 0: outfile_found = True
-
         # Set the OMP_NUM_THREADS variable in the environment
         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
 
-        # Run the command
+        # Set the run command
         if verbose: print('Run directory', run_dir)
         comm_str = 'cd ' + run_dir + '; ' + command
-        if skip:
-            if outfile_found:
-                if verbose: print('Skip the computation for input',name)
-            else:
-                if verbose: print('Executing command:', command)
-                os.system(comm_str)
+
+        # check if the computation can be skipped and run
+        can_skip = all([skip,len(self._get_output_names()) > 0])
+        if can_skip:
+            if verbose: print('Skip the computation for input',name)
         else:
-            # delete the out_dir and ndb_dir (if found) before running the code
-            if os.path.isdir(out_dir):
-                if verbose: print('delete folder:',out_dir)
-                os.system('rm -r %s'%out_dir)
-            if os.path.isdir(ndb_dir):
-                if verbose: print('delete folder:',ndb_dir)
-                os.system('rm -r %s'%ndb_dir)
             if verbose: print('Executing command:', command)
             os.system(comm_str)
 
