@@ -2,16 +2,9 @@
 TODO
 ----
 
-- Add some basic intentional methods in the YamboInput class.
-
-- Modify the build_SAVE function of Utils so that a link of the SAVE file (and not a copy) is created.
-
 - Complete the Dos method of the PwParser to add the broadening of the dos.    
 
-- Fix the documentation of the Utilities module.
-
-- Fix the documentation of dataset :  show the docstring of the attributes of the class.
-
+-
 
 FUTURE DEVELOPMENT
 ------------------
@@ -20,8 +13,8 @@ FUTURE DEVELOPMENT
      Possible strategies:
      a. (without the job manager) : add to calculator the possibility of taking a list of input objects as input
      (or define a new class with this feature). Once that this is done must run all the input in parallel
-     (os.system(command + '&') can work?). Then we need to modify dataset adding an 'is_parallel' boolean attribute,
-     if it is true all the elements of the dataset are passed to the calculator together.
+     (use multiprocessing module of python, otherwise os.system(command + '&') can work?). Then we need to modify dataset
+     adding an 'is_parallel' boolean attribute, if it is true all the elements of the dataset are passed to the calculator together.
      b. (with the job manager) : defined a calculator class the write the proper script and submit it. This calculator
      has to be able to take a list of input objects as input, so the implementation of this feature is a preliminary step
      common to both the approaches. In this case dataset uses this calculator passing all its elements together.

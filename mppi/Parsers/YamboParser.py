@@ -7,7 +7,7 @@ import numpy as np
 reference_column_names = {
     'hf' : ['kpoint','band','e0','ehf','dft','hf'],
     'qp' : ['kpoint','band','e0','eme0','sce0'],
-    'carriers' : ['time','dnhmne)','dnh','dne'],
+    'carriers' : ['time','dnhmne','dnh','dne'],
     'currents' : ['time','j_x','j_y','j_z'],
     'polarization' : ['time','Pol_x','Pol_y','Pol_z'],
     'spin_magnetization' :
@@ -80,7 +80,7 @@ class YamboParser(dict):
         """
         Read the data from the o- file. Data of the file are stored as key : values
         in the self[suffix] dictionary. The names of the keys are taken from the
-        reference_column_names if the suffix is recognized.
+        reference_column_names, if the suffix is recognized.
         """
         lines = file_to_list(file)
         columns = eval_columns(lines)

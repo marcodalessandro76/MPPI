@@ -26,35 +26,47 @@ def build_kpath(*kpoints,numstep=40):
     klist.append(kpoints[-1]+[0])
     return klist
 
-def build_SAVE(source_dir,run_dir,command = 'p2y -a 2'):
+def build_SAVE(source_dir,run_dir,command = 'p2y -a 2',make_link = True):
     """
     Build the SAVE folder for a yambo computation.
 
-    The method build the run_dir folder if it does not exists. Then check if the
-    SAVE folder exists, if not runs the command in the source_dir and copy the
-    SAVE folder in the run_dir. The option -a 2 ensures that labelling of the
-    high-symmetry kpoints is consistent in both QE and Yambo.
-    Lastly, executes yambo (without arguments) in the run_dir to build the r_setup.
+    The function creates the SAVE folder in the source_dir using the command provided
+    as the command parameter (the option -a 2 ensures that labelling of the
+    high-symmetry kpoints is consistent in both QE and Yambo) and create a symbolic
+    link (or a copy) of the SAVE folder in the run_dir. This procedure is performed only if the SAVE
+    folder is not already found in the run_dir.
+    If the source_dir is not found an exception is raised.
 
-    Note:
-        Maybe is better to link the SAVE instead f copy it, to save space on disk.
+    Args:
+        source_dir (str) : name of the folder with the source nscf QuantumESPRESSO computation
+        run_dir (st) : folder where the SAVE folder is linked or copied
+        command (str) : command for generation of the SAVE Folder. Default is 'p2y -a 2'
+        make_link (bool) : if True create a symbolic link
+
     """
     import os
+    # check if the source_dir exists
+    if not os.path.isdir(source_dir):
+        raise ValueError('The source directory', source_dir,
+                         ' does not exists.')
+    # create run_dir
     if not os.path.isdir(run_dir):
         os.mkdir(run_dir)
         print('Create folder %s'%run_dir)
-    if not os.path.isdir(source_dir):
-        print('source folder',source_dir,'not found')
-    elif os.path.isdir(os.path.join(run_dir,'SAVE')):
+    # check if the SAVE folder already exists in the run_dir
+    if os.path.isdir(os.path.join(run_dir,'SAVE')):
         print('SAVE folder already present in %s'%run_dir)
-    else:
-        # create the SAVE folder
+    else: # actions if the SAVE folder does not exists
         comm_str = 'cd %s; %s'%(source_dir,command)
         print('Executing command:', comm_str)
         os.system(comm_str)
-        # copy the SAVE folder
-        src = os.path.join(source_dir,'SAVE')
-        comm_str = 'cp -r %s %s'%(src,run_dir)
+        # copy (or create a symbolik link) of the SAVE folder in the run_dir
+        src = os.path.abspath(os.path.join(source_dir,'SAVE'))
+        dest = os.path.abspath(run_dir)
+        if make_link:
+            comm_str = 'ln -s %s %s'%(src,dest)
+        else:
+            comm_str = 'cp -r %s %s'%(src,dest)
         print('Executing command:', comm_str)
         os.system(comm_str)
         # build the r_setup

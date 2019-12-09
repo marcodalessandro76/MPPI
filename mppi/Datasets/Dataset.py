@@ -98,9 +98,11 @@ class Dataset(Runner):
         """
         Add a run into the dataset.
 
-        Append to the list of runs to be performed and associated to each appended
-        item the corresponding runner instance. Include also the presence of possible
-        further arguments, provided as kwargs.
+        Append a run to the list of runs to be performed and associated to each appended
+        item the corresponding runner instance.
+        The kwargs should contain the instance of the appended input and, eventually, further
+        arguments. All these quantities are stored as an element of the runs list and are
+        passed to the calculator when the run method is called.
 
         The name of the input file is not directly passed. Instead it is computed
         from the id of the run using the function name_from_id.
@@ -153,7 +155,7 @@ class Dataset(Runner):
     def _run_the_calculations(self, selection=None):
         """
         Method that manage the execution of the runs of the Dataset.
-        The argument selection is used by the fetch_results method
+        The argument selection is used by the fetch_results method.
         """
         for c in self.calculators:
             calc = c['calc']
