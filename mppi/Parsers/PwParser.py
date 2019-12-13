@@ -3,7 +3,7 @@ Class to perform the parsing of a QuantumESPRESSO XML file. Makes usage of the
 data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 """
 
-HaToeV = 27.211386
+from mppi.Utilities import HaToeV
 
 class PwParser():
     """
@@ -15,6 +15,16 @@ class PwParser():
         file (str): The name, including the path of the data-file-schema.xml
         verbose (bool) : set the amount of information written on terminal
 
+    Attributes:
+        natoms
+        natypes
+        atomic_positions
+        atomic_species
+        nkpoints
+        nbands
+        occupations
+        weights
+        evals
 
     """
 
@@ -113,38 +123,6 @@ class PwParser():
             return HaToeV*self.fermi
         else:
             return self.fermi
-
-    def get_kpath(self):
-        """
-        Assumes that self.kpoints contains a sampling of kpoints along a path.
-        Compute the curvilinear ascissa along the path.
-
-        Returns:
-        kpath(array) : array the value of the curvilinear ascissa along the path
-        """
-        import numpy as np
-        kpoints = np.array(self.kpoints)
-        kpath = [0]
-        distance = 0
-        for nk in range(1,len(kpoints)):
-            distance += np.linalg.norm(kpoints[nk-1]-kpoints[nk])
-            kpath.append(distance)
-        return np.array(kpath)
-
-    def get_bands(self,convert_eV=True):
-        """
-        Convert the array self.evals into the the array bands, where bands[i] gives
-        the energies of the i-th band along the path.
-        The fermi level is used as the reference energy and the results are
-        expressed in eV if convert_eV = True
-        """
-        import numpy as np
-        bands = []
-        for b in range(len(self.evals[0])): #number of bands
-            bands.append(self.evals[:,b])
-        bands = np.array(bands) - self.fermi
-        if convert_eV: bands *= HaToeV
-        return bands
 
     def Dos(self,Emin=-20, Emax=20, deltaE=0.001, deg=0.00):
         """

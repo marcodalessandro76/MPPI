@@ -40,10 +40,13 @@ Organize runs and analyze output in a dataset
 
 .. toctree:: datasets
 
-Utilities and some useful low-level functions and classes are codified in the Utilities Module
+The Utilities module collects some useful functions and classes. The module is organized in several files.
 
-.. toctree:: utilities.rst
 .. toctree:: attributeDict.rst
+.. toctree:: pwUtils.rst
+.. toctree:: pwBands.rst
+.. toctree:: yamboUtils.rst
+
 
 MPPI Tutorial page
 

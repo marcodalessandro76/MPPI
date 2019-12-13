@@ -1,30 +1,18 @@
 """
-This file contains some low-level useful functions.
+This file contains some useful functions to perform computation with Yambo.
 The module can be loaded in the notebook in one of the following way
 
-from mppi import Utilities as U
+>>> from mppi import Utilities as U
 
-from mppi.Utilities import build_kpath,...
+>>> U.build_SAVE
+
+or to load directly some elements 
+
+>>> from mppi.Utilities import build_SAVE
+
+>>> build_SAVE
+
 """
-
-def fortran_bool(boolean):
-    return {True:'.true.',False:'.false.'}[boolean]
-
-def build_kpath(*kpoints,numstep=40):
-    """
-    Build a list of kpoints to be passed to the set_kpoints methods of the
-    :class:`PwInput` for computing the band structure along a path.
-
-    Args:
-        klist(*list): identifies the high symmetry points of the k-path
-        numstep(int): specifies the number of intermediate points used to build
-                      the path
-    """
-    klist = []
-    for k in kpoints[:-1]:
-        klist.append(k+[numstep])
-    klist.append(kpoints[-1]+[0])
-    return klist
 
 def build_SAVE(source_dir,run_dir,command = 'p2y -a 2',make_link = True):
     """

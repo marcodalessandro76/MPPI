@@ -4,6 +4,9 @@ Class to create and manipulate an input file for pw.x computations of QuantumESP
 The input can be created from scratch or can be initialized from an existing input file.
 """
 
+def fortran_bool(boolean):
+    return {True:'.true.',False:'.false.'}[boolean]
+
 class PwInput(dict):
     """
     Class to generate an manipulate the pw.x input files.
@@ -265,7 +268,6 @@ class PwInput(dict):
             diago_full_acc(boolean)
             force_symmorphic(boolean)
         """
-        from mppi.Utilities.Utils import fortran_bool
         self['control']['calculation'] = "'scf'"
         self['electrons']['conv_thr'] = conv_thr
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
@@ -281,23 +283,11 @@ class PwInput(dict):
             diago_full_acc(boolean)
             force_symmorphic(boolean)
         """
-        from mppi.Utilities.Utils import fortran_bool
         self['control']['calculation'] = "'nscf'"
         self['system']['nbnd'] = nbnd
         self['electrons']['conv_thr'] = conv_thr
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
-
-    # def set_bands(self,nbnd,path_kpoints=None,conv_thr=1e-8,
-    #              diago_full_acc=True,force_symmorphic=True):
-    #     """
-    #     set the calculation to be bands
-    #     """
-    #     self.control['calculation'] = "'bands'"
-    #     self.electrons['conv_thr'] = conv_thr
-    #     self.system['nbnd'] = nbnd
-    #     self.electrons['diago_full_acc'] = fortran_bool(diago_full_acc)
-    #     self.system['force_symmorphic'] = fortran_bool(force_symmorphic)
 
     def add_atom(self,atom,pseudo_name,mass = '1.0'):
         """
@@ -362,7 +352,7 @@ class PwInput(dict):
 
     def set_spinorbit(self):
         """
-        Set the lspinorb and noncolin to True .
+        Set the lspinorb and noncolin to True.
         """
         self['system']['lspinorb'] = '.true.'
         self['system']['noncolin'] = '.true.'

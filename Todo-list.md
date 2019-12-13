@@ -2,9 +2,21 @@
 TODO
 ----
 
-- Complete the Dos method of the PwParser to add the broadening of the dos.    
+- In a nscf computation with skip=true the computation is always skipped because the system recognize the
+  data-file-schema.xls of the source scf computation. This needs to be fixed. I can delete this file after
+  the copy of the scf source folder or I can use the name.xml file as a check to understand if the computation
+  has been already performed.
+  It seems that the data-file-schema has to be present to perform the nscf computation, I try to use the
+  $name.xml file as the skipfile. __DO A CAREFUL CHECK OF THE PROCEDURE__.
 
--
+- Complete the Dos method of the PwParser to add the broadening of the dos. Maybe it is better to build a class
+  as for the PwBands.
+
+- Add a function that compute the gap (both direct and indirect) from the parsing of a pw computation. I can create
+  PwUtils and collect in this module function like this. Maybe the get_gap function can be inserted directly in the
+  PwParser. Also a function get_valence_band can be defined (with a check that the band is the same for all the kpoints)
+  I can use something like if all(v == values[0] for v in values):
+
 
 FUTURE DEVELOPMENT
 ------------------

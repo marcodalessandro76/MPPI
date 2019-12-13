@@ -49,7 +49,7 @@ class QeCalculator(Runner):
         If skip = False delete the log and the xml file and also the folder
         run_dir/prefix.save.
         If the 'source_dir' key is passed to the run method copy the source folder
-        in the run_dir with the name $prefix. This procedure has to be performed
+        in the run_dir with the name $prefix. This procedure is performed
         after the deletion run_dir/prefix.save since otherwise the copy of the
         source_dir is deleted.
 
@@ -91,6 +91,11 @@ class QeCalculator(Runner):
         source_dir = self.run_options.get('source_dir')
         if source_dir is not None:
             self._copy_source_dir(source_dir)
+            # delete the data-file-schema.xml in the $prefix.save folder
+            #result_file = self._get_result_file()
+            #if verbose: print('delete file:',result_file)
+            #os.system('rm %s'%result_file)
+
 
         return {'command': self._get_command()}
 
@@ -115,7 +120,8 @@ class QeCalculator(Runner):
         skip = self.run_options['skip']
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
-        skipfile = self._get_result_file()
+        #skipfile = self._get_result_file()
+        skipfile = os.path.join(run_dir,name)+'.xml'
 
         # Set the OMP_NUM_THREADS variable in the environment
         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
@@ -165,7 +171,7 @@ class QeCalculator(Runner):
         return os.path.join(run_dir,prefix,'data-file-schema.xml')
 
     def _ensure_run_directory(self):
-        from mppi.Utilities import Futile_utils as f
+        from mppi.Utilities import FutileUtils as f
         run_dir = self.run_options.get('run_dir', '.')
         # Restrict run_dir to a sub-directory
         if ("/" in run_dir or run_dir == ".."):
