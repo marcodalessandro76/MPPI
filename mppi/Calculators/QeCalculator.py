@@ -24,12 +24,12 @@ class QeCalculator(Runner):
         name (str) : the name associated to the input file (without extension)
             Usually you can set the name equal to the prefix of the input object so
             the name of the input file and the prefix folder built by QuantumESPRESSO
-            are equal.
+            are equal
         source_dir (str) : location of the scf source folder for a nscf computation.
-        If present the class copies this folder in the run_dir with the name prefix.save.
+        If present the class copies this folder in the run_dir with the name $prefix.save.
         verbose (bool) : set the amount of information provided on terminal
         skip (bool) : if True evaluate if the computation can be skipped. This is done
-            by checking if the file data-file-schema.xml is present in the prefix folder
+            by checking if the file $name.xml is present in the prefix folder
     """
 
     def __init__(self,
@@ -46,8 +46,7 @@ class QeCalculator(Runner):
     def pre_processing(self):
         """
         Process local run dictionary to create the run directory and input file.
-        If skip = False delete the log and the xml file and also the folder
-        run_dir/prefix.save.
+        If skip = False clean the run_dir.
         If the 'source_dir' key is passed to the run method copy the source folder
         in the run_dir with the name $prefix. This procedure is performed
         after the deletion run_dir/prefix.save since otherwise the copy of the
@@ -70,32 +69,15 @@ class QeCalculator(Runner):
         else:
             print('input not provided')
 
-        # if skip = False delete the name.log, name.xml and prefix.save (if found)
+        # if skip = False clean the run_dir
         skip = self.run_options['skip']
         if not skip:
-            logfile = os.path.join(run_dir,name)+'.log'
-            xmlfile = os.path.join(run_dir,name)+'.xml'
-            prefix = input['control']['prefix'].strip("'")
-            outdir = os.path.join(run_dir,prefix)+'.save'
-            if os.path.isfile(logfile):
-                if verbose: print('delete log file:',logfile)
-                os.system('rm %s'%logfile)
-            if os.path.isfile(xmlfile):
-                if verbose: print('delete xml file:',xmlfile)
-                os.system('rm %s'%xmlfile)
-            if os.path.isdir(outdir):
-                if verbose: print('delete folder:',outdir)
-                os.system('rm -r %s'%outdir)
+            self._clean_run_dir()
 
         # Copy the source folder in the run_dir
         source_dir = self.run_options.get('source_dir')
         if source_dir is not None:
             self._copy_source_dir(source_dir)
-            # delete the data-file-schema.xml in the $prefix.save folder
-            #result_file = self._get_result_file()
-            #if verbose: print('delete file:',result_file)
-            #os.system('rm %s'%result_file)
-
 
         return {'command': self._get_command()}
 
@@ -106,7 +88,7 @@ class QeCalculator(Runner):
         Routine associated to the running of the executable.
         If the skip attribute of run_options is True the method evaluated if
         the computation can be skipped. This is done by  checking if the file
-        data-file-schema.xml is already present in the path run_dir/prefix.save
+        $name.xml is already present in the path run_dir/prefix.save
 
         Args:
            command (str): the command as it is set by the ``pre_processing``
@@ -120,7 +102,6 @@ class QeCalculator(Runner):
         skip = self.run_options['skip']
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
-        #skipfile = self._get_result_file()
         skipfile = os.path.join(run_dir,name)+'.xml'
 
         # Set the OMP_NUM_THREADS variable in the environment
@@ -205,3 +186,28 @@ class QeCalculator(Runner):
             if verbose:
                 print('The folder %s already exsists. Source folder % s not copied'
                 %(dest_dir,source_dir))
+
+    def _clean_run_dir(self):
+        """
+        Clean the run_dir before performing the computation. Delete the $name.log file,
+        the $name.xml file and the folder run_dir/prefix.save.
+        """
+        run_dir = self.run_options.get('run_dir', '.')
+        name = self.run_options.get('name','default')
+        input = self.run_options.get('input')
+        prefix = input['control']['prefix'].strip("'")
+        verbose = self.run_options['verbose']
+
+        logfile = os.path.join(run_dir,name)+'.log'
+        xmlfile = os.path.join(run_dir,name)+'.xml'
+        outdir = os.path.join(run_dir,prefix)+'.save'
+
+        if os.path.isfile(logfile):
+            if verbose: print('delete log file:',logfile)
+            os.system('rm %s'%logfile)
+        if os.path.isfile(xmlfile):
+            if verbose: print('delete xml file:',xmlfile)
+            os.system('rm %s'%xmlfile)
+        if os.path.isdir(outdir):
+            if verbose: print('delete folder:',outdir)
+            os.system('rm -r %s'%outdir)

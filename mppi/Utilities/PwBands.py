@@ -62,7 +62,7 @@ class PwBands():
         Convert the array data.evals into the the array bands, where bands[i] gives
         the energies of the i-th band along the path.
         The fermi level is used as the reference energy and the results are
-        expressed in eV if convert_eV = True
+        expressed in eV if convert_eV = True.
         """
         from mppi.Utilities import HaToeV
         import numpy as np
@@ -79,7 +79,7 @@ class PwBands():
         Compute the curvilinear ascissa along the path.
 
         Returns:
-        kpath(array) : array the value of the curvilinear ascissa along the path
+        kpath(array) : values of the curvilinear ascissa along the path
         """
         import numpy as np
         kpoints = np.array(self.data.kpoints)
@@ -136,3 +136,6 @@ class PwBands():
         ax.set_xticklabels(labels,size=14)
         ax.set_xticks(positions)
         plt.show()
+
+        # Display the band gap
+        self.data.get_gap()

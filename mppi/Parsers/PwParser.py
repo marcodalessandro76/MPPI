@@ -124,6 +124,44 @@ class PwParser():
         else:
             return self.fermi
 
+    def get_num_occupied_bands(self):
+        """
+        Compute the number of occupied bands of the system. The method check if the number is
+        equal for all the kpoints.
+        """
+        num_occupied = []
+        for occupation in self.occupations:
+            num_occupied.append((occupation == 1.).sum())
+        if all(occ == num_occupied[0] for occ in num_occupied):
+            return num_occupied[0]
+        else:
+            print('number of occupied bands is k dependent')
+            return None
+
+    def get_gap(self):
+        """
+        Compute the energy gap (in eV)
+        """
+        valence_band = self.evals[:,self.get_num_occupied_bands()-1]
+        conduction_band = self.evals[:,self.get_num_occupied_bands()]
+
+        VBM = valence_band.max()
+        kpoint_vbm = valence_band.argmax()
+        CBM = conduction_band.min()
+        kpoint_cbm = conduction_band.argmin()
+        energy_gap = (CBM-VBM)*HaToeV
+        direct_gap = (conduction_band[kpoint_vbm]-valence_band[kpoint_vbm])*HaToeV
+        if kpoint_cbm == kpoint_vbm:
+            print('Direct gap system')
+            print('=================')
+            print('Energy gap :',energy_gap,'eV')
+        else :
+            print('Indirect gap system')
+            print('===================')
+            print('Energy gap :',energy_gap,'eV')
+            print('Direct gap :',direct_gap,'eV')
+        return {'gap':energy_gap,'direct_gap':direct_gap,'k_cbm':kpoint_cbm,'k_vbm':kpoint_vbm}
+
     def Dos(self,Emin=-20, Emax=20, deltaE=0.001, deg=0.00):
         """
         Compute the DOS.

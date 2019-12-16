@@ -20,4 +20,4 @@ In this page you find some tutorials and examples that explain the usage of the 
  .. toctree::
    :maxdepth: 1
 
-   tutorials/GaAs_BandStructure_Pw.ipynb
+   tutorials/Pw_BandStructure.ipynb

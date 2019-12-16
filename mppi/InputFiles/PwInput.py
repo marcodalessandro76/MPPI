@@ -289,6 +289,22 @@ class PwInput(dict):
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
+    def set_bands(self,nbnd,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
+        """
+        Set the variables for a bands calculation
+
+        Args:
+            nbnd(int): number of bands
+            conv_thr(float): the convergence threshold value
+            diago_full_acc(boolean)
+            force_symmorphic(boolean)
+        """
+        self['control']['calculation'] = "'bands'"
+        self['system']['nbnd'] = nbnd
+        self['electrons']['conv_thr'] = conv_thr
+        self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
+        self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
+
     def add_atom(self,atom,pseudo_name,mass = '1.0'):
         """
         Update the self['atomic_species'] dictionary
