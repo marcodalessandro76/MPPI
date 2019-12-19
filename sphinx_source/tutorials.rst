@@ -18,6 +18,7 @@ In this page you find some tutorials and examples that explain the usage of the 
 * Some example in which the functionalities of the code are used to obtain and analyze scientific results
 
  .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   tutorials/Pw_BandStructure.ipynb
+   tutorials/Analysis_BandStructure.ipynb
+   tutorials/Analysis_Dos.ipynb

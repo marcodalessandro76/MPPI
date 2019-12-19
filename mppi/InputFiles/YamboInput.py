@@ -178,7 +178,13 @@ class YamboInput(dict):
 
     # Set Methods
 
-    def set_QPkRange(self,first_k,last_k):
+    def set_extendOut(self):
+        """
+        Activate the ExtendOut option to print all the variable in the output file.
+        """
+        self['arguments'].append('ExtendOut')
+
+    def set_kRange(self,first_k,last_k):
         """
         Set the the kpoint interval in the variable QPkpoint.
         """
@@ -186,7 +192,7 @@ class YamboInput(dict):
         kpoint_bands = [first_k,last_k] + bands
         self['variables']['QPkrange'] = [kpoint_bands,'']
 
-    def set_QPbandRange(self,first_band,last_band):
+    def set_bandRange(self,first_band,last_band):
         """
         Set the the band interval in the variable QPkpoint.
         """

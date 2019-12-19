@@ -16,15 +16,21 @@ class PwParser():
         verbose (bool) : set the amount of information written on terminal
 
     Attributes:
-        natoms
-        natypes
-        atomic_positions
-        atomic_species
-        nkpoints
-        nbands
-        occupations
-        weights
-        evals
+        natoms : number of atoms in the cell
+        natypes : number of atomic species
+        atomic_positions : list with the position of each atom
+        atomic_species : dictionary with mass and pseudo for each species
+        nkpoints : numer of kpoints
+        nbands : number of bands
+        occupations : list with the bands occupation for each kpoint
+        weights : list with thw weight of each kpoint
+        energy : total energy of the system (in Hartree)
+        fermi : fermi energy (in Hartree)
+        evals : list of the ks energies for each kpoint (in Hartree)
+        lsda : True if collinear spin is activated
+        noncolin : True if noncollinear spin calculation is activated
+        spinorbit : True if spin-orbit couping is present
+        spin_degen : 1 if lsda or non collinear spin is activated, 0 otherwise
 
     """
 
@@ -104,6 +110,15 @@ class PwParser():
         self.evals = np.array(self.evals)
         self.occupations = np.array(self.occupations)
 
+        #spin related properties and spin-orbit coupling
+        lsda = self.data.findall('output/band_structure/lsda')[0].text.strip()
+        self.lsda = True if lsda == 'true' else False
+        noncolin = self.data.findall('output/band_structure/noncolin')[0].text.strip()
+        self.noncolin = True if noncolin == 'true' else False
+        spinorbit = self.data.findall('output/band_structure/spinorbit')[0].text.strip()
+        self.spinorbit = True if spinorbit == 'true' else False
+        self.spin_degen = 1 if self.lsda or self.noncolin else 2
+
     def get_energy(self,convert_eV = True):
         """
         Return the total energy the system. If convert_eV is True the energy
@@ -128,6 +143,7 @@ class PwParser():
         """
         Compute the number of occupied bands of the system. The method check if the number is
         equal for all the kpoints.
+
         """
         num_occupied = []
         for occupation in self.occupations:
@@ -135,32 +151,75 @@ class PwParser():
         if all(occ == num_occupied[0] for occ in num_occupied):
             return num_occupied[0]
         else:
-            print('number of occupied bands is k dependent')
+            print('number of occupied bands is k-dependent')
             return None
 
-    def get_gap(self):
+    def get_evals(self, set_gap=None, set_direct_gap=None):
         """
-        Compute the energy gap (in eV)
-        """
-        valence_band = self.evals[:,self.get_num_occupied_bands()-1]
-        conduction_band = self.evals[:,self.get_num_occupied_bands()]
+        Return the ks energies for each kpoint (in eV). The top of the valence band is used as the
+        reference energy value. It is possible to shift the energies of the empty bands by setting an arbitrary
+        value for the gap (direct or indirect). Implemented and tested only for semiconductors.
 
-        VBM = valence_band.max()
-        kpoint_vbm = valence_band.argmax()
-        CBM = conduction_band.min()
-        kpoint_cbm = conduction_band.argmin()
-        energy_gap = (CBM-VBM)*HaToeV
-        direct_gap = (conduction_band[kpoint_vbm]-valence_band[kpoint_vbm])*HaToeV
-        if kpoint_cbm == kpoint_vbm:
-            print('Direct gap system')
-            print('=================')
-            print('Energy gap :',energy_gap,'eV')
-        else :
-            print('Indirect gap system')
-            print('===================')
-            print('Energy gap :',energy_gap,'eV')
-            print('Direct gap :',direct_gap,'eV')
-        return {'gap':energy_gap,'direct_gap':direct_gap,'k_cbm':kpoint_cbm,'k_vbm':kpoint_vbm}
+        Args:
+            set_gap (float) : target gap in eV
+            set_direct_gap (float) : target direct_gap in eV. If set_gap is provided this
+                parameter is ignored
+
+        """
+        evals = self.evals*HaToeV
+        homo_band = evals[:,self.get_num_occupied_bands()-1]
+        VBM = homo_band.max()
+        evals -= VBM
+
+        if self.get_num_occupied_bands() == self.nbands: # only occupied bands are present
+            return evals
+        else: # shift the energy level of the empty bands if needed
+            lumo_index = self.get_num_occupied_bands()
+            gap = self.get_gap(verbose=False)
+            scissor = 0.
+            if set_gap is not None: scissor = set_gap - gap['gap']
+            elif set_direct_gap is not None: scissor = set_direct_gap - gap['direct_gap']
+            print('Apply a scissor of',scissor,'eV')
+            evals[:,lumo_index:] += scissor
+            return evals
+
+    def get_gap(self,verbose=True):
+        """
+        Compute the energy gap of the system (in eV). The method check if the gap is direct or
+        indirect. Implemented and tested only for semiconductors.
+
+        Return:
+            :py:class:`dict` : a dictionary with the values of direct and indirect gaps and the positions
+            of the VMB and CBM
+
+        """
+        import numpy as np
+        homo_band = self.evals[:,self.get_num_occupied_bands()-1]
+        lumo_band = self.evals[:,self.get_num_occupied_bands()]
+
+        VBM = homo_band.max()
+        position_vbm = homo_band.argmax()
+        CBM = lumo_band.min()
+        position_cbm = lumo_band.argmin()
+        gap = (CBM-VBM)*HaToeV
+        direct_gap = (lumo_band[position_vbm]-homo_band[position_vbm])*HaToeV
+
+        # If there are several copies of the same point on the path it can happen that
+        # the system is recognized as an indirect gap for numerical noise, so we check
+        if np.allclose(gap,direct_gap,atol=1e-5,rtol=1e-5):
+            gap = direct_gap
+            position_cbm = position_vbm
+        if verbose:
+            if position_cbm == position_vbm:
+                print('Direct gap system')
+                print('=================')
+                print('Gap :',gap,'eV')
+            else :
+                print('Indirect gap system')
+                print('===================')
+                print('Gap :',gap,'eV')
+                print('Direct gap :',direct_gap,'eV')
+        return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,'positon_vbm':position_vbm}
 
     def Dos(self,Emin=-20, Emax=20, deltaE=0.001, deg=0.00):
         """

@@ -4,20 +4,27 @@ TODO
 
 - Check the compilation of the ReadTheDocs documentation.
 
-- Complete the Dos method of the PwParser to add the broadening of the dos. Maybe it is better to build a class
-  as for the PwBands.
+- Implement a class that manage the Dos. The class should compute the dos starting from on object like PwParser.evals
+  that contains the ks energies of all the bands for each kpoint.
+  A method compute the dos for each of the k points: we define an energy range and an energy resolution and for each
+  kpoint we build a list with the binning of the ks energies. Then all the binning lists are summed by including the
+  weights of each kpoint. The class needs to manage the spin polarization.
+  To manage the broadening study the DiracSuperposition class of PyBigDFT.
 
-- Set the ndb of YamboCalculator equal to the name of the folder that contain the database.  
+- Implement a YppBands class to manage the band structure from the output of a ypp -s b calculation.
 
-- Add the clean_run_dir method in the YamboCalculator.
+- Complete the reference_column_names_extendOut for the real-time runlevels.
 
-- Implement a YppBands class to manage the band structure from the output of a ypp -s b calculation. 
+- Use the function floats_from_string in YamboParser and clean the eval_columns function.
 
-- Check the effect of the ExtendOut option in the Yambo input.
+- Update of PwParser
+  1. check if it is better to to express the evals in eV and/or define a method that : convert the eval in eV (if requested),
+     set the fermi energy to zero and translate the conduction bands setting the gap to a given value, and then return the
+     evals
 
-- The get_gap method of the Pw parser can provides wrong estimate of the Direct/Indirect nature of the system to due  
-  small energy differences due to numerical noise. Fix this problem (use all close to see if the direct nature is satisfied
-  inside a given numerical tolerance).
+- Update of PwBands : this class can become more general purpose. To do so we have to define a structure for the ks energies
+  that the class is able to manage. Then we define some methods that convert the output of Pw or Ypp calculation in this format,
+  so the class can manage the BandStructure for various type of inputs. 
 
 FUTURE DEVELOPMENT
 ------------------

@@ -55,7 +55,7 @@ class YamboCalculator(Runner):
         Process local run dictionary. Check that the run_dir exists and that it
         contains the SAVE folder. Check that the input object has been provided
         in the run parameters and write it on disk.
-        If skip = False delete the folders with the o- files and the ndb database.
+        If skip = False clean the run_dir.
 
         Note:
             If the run_dir and/or the SAVE folder do not exist an alert is
@@ -83,18 +83,10 @@ class YamboCalculator(Runner):
             else :
                 print('input not provided')
 
-        # if skip = False delete the out_dir and ndb_dir (if found) before running the code
+        # if skip = False clean the run_dir
         skip = self.run_options['skip']
         if not skip:
-            jobname = self.run_options.get('jobname',name)
-            out_dir = os.path.join(run_dir,name)
-            ndb_dir = os.path.join(run_dir,jobname)
-            if os.path.isdir(out_dir):
-                if verbose: print('delete folder:',out_dir)
-                os.system('rm -r %s'%out_dir)
-            if os.path.isdir(ndb_dir):
-                if verbose: print('delete folder:',ndb_dir)
-                os.system('rm -r %s'%ndb_dir)
+            self._clean_run_dir()
 
         return {'command': self._get_command()}
 
@@ -142,14 +134,14 @@ class YamboCalculator(Runner):
             os.system(comm_str)
 
         return {'output_names': self._get_output_names(),
-                'ndb_names': self._get_ndb_names() }
+                'ndb_folder': jobname}
 
-    def post_processing(self, command, output_names, ndb_names):
+    def post_processing(self, command, output_names, ndb_folder):
         """
-        In the actual implementation return a dictionary with the names
-        of the o- file(s) and ndb database.
+        Return a dictionary with the names of the o- file(s) and the folder that
+        contains the ndb database.
         """
-        return {'output' : output_names, 'ndb' : ndb_names}
+        return {'output' : output_names, 'ndb_folder' : ndb_folder}
 
     def _get_command(self):
         name = self.run_options.get('name','yambo')
@@ -177,27 +169,41 @@ class YamboCalculator(Runner):
                     output_names.append(os.path.join(out_dir,file))
         return output_names
 
-    def _get_ndb_names(self):
+    # def _get_ndb_names(self):
+    #     """
+    #     Look for the names of the ndb file(s) produced by yambo.
+    #
+    #     Return:
+    #         :py:class:`list`: A list with the names, including the path, of the
+    #         files ndb produced by the run
+    #     """
+    #     run_dir = self.run_options.get('run_dir', '.')
+    #     name = self.run_options.get('name','yambo')
+    #     jobname = self.run_options.get('jobname',name)
+    #     ndb_dir = os.path.join(run_dir,jobname)
+    #
+    #     ndb_names = []
+    #     if os.path.isdir(ndb_dir):
+    #         for file in os.listdir(ndb_dir):
+    #             if 'ndb' in file:
+    #                 ndb_names.append(os.path.join(ndb_dir,file))
+    #     return ndb_names
+
+    def _clean_run_dir(self):
         """
-        Look for the names of the ndb file(s) produced by yambo.
-
-        Note:
-            This method needs to be modified to extract only the database
-            that we really need.
-
-        Return:
-            :py:class:`list`: A list with the names, including the path, of the
-            files ndb produced by the run
-
+        Clean the run_dir before performing the computation. Delete the out_dir
+        and ndb_dir (if found).
         """
+        verbose = self.run_options['verbose']
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','yambo')
         jobname = self.run_options.get('jobname',name)
+        out_dir = os.path.join(run_dir,name)
         ndb_dir = os.path.join(run_dir,jobname)
 
-        ndb_names = []
+        if os.path.isdir(out_dir):
+            if verbose: print('delete folder:',out_dir)
+            os.system('rm -r %s'%out_dir)
         if os.path.isdir(ndb_dir):
-            for file in os.listdir(ndb_dir):
-                if 'ndb' in file:
-                    ndb_names.append(os.path.join(ndb_dir,file))
-        return ndb_names
+            if verbose: print('delete folder:',ndb_dir)
+            os.system('rm -r %s'%ndb_dir)
