@@ -44,8 +44,12 @@ The Utilities module collects some useful functions and classes. The module is o
 
 .. toctree:: attributeDict.rst
 .. toctree:: pwUtils.rst
-.. toctree:: pwBands.rst
 .. toctree:: yamboUtils.rst
+.. toctree:: bandStructure.rst
+.. toctree:: dos.rst
+
+
+
 
 
 MPPI Tutorial page

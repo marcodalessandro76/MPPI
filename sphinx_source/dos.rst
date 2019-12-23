@@ -1,7 +1,7 @@
-PwBands
--------
+Dos
+---
 
-.. automodule:: mppi.Utilities.PwBands
+.. automodule:: mppi.Utilities.Dos
     :members:
     :undoc-members:
     :show-inheritance:

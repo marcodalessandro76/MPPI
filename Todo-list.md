@@ -11,20 +11,18 @@ TODO
   weights of each kpoint. The class needs to manage the spin polarization.
   To manage the broadening study the DiracSuperposition class of PyBigDFT.
 
-- Implement a YppBands class to manage the band structure from the output of a ypp -s b calculation.
-
 - Complete the reference_column_names_extendOut for the real-time runlevels.
 
-- Use the function floats_from_string in YamboParser and clean the eval_columns function.
+- Test the PwParser with a result for graphene.
+    1. the self.fermi return the highestOccupiedLevel why not the fermi_level???
+    2. carefully check the usage of VBM and fermi in the get_gap method.
+    3. study the methods setfermi in electronsdb
+    4. Test the get_eval method of PwParser with a result for graphene. If the number of occupied states is k dependent
+          the get eval simply return the eval in eV. Check if the band structure of graphene can be plotted.
 
-- Update of PwParser
-  1. check if it is better to to express the evals in eV and/or define a method that : convert the eval in eV (if requested),
-     set the fermi energy to zero and translate the conduction bands setting the gap to a given value, and then return the
-     evals
+- The weights of PwParser can be converted into a numpy.array? Test it with graphene.
 
-- Update of PwBands : this class can become more general purpose. To do so we have to define a structure for the ks energies
-  that the class is able to manage. Then we define some methods that convert the output of Pw or Ypp calculation in this format,
-  so the class can manage the BandStructure for various type of inputs. 
+- remove the xml files from IO_Files folder. 
 
 FUTURE DEVELOPMENT
 ------------------

@@ -10,7 +10,7 @@ import numpy as np
 reference_column_names_extendOut = {
     'hf' : ['kpoint','band','e0','ehf','dft','hf'],
     'qp' : ['kpoint','band','e0','e','eme0','dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs'],
-    # complete the list for this run levels.....
+    # complete the list for these run levels.....
     'carriers' : ['time','dnhmne','dnh','dne'],
     'currents' : ['time','j_x','j_y','j_z'],
     'polarization' : ['time','Pol_x','Pol_y','Pol_z'],
@@ -51,7 +51,7 @@ def file_to_list(filename,skip='#'):
             if not l.startswith(skip): lines.append(l)
     return lines
 
-def floats_from_string(line):
+def _floats_from_string(line):
   """
   Split a string using blank spaces and convert the elements to float.
   """
@@ -61,7 +61,7 @@ def floats_from_string(line):
       except ValueError: pass
   return line_float
 
-def eval_columns(lines):
+def build_columns(lines):
     """
     Split each line of the output of file_to_list into a list and convert
     its elements to float. The procedure deletes the values that cannot be converted
@@ -70,20 +70,8 @@ def eval_columns(lines):
     Then transpose the array so that each element is a column of the data of the file.
     """
     splitted = []
-    # simple implementation that fails if some elements cannot be converted to float
-    # for l in lines: # run over lines
-    #     splitted.append(list(map(float,l.split())))
-
-    for l in lines: #run over lines
-        l_float = [] #each line is converted in a string of float
-        for value in l.split():
-            # if some element cannot converted to float are ignored
-            try: l_float.append(float(value))
-            except ValueError: pass
-        splitted.append(l_float)
-
-    # for line in lines:
-    #     splitted.append(floats_from_string(line))
+    for line in lines:
+         splitted.append(_floats_from_string(line))
 
     columns = np.array(splitted).transpose()
     return columns
@@ -124,7 +112,7 @@ class YamboParser(dict):
             files(list): The list of strings with the names of the file to be parsed.
             verbose (bool) : Determine the amount of information provided on terminal.
             extendOut (bool) : Determine which dictionary is used as reference for the
-                            name of the variables
+                            names of the variables
         """
         dict.__init__(self)
         for file in files:
@@ -141,5 +129,5 @@ class YamboParser(dict):
         the value of the boolean extendOut), if the suffix is recognized.
         """
         lines = file_to_list(file)
-        columns = eval_columns(lines)
+        columns = build_columns(lines)
         self[suffix] = make_dict(columns,suffix,extendOut)
