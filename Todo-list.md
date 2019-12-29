@@ -4,25 +4,21 @@ TODO
 
 - Check the compilation of the ReadTheDocs documentation.
 
-- Implement a class that manage the Dos. The class should compute the dos starting from on object like PwParser.evals
-  that contains the ks energies of all the bands for each kpoint.
-  A method compute the dos for each of the k points: we define an energy range and an energy resolution and for each
-  kpoint we build a list with the binning of the ks energies. Then all the binning lists are summed by including the
-  weights of each kpoint. The class needs to manage the spin polarization.
-  To manage the broadening study the DiracSuperposition class of PyBigDFT.
+- Add the spin to the Dos class.
+
+- Complete the documentation of the Dos class.
+
+- Add a from_Yambo method in the Dos class. The output of the YamboParser does not contain
+  information on the weights of the kpoints. These information can be extracted from ns.db1
+  using the YamboElectronsDB class of yambopy or from the xml file of the pw output used to
+  build the SAVE folder.
+
+- Define a get_transitions method in the PwParser.
 
 - Complete the reference_column_names_extendOut for the real-time runlevels.
 
 - Test the PwParser with a result for graphene.
-    1. the self.fermi return the highestOccupiedLevel why not the fermi_level???
-    2. carefully check the usage of VBM and fermi in the get_gap method.
-    3. study the methods setfermi in electronsdb
-    4. Test the get_eval method of PwParser with a result for graphene. If the number of occupied states is k dependent
-          the get eval simply return the eval in eV. Check if the band structure of graphene can be plotted.
-
-- The weights of PwParser can be converted into a numpy.array? Test it with graphene.
-
-- remove the xml files from IO_Files folder. 
+    1. why there no self.fermi?
 
 FUTURE DEVELOPMENT
 ------------------

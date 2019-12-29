@@ -75,8 +75,8 @@ class PwInput(dict):
 
         self._stringify_atomic_species(lines)
         self._stringify_atomic_positions(lines)
-        self._stringify_cell_parameters(lines)
         self._stringify_kpoints(lines)
+        self._stringify_cell_parameters(lines)
 
         return '\n'.join(lines)
 
@@ -253,13 +253,25 @@ class PwInput(dict):
         """
         self['control']['pseudo_dir'] = "'%s'"%pseudo_dir
 
-    def set_occupations(self):
+    def set_occupations(self,occupations='fixed',smearing='fermi-dirac',degauss=50.):
         """
-        TODO : set the type of orbital occupations (fixed, smearing)
-        """
-        pass
+        Set the type of orbital of occupations of the ks states. If a smearing is
+        present set also the type of smearing and the value of the degauss parameter.
 
-    def set_scf(self,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
+        Args:
+            occupations (string) : type of occupation of the ks states (fixed, smearing,...)
+            smearing (string) : type of smearing (gaussian, fermi-dirac,...)
+            degauss (float) : value of the gaussian spreading (meV) for brillouin-zone
+                integration in metals
+        """
+        from mppi.Utilities import HaToeV
+        self['system']['occupations'] = "'"+occupations+"'"
+        if occupations == 'smearing':
+            self['system']['smearing'] = "'"+smearing+"'"
+            self['system']['degauss'] = degauss/(0.5*1e3*HaToeV)
+
+    def set_scf(self,conv_thr=1e-8,diago_full_acc=False,
+                force_symmorphic=False,verbosity='high'):
         """
         Set the variables for a scf calculation
 
@@ -267,13 +279,16 @@ class PwInput(dict):
             conv_thr(float): the convergence threshold value
             diago_full_acc(boolean)
             force_symmorphic(boolean)
+            verbosity(string)
         """
         self['control']['calculation'] = "'scf'"
+        self['control']['verbosity'] = "'"+verbosity+"'"
         self['electrons']['conv_thr'] = conv_thr
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
-    def set_nscf(self,nbnd,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
+    def set_nscf(self,nbnd,conv_thr=1e-8,diago_full_acc=False,
+                 force_symmorphic=False,verbosity='high'):
         """
         Set the variables for a nscf calculation
 
@@ -282,14 +297,17 @@ class PwInput(dict):
             conv_thr(float): the convergence threshold value
             diago_full_acc(boolean)
             force_symmorphic(boolean)
+            verbosity(string)
         """
         self['control']['calculation'] = "'nscf'"
+        self['control']['verbosity'] = "'"+verbosity+"'"
         self['system']['nbnd'] = nbnd
         self['electrons']['conv_thr'] = conv_thr
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
-    def set_bands(self,nbnd,conv_thr=1e-8,diago_full_acc=True,force_symmorphic=True):
+    def set_bands(self,nbnd,conv_thr=1e-8,diago_full_acc=False,
+                 force_symmorphic=False,verbosity='high'):
         """
         Set the variables for a bands calculation
 
@@ -298,8 +316,10 @@ class PwInput(dict):
             conv_thr(float): the convergence threshold value
             diago_full_acc(boolean)
             force_symmorphic(boolean)
+            verbosity(string)
         """
         self['control']['calculation'] = "'bands'"
+        self['control']['verbosity'] = "'"+verbosity+"'"
         self['system']['nbnd'] = nbnd
         self['electrons']['conv_thr'] = conv_thr
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
@@ -331,8 +351,8 @@ class PwInput(dict):
         if nat < ntyp:
             print('Number of atoms in the cell cannot be lower than number of atomic species')
             nat = ntyp
-        self['control']['ntyp'] = str(ntyp)
-        self['control']['nat'] = str(nat)
+        self['system']['ntyp'] = str(ntyp)
+        self['system']['nat'] = str(nat)
 
     def set_atomic_positions(self,positions,type='alat'):
         """
@@ -341,10 +361,42 @@ class PwInput(dict):
         Args:
             type(str) : units for the positions (alat,angstrom,crystal,...)
             positions(list) : a list with the structure
-                    [['atom1' : [x,y,z]],['atom2' : [x,y,z]],...]}
+                    [['atom1',[x,y,z]],['atom2',[x,y,z]],...]}
         """
         pos = {'type' : type, 'values' : positions}
         self['atomic_positions'] = pos
+
+    def set_lattice(self,ibrav,cell_vectors=None,cell_units='angstrom',
+                    celldm1=None,celldm2=None,celldm3=None,
+                    celldm4=None,celldm5=None,celldm6=None):
+
+        """
+        Set the lattice structure using the typical QuantumESPRESSO input variables.
+
+        Args:
+            ibrav (int) : Bravais-lattice index. 0 : Free, 1 : Cubic, 2 : Fcc, 3 : bcc,
+                4 : Hexagonal
+            cell_vectors (:py:class:`list`) : the list with the crystal lattice vectors in the
+                form [[v1_x,v1_y,v1_z],[v2_x,v2_y,v2_z],[v3_x,v3_y,v3_z]]
+            cell_units (string) : units used for the cell vectors (angstrom, BOHR or alat).
+                If alat is used the lattice vectors are in units of the lattice parameter celldm(1)
+            celldms (**kwargs) : Crystallographic constants. Only needed values
+                (depending on "ibrav") must be specified. alat = celldm(1) is the lattice parameter (in BOHR).
+                If ibrav==0, only celldm(1) is used if present and cell vectors are
+                read from card CELL_PARAMETERS
+
+        """
+        if ibrav == 0 and cell_vectors is None:
+            raise ValueError('ibrav = 0 implies that the cell_parameters variable is set')
+        if cell_vectors:
+            self['cell_parameters'] = {'type' : cell_units, 'values' : cell_vectors}
+        self['system']['ibrav'] = ibrav
+        if celldm1 is not None: self['system']['celldm(1)'] = celldm1
+        if celldm2 is not None: self['system']['celldm(2)'] = celldm2
+        if celldm3 is not None: self['system']['celldm(3)'] = celldm3
+        if celldm4 is not None: self['system']['celldm(4)'] = celldm4
+        if celldm5 is not None: self['system']['celldm(5)'] = celldm5
+        if celldm6 is not None: self['system']['celldm(6)'] = celldm6
 
     def set_kpoints(self,type='automatic',points=[1.,1.,1.],shift=[0.,0.,0.],path=[]):
         """

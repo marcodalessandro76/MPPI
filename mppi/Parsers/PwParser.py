@@ -192,6 +192,24 @@ class PwParser():
             evals[:,self.nbands_valence:] += scissor
             return evals
 
+    # from whypy
+    # def get_transitions(self):
+    #         """
+    #         Calculate transition energies
+    #         """
+    #         eigenvalues = self.eigenvalues_ibz
+    #         nvalence  = self.nbandsv
+    #         nconduction  = self.nbandsc
+    #         nkpoints = self.nkpoints_ibz
+    #
+    #         transitions = np.zeros([nkpoints,nvalence*nconduction])
+    #         for k,v,c in product(range(nkpoints),range(nvalence),range(nconduction)):
+    #             vc = v*nvalence+c
+    #             transitions[k,vc] = eigenvalues[k,c+nvalence]-eigenvalues[k,v]
+    #         self.transitions = transitions
+    #
+    #         return self.transitions
+
     def get_gap(self,verbose=True):
         """
         Compute the energy gap of the system (in eV). The method check if the gap is direct or
@@ -233,45 +251,3 @@ class PwParser():
                 print('Gap :',gap,'eV')
                 print('Direct gap :',direct_gap,'eV')
         return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,'positon_vbm':position_vbm}
-
-    # def Dos(self,Emin=-20, Emax=20, deltaE=0.001, deg=0.00):
-    #     """
-    #     Compute the DOS.
-    #     DOS(E) = sum_{n,K} [delta(E - E_{n}(K)) * weight(K)]
-    #
-    #     Todo:
-    #         Transform this function into a class. In this way one could compute
-    #         a dos also starting from something different from a PwParser object.
-    #         Moreover, it could be possible to combine the data of several different
-    #         object into a single dos.
-    #
-    #     Note:
-    #         What happens if we do not specify the weight of the kpoints????
-    #
-    #     Args:
-    #         Emin:   Starting energy for the DOS (in eV)
-    #         Emax:   Final energy for the DOS (in eV)
-    #         deltaE: Tick separation on the X axis
-    #         deg:    Sigma to be used for a gaussian broadening.
-	# 	            Default = 0.0: Does not apply any broadening.
-    #
-    #     Return:
-    #         :py:class:`array`: The first column runs over the energies, the second
-    #         one contain the corresponding value of the DOS
-    #     """
-    #     import numpy as np
-    #     #from ..tools.broad import broad
-    #     res = np.linspace(Emin, Emax, (Emax-Emin)/deltaE+1).reshape(1,-1)
-    #     res = np.pad(res, ((0,1),(0,0)), 'constant')
-    #     energies = self.evals*HaToeV - self.get_fermi()
-    #
-    #     for n,egv in enumerate(energies):
-    #         i = np.floor((egv - Emin) / deltaE +0.5).astype(dtype='int')
-    #         i = i[np.where( (0 <= i) & (i < res[0].size))]
-    #         res[1,i] += self.weights[n]
-    #     res[1:] /= deltaE
-    #
-    #     if deg > 0:
-    #         res = broad(res, t='gauss', deg=deg, axis=1)
-    #
-    #     return res.T

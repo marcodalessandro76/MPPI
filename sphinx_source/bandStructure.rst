@@ -1,5 +1,5 @@
 BandStructure
--------
+-------------
 
 .. automodule:: mppi.Utilities.BandStructure
     :members:
