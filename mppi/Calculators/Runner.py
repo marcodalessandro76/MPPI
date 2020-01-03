@@ -74,16 +74,13 @@ class Runner():
         """
         Create a local dictionary for a specific run.
         It combines the present status of global option with the local
-        dictionary of the run
+        dictionary of the run and creates the run_options dictionary.
+        This dictionary can be accessed during the definition of the
+        process_run method. It contains all the relevant keys for the definition
+        of the runner.
         """
         import copy
-        # First deepcopy from global_options and update from kwargs
         self.run_options = copy.deepcopy(self._global_options)
-        """ :py:class`dict`: Local options of process_run.
-         This dictionary can be accessed during the definition of the
-         process_run method.
-        It contains all the relevant keys for the definition of the runner.
-        """
         self.run_options.update(kwargs)
 
     def run(self, **kwargs):

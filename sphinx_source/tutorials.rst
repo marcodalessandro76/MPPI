@@ -14,8 +14,9 @@ In this page you find some tutorials and examples that explain the usage of the 
    tutorials/Tutorial_PwParser.ipynb
    tutorials/Tutorial_YamboParser.ipynb
    tutorials/Tutorial_Datasets.ipynb
+   tutorials/Tutorial_QeParallelCalculator.ipynb
 
-* Some example in which the functionalities of the code are used to obtain and analyze scientific results
+* Some examples in which the functionalities of the code are used to obtain and analyze scientific results
 
  .. toctree::
    :maxdepth: 2

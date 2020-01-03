@@ -143,7 +143,7 @@ class QeCalculator(Runner):
     def _get_result_file(self):
         """
         Return the name, including the path, of the data-file-schema.xml
-        file build by pw.
+        file built by pw.
         """
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options['input']
