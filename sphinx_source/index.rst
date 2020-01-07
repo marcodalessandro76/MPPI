@@ -17,7 +17,7 @@ Python package for managing computations and performing post-processing in Quant
 Module Members
 --------------
 
-Manage the input files with classes able create and modify the input files of QuantumESPRESSO
+Manage the input files with classes able to create and modify the input files of QuantumESPRESSO
 and Yambo
 
 .. toctree:: pwInput
@@ -47,10 +47,6 @@ The Utilities module collects some useful functions and classes. The module is o
 .. toctree:: yamboUtils.rst
 .. toctree:: bandStructure.rst
 .. toctree:: dos.rst
-
-
-
-
 
 MPPI Tutorial page
 
