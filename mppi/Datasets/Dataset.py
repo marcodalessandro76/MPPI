@@ -30,15 +30,15 @@ def name_from_id(id):
         name = None
     return name
 
-def names_from_id(id):
-    """
-    Convert the id into a list of run names to search with the function id_in_names
-    and add the separator ',' to have the proper value of a key.
-    """
-    if id is None:
-        return ['']
-    else:
-        return [name_from_id({k: v})+',' for k, v in id.items()]
+# def names_from_id(id):
+#     """
+#     Convert the id into a list of run names to search with the function id_in_names
+#     and add the separator ',' to have the proper value of a key.
+#     """
+#     if id is None:
+#         return ['']
+#     else:
+#         return [name_from_id({k: v})+',' for k, v in id.items()]
 
 class Dataset(Runner):
     """
@@ -51,6 +51,8 @@ class Dataset(Runner):
         **kwargs : all the parameters passed to the dataset and stored in its _global_options.
             Can be useful, for instance, in performing a post-processing of the results.
 
+    The class members are:
+
     Attributes:
         runs (:py:class:`list`) : list of the runs which have to be treated by the dataset. The runs
             contain the input parameter to be passed to the various runners.
@@ -58,7 +60,6 @@ class Dataset(Runner):
         results (:py:class:`dict`) : set of the results of each of the runs. The set is not ordered as the
             runs may be executed asynchronously.
         ids (:py:class:`list`) : list of run ids, to be used in order to identify and fetch the results
-        names (:py:class:`list`) : list of run names, needed for distinguishing the input files.
 
     Example:
         >>> code = QeCalculator()
@@ -77,99 +78,77 @@ class Dataset(Runner):
         newkwargs = deepcopy(kwargs)
         Runner.__init__(self, label=label, run_dir=run_dir, **newkwargs)
 
+        self.ids = []
         self.runs = []
         self.calculators = []
         self.results = {}
-        self.ids = []
-        self.names = []
         self._post_processing_function = None
 
     def append_run(self, id, runner, input, **kwargs):
         """
         Add a run into the dataset.
 
-        Append a run to the list of runs to be performed and associated to each appended
-        item the corresponding runner instance.
-        The kwargs should contain the instance of the appended input and, eventually, further
-        arguments. All these quantities are stored as an element of the runs list and are
-        passed to the calculator when the run method is called.
+        Append a run to the list of runs to be performed and associate to each appended
+        item the corresponding runner instance. The method updates the class member
+
+            self.runs[icalc] = {`names` : [...], `inputs` : [...], kwargs}
+
+        where icalc is the cardinal index of the calculator.
 
         The name of the input file is not directly passed. Instead it is computed
         from the id of the run using the function name_from_id.
 
         Args:
-          id (:py:class:`dict`) : the id of the run, useful to identify the run in the
-             dataset. It can be a dictionary or a string, as it may contain
-             different keyword. For example a run can be classified as
-             ``id = {'energy_cutoff':60, 'kpoints': 6}``.
-          runner (:class:`Runner`) : the instance of  :class:`runner` class to which the remaining keyword
-             arguments will be passed at the input.
+            id : the id of the run, useful to identify the run in the dataset. It can be
+                a dictionary or a string, as it may contain different keyword. For example a
+                run can be classified as
+                ``id = {'energy_cutoff': 60, 'kpoints': 6}``
+            input (:class:`InputFile`) : the instance of an InputFile class
+            runner (:class:`Runner`) : the instance of  :class:`runner` class to which the
+                remaining keyword arguments will be passed at the input
+            kwargs : these parameters describe further possible variables. All these quantities
+                are stored as an element of the runs list and are passed to the calculator, together
+                with the global options of the Dataset, when the run method is called
 
         Raises:
           ValueError: if the provided id is identical to another previously
              appended run.
-        """
-        # from copy import deepcopy
-        # name = name_from_id(id)
-        # if name in self.names:
-        #     raise ValueError('The run id', name,
-        #                      ' is already provided, modify the run id.')
-        # self.names.append(name)
-        # # create the input objecte for the run, combining run_dict and input
-        # inp_to_append = deepcopy(self._global_options)
-        # inp_to_append.update(deepcopy(kwargs))
-        # # get the number of this run
-        # irun = len(self.runs)
-        # # append it to the runs list
-        # self.runs.append(inp_to_append)
-        # # append id and name
-        # self.ids.append(id)
-        # # search if the calculator already exists
-        # found = False
-        # for calc in self.calculators:
-        #     if calc['calc'] == runner:
-        #         calc['runs'].append(irun)
-        #         found = True
-        #         break
-        # if not found:
-        #     self.calculators.append({'calc': runner, 'runs': [irun]})
 
-        # Names a livello globale si puo togliere??? sembra di si
+        """
         from copy import deepcopy
         if id in self.ids:
-            raise ValueError('The run id', name,
+            raise ValueError('The run id', id,
                              ' is already provided, modify the run id.')
-        self.ids.append(id)
-        # get the cardinal number of this run
+        # get the cardinal number of this run and append id
         irun = len(self.ids)
-
-        # check if runner has been already used, otherwise add it to self.calculator
-        # and identify its position in the self.calculators list
+        self.ids.append(id)
+        # check if runner has been already used, otherwise add it to self.calculators
+        # icalc identifies the position of the calculator in the self.calculators list
         calc_found = False
         for ind,calc in enumerate(self.calculators):
             if calc['calc'] == runner:
-                calc['runs'].append(irun)
+                calc['iruns'].append(irun)
                 calc_found = True
                 icalc = ind
                 break
         if not calc_found:
-            self.calculators.append({'calc': runner, 'runs': [irun]})
             icalc = len(self.calculators)
-
-        # append the run_options
+            self.calculators.append({'calc': runner, 'iruns': [irun]})
+        # append the name and input to the runs names and inputs of the chosen calculator, then
+        # update the kwargs of runs
         inp_to_append = deepcopy(self._global_options)
         inp_to_append.update(deepcopy(kwargs))
         if calc_found:
-            self.runs[calc_found]['names'].append(name_from_id(id))
-            self.runs[calc_found]['inputs'].append(input)
-            self.runs[calc_found].update(inp_to_append)
+            self.runs[icalc]['names'].append(name_from_id(id))
+            self.runs[icalc]['inputs'].append(deepcopy(input))
+            self.runs[icalc].update(inp_to_append)
         else:
-            self.runs.append({'names' : [name_from_id(id)],'inputs' : [input], **inp_to_append})
+            self.runs.append({'names' : [name_from_id(id)],'inputs' : [deepcopy(input)], **inp_to_append})
 
     def process_run(self):
         """
-        Run the dataset, by performing explicit run of each of the item of the
-           runs_list.
+        Run the dataset by performing explicit run of each of the item of the
+           runs list.
         """
         self._run_the_calculations()
         return {}
@@ -177,55 +156,55 @@ class Dataset(Runner):
     def _run_the_calculations(self, selection=None):
         """
         Method that manage the execution of the runs of the Dataset.
-        The argument selection is used by the fetch_results method.
-        """
-        # for c in self.calculators:
-        #     calc = c['calc']
-        #     # To be implemented...
-        #     # if calc is a "parallel calculator" we will pass all the names[calc['runs']]
-        #     # and all the runs[calc['runs']] together to its "parallel" run method
-        #     for r in c['runs']:
-        #         if selection is not None and r not in selection:
-        #             continue
-        #         inp = self.runs[r]
-        #         name = self.names[r]
-        #         self.results[r] = calc.run(name=name, **inp)
+        The method take into account the `multiTask` parameter of the calculators.
+        If this parameter is False a separate call to the run method of the calculator
+        is performed for each of the run attributed to the calculator.
 
-        for c in self.calculators:
+        Args:
+            selection (list) : if not None only the iruns in the list are computed.
+                This parameter is used only when the method is called by the :meth:`fetch_results`
+                method.
+
+        """
+
+        for icalc,c in enumerate(self.calculators):
             calc = c['calc']
-            runs = c['runs']
-            multiTask = c['multiTask']
+            iruns = c['iruns']
+            multiTask = calc.get_global_option('multiTask')
+            if selection is not None:
+                selected_iruns = [r for r in iruns if r in selection]
+            else:
+                selected_iruns = iruns
 
             if multiTask:
-                #pass all the runs associated to the present calculator as a single list
-                #for parallel computation
-                # if selection is not None:
-                #     selected_runs = [r for r in runs if r in selection]
-                # else:
-                #     selected_runs = runs
-                inputs = self.runs[runs]
-                names = self.names[runs]
-                print('names',names)
-                print('inputs',inputs)
-                #self.results[r] = calc.run(names=names, **inputs)
-            else:
-                for r in runs:
-                    if selection is not None and r not in selection:
-                        continue
-                    inp = self.runs[r]
-                    name = self.names[r]
-                    self.results[r] = calc.run(name=name, **inp)
+                inputs = [self.runs[icalc]['inputs'][iruns.index(r)] for r in selected_iruns]
+                names = [self.runs[icalc]['names'][iruns.index(r)] for r in selected_iruns]
+                args = {}
+                for key,value in self.runs[icalc].items():
+                    if key not in ['inputs','names']:
+                        args[key] = value
+                results =  calc.run(names=names,inputs=inputs,**args)
+                for k,v in zip(selected_iruns,results):
+                    self.results[k] = v
+            else: # serial implementation: make one call of run for each computation
+                for r in selected_iruns:
+                    inputs = [self.runs[icalc]['inputs'][iruns.index(r)]]
+                    names = [self.runs[icalc]['names'][iruns.index(r)]]
+                    args = {}
+                    for key,value in self.runs[icalc].items():
+                        if key not in ['inputs','names']:
+                            args[key] = value
+                    self.results[r] = calc.run(names=names,inputs=inputs, **args)[0]
 
     def set_postprocessing_function(self, func):
-        """Set the callback of run.
-
+        """
+        Set the callback of run.
         Calls the function ``func`` after having performed the appended runs.
 
         Args:
            func (func): function that process the `inputs` `results` and
                returns the value of the `run` method of the dataset.
                The function is called as ``func(self)``.
-
         """
         self._post_processing_function = func
 
@@ -239,14 +218,15 @@ class Dataset(Runner):
             return self.results
 
     def fetch_results(self, id=None, attribute=None, run_if_not_present=True):
-        """Retrieve some attribute from some of the results.
+        """
+        Retrieve the results that match some conditions.
 
         Selects out of the results the objects which have in their ``id``
         at least the dictionary specified as input. May return an attribute
         of each result if needed.
 
         Args:
-           id (dict): dictionary of the retrieved id. Return a list of the runs
+           id : string or dictionary of the retrieved id. Return a list of the runs
                that have the ``id`` argument inside the provided ``id`` in the
                order provided by :py:meth:`append_run`.
            attribute (str): if present, provide the attribute of each of the
@@ -254,37 +234,60 @@ class Dataset(Runner):
            run_if_not_present (bool): If the run has not yet been performed
                in the dataset then perform it.
 
-        Example (from PyBigDFT):
+        Example:
            >>> study=Dataset()
-           >>> study.append_run(id={'cr': 3},input={'dft':{'rmult':[3,8]}})
-           >>> study.append_run(id={'cr': 4},input={'dft':{'rmult':[4,8]}})
-           >>> study.append_run(id={'cr': 3, 'h': 0.5},
-           >>>                  input={'dft':{'hgrids': 0.5, 'rmult':[3,8]}})
+           >>> study.append_run(id={'ecut': 40, 'k' : 4}, input = ..., runner = )
+           >>> study.append_run(id={'ecut': 40, 'k' : 6}, input = ..., runner = )
+           >>> study.append_run(id={'ecut': 50, 'k' : 6}, input = ..., runner = )
            >>> #append other runs if needed
            >>> #set a post processing function that perform a parsing of the rsesults
-           >>>>#and contains 'energy' as an attribute of the results object
+           >>> #and contains 'energy' as an attribute of the results object
            >>> #run the calculations (optional if run_if_not_present=True)
            >>> study.run()
-           >>> # returns a list of the energies of first and the third result
+           >>> # returns a list of the energies of first and the second result
            >>> # in this example
-           >>> data=study.fetch_results(id={'cr': 3},attribute='energy')
+           >>> data=study.fetch_results(id={'ecut': 40},attribute='energy')
+
         """
-        names = names_from_id(id)
+        # names = names_from_id(id)
+        # fetch_indices = []
+        # selection_to_run = []
+        # for irun, name in enumerate(self.names):
+        #     #check if all the names(i.e. the selected id) are inside the name
+        #     #associated to the present element of the dataset
+        #     if not all([(n in name+',') for n in names]):
+        #         continue
+        #     #if irun is not inside the kyes of self.results the computation associated
+        #     #to its append has not been performed
+        #     if run_if_not_present and irun not in self.results:
+        #         selection_to_run.append(irun)
+        #     fetch_indices.append(irun)
+        # if len(selection_to_run) > 0:
+        #     self._run_the_calculations(selection=selection_to_run)
+        #
+        # data = []
+        # if self._post_processing_function is not None:
+        #     for irun in fetch_indices:
+        #         r = self.post_processing()[irun]
+        #         data.append(r if attribute is None else getattr(r, attribute))
+        # else:
+        #     print('Provide a post processing function able to parse the results')
+        # return data
+
+        names = [name_from_id(id) for id in self.ids]
+        id_name = name_from_id(id)
         fetch_indices = []
         selection_to_run = []
-        for irun, name in enumerate(self.names):
-            #check if all the names(i.e. the selected id) are inside the name
-            #associated to the present element of the dataset
-            if not all([(n in name+',') for n in names]):
-                continue
-            #if irun is not inside the kyes of self.results the computation associated
-            #to its append has not been performed
-            if run_if_not_present and irun not in self.results:
-                selection_to_run.append(irun)
-            fetch_indices.append(irun)
+        # identify the elements of the dataset that match the id, if selection_to_run
+        # is True perform the associated runs if they are not present
+        for irun,name in enumerate(names):
+            if id_name in name :
+                fetch_indices.append(irun)
+                if run_if_not_present and irun not in self.results:
+                    selection_to_run.append(irun)
         if len(selection_to_run) > 0:
             self._run_the_calculations(selection=selection_to_run)
-
+    
         data = []
         if self._post_processing_function is not None:
             for irun in fetch_indices:
@@ -294,8 +297,7 @@ class Dataset(Runner):
             print('Provide a post processing function able to parse the results')
         return data
 
-    def seek_convergence(self,
-                        rtol=1.e-5, atol=1.e-8,
+    def seek_convergence(self, rtol=1.e-5, atol=1.e-8,
                         selection=None, **kwargs):
         """
         Search for the first result of the dataset which matches the provided
@@ -321,6 +323,7 @@ class Dataset(Runner):
            LookupError: if the parameter for convergence were not found.
                The dataset has to be enriched or the convergence parameters
                loosened.
+
         """
         from numpy import allclose
         to_get = self.ids if selection is None else selection

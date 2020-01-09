@@ -12,7 +12,7 @@ class QeCalculator(Runner):
     are managed by a scheduler that, in the actual implementation of the class, can
     be `direct` or `slurm`.
 
-    Attributes:
+    Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
        multiTask  (:py:class:`bool`) : specifies the usage of the calculator when called from the :class:`Dataset`.
@@ -108,16 +108,22 @@ class QeCalculator(Runner):
         Returns:
            :py:class:`dict`: The dictionary `results_file`
              values to be passed to `post_processing` method
-        """
 
+        """
         # Set the OMP_NUM_THREADS variable in the environment
         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
+
         # Prepare the run `script`
         job = self.build_run_script()
         # Submit the job
         self.submit_job(job)
         # Wait the end of the job
         self.wait(job)
+
+        # if self.run_options['multiTask']:
+        #     self.build_run_script()
+
+
 
         return {'results_file': self._get_results_file()}
 
@@ -144,7 +150,6 @@ class QeCalculator(Runner):
         `direct` and `slurm` scheduler are implemented.
         """
         scheduler = self.run_options['scheduler']
-        print('scheduler',scheduler)
 
         job = None
         if scheduler == 'direct':
@@ -218,7 +223,6 @@ class QeCalculator(Runner):
             if run_command is not None:
                 p = multiprocessing.Process(target=os_system_run, args=(run_command,))
                 job.append(p)
-        #print('job',job)
         return job
 
     def slurm_runner(self):

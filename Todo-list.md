@@ -20,6 +20,8 @@ TODO
 - Test the PwParser with a result for graphene.
     1. why there no self.fermi?
 
+- Can I introduce the serial run at the level of Calculator????
+
 FUTURE DEVELOPMENT
 ------------------
 
