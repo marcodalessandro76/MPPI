@@ -15,9 +15,8 @@ class QeCalculator(Runner):
     Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
-       multiTask  (:py:class:`bool`) : specifies the usage of the calculator when called from the :class:`Dataset`.
-            If multiTask is true all the runs appended to the Dataset class are passed in parallel to the calculator,
-            otherwise a separate call of the :meth:`run` method is performed for each appended run
+       multiTask  (:py:class:`bool`) : if true a single run_script is built and all the computations are performed in parallel,
+            otherwise an independent script is built for each elements of inputs and the computations are performed sequentially
        mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. 'mpirun -np 4'
        cpus_per_task (:py:class:`int`) : set the `cpus_per_task` variable for the slurm script
        ntasks (:py:class:`int`) : `set the ntasks` variable for the slurm script
@@ -25,16 +24,17 @@ class QeCalculator(Runner):
            This is done by checking if the file $name.xml is present in the prefix folder,
            for each name in names
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
+       IO_time (int) : time step (in second) used by the wait method to check that the job is completed
 
     Example:
-     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True,verbose=True)
+     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True,verbose=True,scheduler='direct')
      >>> code.run(inputs = [...], run_dir = ...,names = [...], source_dir = ..., **kwargs)
 
      where the arguments of the run method are:
 
     Args:
         run_dir (:py:class:`string`) : the folder in which the simulation is performed
-        inputs (:py:class:`list`) : list with the instances of the PwInput class
+        inputs (:py:class:`list`) : list with the instances of the :class:`PwInput` class
             that define the input objects
         names (:py:class:`list`) : list with the names associated to the input files,
             given in the same order of the inputs list.
@@ -51,14 +51,16 @@ class QeCalculator(Runner):
                  omp = os.environ.get('OMP_NUM_THREADS', 1), executable = 'pw.x',
                  multiTask = True, scheduler = 'direct',
                  mpi_run = 'mpirun -np 2', cpus_per_task = 4, ntasks = 3,
-                 skip = False, verbose = True):
+                 skip = False, verbose = True, IO_time = 5):
         # Use the initialization from the Runner class (all options inside _global_options)
         Runner.__init__(self, omp=omp, executable=executable,
                         multiTask=multiTask, scheduler=scheduler,
                         mpi_run=mpi_run, cpus_per_task=cpus_per_task, ntasks=ntasks,
-                        skip=skip, verbose=verbose)
-        print('Initialize a parallel QuantumESPRESSO calculator with scheduler %s' %
-            self._global_options['scheduler'])
+                        skip=skip, verbose=verbose, IO_time=IO_time)
+        if multiTask: task_str = 'parallel'
+        else: task_str = 'serial'
+        print('Initialize a %s QuantumESPRESSO calculator with scheduler %s' %
+            (task_str,self._global_options['scheduler']))
 
     def pre_processing(self):
         """
@@ -98,39 +100,39 @@ class QeCalculator(Runner):
     def process_run(self):
         """
         Method associated to the running of the executable. The method prepare the
-        job script in a way that depend on the chosen scheduler, than submit the job
-        and wait the end of the computation before passing the `results_file` list to the
-        :meth:`post_processing` method.
+        job script in a way that depend on the chosen scheduler, then submit the job
+        and wait the end of the computation before passing to the :meth:`post_processing` method.
 
         Note:
             The wait method is actually not implemented for the slurm scheduler
 
         Returns:
            :py:class:`dict`: The dictionary `results_file`
-             values to be passed to `post_processing` method
+             values to be passed to the :meth:`post_processing` method
 
         """
         # Set the OMP_NUM_THREADS variable in the environment
         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
+        names = self.run_options.get('names')
+        multiTask = self.run_options.get('multiTask')
 
-        # Prepare the run `script`
-        job = self.build_run_script()
-        # Submit the job
-        self.submit_job(job)
-        # Wait the end of the job
-        self.wait(job)
+        if multiTask:
+            job = self.build_run_script(names)
+            self.submit_job(job)
+            self.wait(job)
+        else:
+            for name in names:
+                job = self.build_run_script([name])
+                self.submit_job(job)
+                self.wait(job)
 
-        # if self.run_options['multiTask']:
-        #     self.build_run_script()
+        return {}
 
-
-
-        return {'results_file': self._get_results_file()}
-
-    def post_processing(self, results_file):
+    def post_processing(self):
         """
-        Check if the xml files of the results_file list exist. If a file is absent
-        the method subsitute its name with None making easy to understand if a specific
+        Return a list with the names, including the path, of the data-file-schema.xml
+        files built by pw, for each element of inputs. If a file is absent the method returns
+        None in the associated element of the list, making easy to understand if a specific
         computation has been correctly performed.
 
         Return:
@@ -138,24 +140,38 @@ class QeCalculator(Runner):
                 otherwise return None.
 
         """
-        for ind,file in enumerate(results_file):
-            if not os.path.isfile(file):
-                results_file[ind] = None
-        return results_file
+        run_dir = self.run_options.get('run_dir', '.')
+        inputs = self.run_options['inputs']
+        results = []
+        for input in inputs:
+            prefix = input['control']['prefix'].strip("'")
+            prefix += '.save'
+            result = os.path.join(run_dir,prefix,'data-file-schema.xml')
+            if os.path.isfile(result):
+                results.append(result)
+            else:
+                results.append(None)
 
-    def build_run_script(self):
+        return results
+
+    def build_run_script(self,names):
         """
-        Create the run script that is executed by the submit_job method.
+        Create the run script that is executed by the :meth:`submit_job` method.
         The script depends on the scheduler adopted, and specific methods for
         `direct` and `slurm` scheduler are implemented.
+
+        Args:
+            names (:py:class:`list`) : list with names of the input files included in the
+                script. If multiTask is False this list is composed by a single element
+
         """
         scheduler = self.run_options['scheduler']
 
         job = None
         if scheduler == 'direct':
-            job = self.direct_runner()
+            job = self.direct_runner(names)
         elif scheduler == 'slurm':
-            job = self.slurm_runner()
+            job = self.slurm_runner(names)
         else:
             print('scheduler unknown')
         return job
@@ -175,8 +191,18 @@ class QeCalculator(Runner):
     def wait(self,job):
         """
         Wait the end of the job.
+
+        Args:
+            job : The reference to the job to be executed. If the scheduler is `direct`
+                job is a list with the instance of :py:class:multiprocessing. If the
+                scheduler is `slurm` job is the name of the slurm script
+
+        Note:
+            Actually implemented only for scheduler `direct`
+
         """
         verbose = self.run_options['verbose']
+        IO_time = self.run_options['IO_time']
         import time
 
         while not self._is_terminated(job):
@@ -185,7 +211,7 @@ class QeCalculator(Runner):
                 for ind,run in enumerate(job):
                     s+='run'+str(ind)+'_is_running:'+str(run.is_alive()) + '  '
                 print(s)
-            time.sleep(5)
+            time.sleep(IO_time)
         if verbose : print('Job completed')
 
     def _is_terminated(self,job):
@@ -201,11 +227,15 @@ class QeCalculator(Runner):
             print('is_terminated method to be implemented for slurm scheduler')
             return True
 
-    def direct_runner(self):
+    def direct_runner(self,names):
         """
         Define the list of Process (methods of multiprocessing) associated to the
         runs of the job. If a run can be skipped it is not included in the list of
         the job processes.
+
+        Args:
+            names (:py:class:`list`) : list with names of the input files included in the
+                script. If multiTask is False this list is composed by a single element
 
         Return:
             :py:class:`list` : list of the :py:class:`multiprocessing` objects
@@ -213,7 +243,6 @@ class QeCalculator(Runner):
 
         """
         import multiprocessing
-        names = self.run_options.get('names')
         def os_system_run(comm_str):
             os.system(comm_str)
 
@@ -225,9 +254,13 @@ class QeCalculator(Runner):
                 job.append(p)
         return job
 
-    def slurm_runner(self):
+    def slurm_runner(self,names):
         """
         Create the slurm script associated to the runs of the job.
+
+        Args:
+            names (:py:class:`list`) : list with names of the input files included in the
+                script. If multiTask is False this list is composed by a single element
 
         Return:
             :py:class:`string`: the name of the slurm script
@@ -235,13 +268,12 @@ class QeCalculator(Runner):
         """
         cpus_per_task = self.run_options['cpus_per_task']
         ntasks = self.run_options['ntasks']
-        names = self.run_options.get('names')
         run_dir = self.run_options.get('run_dir', '.')
 
         job_name = os.path.join(run_dir,'job_'+names[0])+'.sh'
-        print('job_name',job_name)
-        if os.path.isfile(os.path.join(run_dir,job_name)):
-            print('remove slurm script')
+        if os.path.isfile(job_name):
+            print('delete slurm script %s'%job_name)
+            os.system('rm %s'%job_name)
 
         lines_options = []
         #SBATCH options
@@ -260,7 +292,6 @@ class QeCalculator(Runner):
             return None
 
         lines = lines_options+lines_run
-        #print('\n'.join(lines))
         f = open(job_name,'w')
         f.write('\n'.join(lines))
         f.close()
@@ -269,7 +300,7 @@ class QeCalculator(Runner):
 
     def run_command(self,name):
         """
-        Define the run command used to the run the computation associated to the
+        Define the run command used to run the computation associated to the
         input file $name.
         If the skip attribute of run_options is True the method evaluated if
         the computation can be skipped. This is done by  checking if the file
@@ -322,19 +353,19 @@ class QeCalculator(Runner):
         comm_str =  command + ' -inp %s > %s'%(input_name,output_name)
         return comm_str
 
-    def _get_results_file(self):
-        """
-        Return a list with the name, including the path, of the data-file-schema.xml
-        file built by pw.
-        """
-        run_dir = self.run_options.get('run_dir', '.')
-        inputs = self.run_options['inputs']
-        results = []
-        for input in inputs:
-            prefix = input['control']['prefix'].strip("'")
-            prefix += '.save'
-            results.append(os.path.join(run_dir,prefix,'data-file-schema.xml'))
-        return results
+    # def _get_results(self):
+    #     """
+    #     Return a list with the name, including the path, of the data-file-schema.xml
+    #     file built by pw.
+    #     """
+    #     run_dir = self.run_options.get('run_dir', '.')
+    #     inputs = self.run_options['inputs']
+    #     results = []
+    #     for input in inputs:
+    #         prefix = input['control']['prefix'].strip("'")
+    #         prefix += '.save'
+    #         results.append(os.path.join(run_dir,prefix,'data-file-schema.xml'))
+    #     return results
 
     def _ensure_run_directory(self):
         from mppi.Utilities import FutileUtils as f

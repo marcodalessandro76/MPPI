@@ -23,7 +23,7 @@ and Yambo
 .. toctree:: pwInput
 .. toctree:: yamboInput
 
-Run a single calculation in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
+Run (many) calculations in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
 the programs (pw.x,ph.x,...) of the suite.
 
 The YamboCalculator object manage the yambo and ypp executables and also their time-dependent variants
@@ -48,7 +48,10 @@ The Utilities module collects some useful functions and classes. The module is o
 .. toctree:: bandStructure.rst
 .. toctree:: dos.rst
 
-MPPI Tutorial page
+MPPI Tutorials page
+-------------------
+
+In this page you find some tutorials and examples that explain the usage of the package.
 
 .. toctree::
    :maxdepth: 1

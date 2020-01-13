@@ -1,5 +1,5 @@
 """
-This module contains functions and a class to manage with the Density of States (Dos).
+This module defines the tools to build and manage the Density of States (Dos).
 A Dos can be built starting from various inputs like the output of QuantumESPRESSO or a
 Yambo computations or from a generic one-dimensional array. Different Dos can be managed together.
 """
@@ -30,7 +30,7 @@ def build_histogram(values,weights=None,minVal=None,maxVal=None,
     If the weights are not specified a uniform array of weights, normalized to one, is assumed.
 
     Args:
-        values (:class:`numpy.array`) : one-dimensional array with the values of the energy
+        values (:class:`numpy.array`) : one-dimensional array with the values used to build the Dos
         weights (:py:class:`numpy.array`) : one-dimensional array with the weight of each value.
             If None a uniform array normalized to one is used
         minVal (float) : values lower than this parameter are not included in the histogram
@@ -96,9 +96,10 @@ class Dos():
 
     Add further description....
 
-    Arguments:
+    Attributes:
         dos :
         labels :
+        
     """
 
     def __init__(self, energies = None, weights = None, label = None, **kwargs):

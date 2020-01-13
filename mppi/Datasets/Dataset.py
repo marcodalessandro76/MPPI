@@ -30,16 +30,6 @@ def name_from_id(id):
         name = None
     return name
 
-# def names_from_id(id):
-#     """
-#     Convert the id into a list of run names to search with the function id_in_names
-#     and add the separator ',' to have the proper value of a key.
-#     """
-#     if id is None:
-#         return ['']
-#     else:
-#         return [name_from_id({k: v})+',' for k, v in id.items()]
-
 class Dataset(Runner):
     """
     Class to perform a set of calculations and to manage the associated results.
@@ -119,8 +109,7 @@ class Dataset(Runner):
         if id in self.ids:
             raise ValueError('The run id', id,
                              ' is already provided, modify the run id.')
-        # get the cardinal number of this run and append id
-        irun = len(self.ids)
+        irun = len(self.ids) # get the cardinal number of this run and append its id
         self.ids.append(id)
         # check if runner has been already used, otherwise add it to self.calculators
         # icalc identifies the position of the calculator in the self.calculators list
@@ -156,9 +145,6 @@ class Dataset(Runner):
     def _run_the_calculations(self, selection=None):
         """
         Method that manage the execution of the runs of the Dataset.
-        The method take into account the `multiTask` parameter of the calculators.
-        If this parameter is False a separate call to the run method of the calculator
-        is performed for each of the run attributed to the calculator.
 
         Args:
             selection (list) : if not None only the iruns in the list are computed.
@@ -170,31 +156,20 @@ class Dataset(Runner):
         for icalc,c in enumerate(self.calculators):
             calc = c['calc']
             iruns = c['iruns']
-            multiTask = calc.get_global_option('multiTask')
             if selection is not None:
                 selected_iruns = [r for r in iruns if r in selection]
             else:
                 selected_iruns = iruns
 
-            if multiTask:
-                inputs = [self.runs[icalc]['inputs'][iruns.index(r)] for r in selected_iruns]
-                names = [self.runs[icalc]['names'][iruns.index(r)] for r in selected_iruns]
-                args = {}
-                for key,value in self.runs[icalc].items():
-                    if key not in ['inputs','names']:
-                        args[key] = value
-                results =  calc.run(names=names,inputs=inputs,**args)
-                for k,v in zip(selected_iruns,results):
-                    self.results[k] = v
-            else: # serial implementation: make one call of run for each computation
-                for r in selected_iruns:
-                    inputs = [self.runs[icalc]['inputs'][iruns.index(r)]]
-                    names = [self.runs[icalc]['names'][iruns.index(r)]]
-                    args = {}
-                    for key,value in self.runs[icalc].items():
-                        if key not in ['inputs','names']:
-                            args[key] = value
-                    self.results[r] = calc.run(names=names,inputs=inputs, **args)[0]
+            inputs = [self.runs[icalc]['inputs'][iruns.index(r)] for r in selected_iruns]
+            names = [self.runs[icalc]['names'][iruns.index(r)] for r in selected_iruns]
+            args = {}
+            for key,value in self.runs[icalc].items():
+                if key not in ['inputs','names']:
+                    args[key] = value
+            results =  calc.run(names=names,inputs=inputs,**args)
+            for k,v in zip(selected_iruns,results):
+                self.results[k] = v
 
     def set_postprocessing_function(self, func):
         """
@@ -249,30 +224,6 @@ class Dataset(Runner):
            >>> data=study.fetch_results(id={'ecut': 40},attribute='energy')
 
         """
-        # names = names_from_id(id)
-        # fetch_indices = []
-        # selection_to_run = []
-        # for irun, name in enumerate(self.names):
-        #     #check if all the names(i.e. the selected id) are inside the name
-        #     #associated to the present element of the dataset
-        #     if not all([(n in name+',') for n in names]):
-        #         continue
-        #     #if irun is not inside the kyes of self.results the computation associated
-        #     #to its append has not been performed
-        #     if run_if_not_present and irun not in self.results:
-        #         selection_to_run.append(irun)
-        #     fetch_indices.append(irun)
-        # if len(selection_to_run) > 0:
-        #     self._run_the_calculations(selection=selection_to_run)
-        #
-        # data = []
-        # if self._post_processing_function is not None:
-        #     for irun in fetch_indices:
-        #         r = self.post_processing()[irun]
-        #         data.append(r if attribute is None else getattr(r, attribute))
-        # else:
-        #     print('Provide a post processing function able to parse the results')
-        # return data
 
         names = [name_from_id(id) for id in self.ids]
         id_name = name_from_id(id)
@@ -287,7 +238,7 @@ class Dataset(Runner):
                     selection_to_run.append(irun)
         if len(selection_to_run) > 0:
             self._run_the_calculations(selection=selection_to_run)
-    
+
         data = []
         if self._post_processing_function is not None:
             for irun in fetch_indices:

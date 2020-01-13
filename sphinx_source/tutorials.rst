@@ -1,8 +1,6 @@
 MPPI Tutorials
 ==============
 
-In this page you find some tutorials and examples that explain the usage of the package.
-
 * Specific tutorials that explain the basic usage of the various classes of the package
  .. toctree::
    :maxdepth: 1

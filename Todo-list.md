@@ -20,19 +20,13 @@ TODO
 - Test the PwParser with a result for graphene.
     1. why there no self.fermi?
 
-- Can I introduce the serial run at the level of Calculator????
+- Update Analysis_BandStructure due to the modifications of the QeCalculator.
+
+- Test of Dataset with the new YamboCalculator
+
 
 FUTURE DEVELOPMENT
 ------------------
 
-  1. Add the possibility to run many computations in parallel (with and/or without a job manager like slurm).
-     Possible strategies:
-     a. (without the job manager) : add to calculator the possibility of taking a list of input objects as input
-     (or define a new class with this feature). Once that this is done must run all the input in parallel
-     (use multiprocessing module of python, otherwise os.system(command + '&') can work?). Then we need to modify dataset
-     adding an 'is_parallel' boolean attribute, if it is true all the elements of the dataset are passed to the calculator together.
-     b. (with the job manager) : defined a calculator class the write the proper script and submit it. This calculator
-     has to be able to take a list of input objects as input, so the implementation of this feature is a preliminary step
-     common to both the approaches. In this case dataset uses this calculator passing all its elements together.
-
-  2.
+  1. ...
+  2. ...
