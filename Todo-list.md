@@ -17,14 +17,6 @@ TODO
 
 - Complete the reference_column_names_extendOut for the real-time runlevels.
 
-- Test the PwParser with a result for graphene.
-    1. why there no self.fermi?
-
-- Update Analysis_BandStructure due to the modifications of the QeCalculator.
-
-- Test of Dataset with the new YamboCalculator
-
-
 FUTURE DEVELOPMENT
 ------------------
 

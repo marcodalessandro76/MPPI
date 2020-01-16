@@ -149,7 +149,7 @@ class PwParser():
 
         """
         fermi = self.data.find('output/band_structure/fermi_energy')
-        if fermi:
+        if fermi is not None:
             fermi = float(fermi.text)
             if convert_eV: fermi *= HaToeV
             return fermi
@@ -181,7 +181,7 @@ class PwParser():
         if set_gap == None and set_direct_gap == None:
             return evals
         elif self.nbands_valence == self.nbands: # only occupied bands are present
-            print('There are no empty bannds. `Set gap` has not been applied')
+            print('There are no empty bands. `Set gap` has not been applied')
             return evals
         else: # shift the energy level of the empty bands if needed
             gap = self.get_gap(verbose=False)

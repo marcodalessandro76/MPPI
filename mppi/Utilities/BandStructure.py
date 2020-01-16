@@ -16,15 +16,18 @@ or, for instance, to load only BandStructure
 
 def build_kpath(*kpoints,numstep=40):
     """
-    Build a list of kpoints to be passed to the set_kpoints methods of the
-    :class:`PwInput` for computing the band structure along a path.
+    Build a list of kpoints to be passed to the set_kpoints methods of the :class:`PwInput`
+    for computing the band structure along a path.
+
+    Example:
+        >>> build_kpath(L,G,X,K,G,numstep=30)
 
     Args:
-        klist (*list): specifies the high symmetry points along the k-path
+        kpoints : arguments that specify the high symmetry points along the k-path
         numstep (int): specifies the number of intermediate points used to build the path
 
     Returns:
-        (list) : list of kpoints as nedded by pw in the nscf computation with tpiba_b option
+        :py:class:`list` : list of kpoints as nedded by pw in the bands computation with tpiba_b option
 
     """
     klist = []
@@ -106,8 +109,8 @@ class BandStructure():
         The class make usage of the YamboParser of this package.
 
         Args:
-            results (:py:class:`dictionary`) : dictionary provided as the output of a Ypp computation.
-                The key ['output'] contains the list of the o- files
+            results (:py:class:`list`) : list that contiains the o- file provided as the output of a
+                Ypp computation. results is the key ['output'][irun] of the run method of YamboCalculator
             high_sym_points(:py:class:`dict`) : dictionary with name and coordinates of the
                             high_sym_points of the path
             suffix (string) : specifies the suffix of the o- file use to build the bands
@@ -115,7 +118,8 @@ class BandStructure():
         """
         from mppi import Parsers as P
         import numpy as np
-        data = P.YamboParser(results['output'])
+        #data = P.YamboParser(results['output'])
+        data = P.YamboParser(results)
         kpoints, bands = _parse_Ypp_output(data[suffix])
         return cls(bands=bands,kpoints=kpoints,high_sym_points=high_sym_points)
 

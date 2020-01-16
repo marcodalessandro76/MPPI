@@ -136,21 +136,22 @@ class QeCalculator(Runner):
         computation has been correctly performed.
 
         Return:
-            :py:class:`list` : list with the names of the xml files (if the file exists)
-                otherwise return None.
+            :py:class:`dict` : dictionary
+                {'output' : []}
+             where [] is a list with the names of the xml files (if the file exists) otherwise the associated element is set to None.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
         inputs = self.run_options['inputs']
-        results = []
+        results = {'output' : []}
         for input in inputs:
             prefix = input['control']['prefix'].strip("'")
             prefix += '.save'
             result = os.path.join(run_dir,prefix,'data-file-schema.xml')
             if os.path.isfile(result):
-                results.append(result)
+                results['output'].append(result)
             else:
-                results.append(None)
+                results['output'].append(None)
 
         return results
 

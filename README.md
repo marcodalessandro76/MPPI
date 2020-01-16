@@ -19,7 +19,7 @@ Then move inside the folder and install the package using the pip or the python 
 python3 setupy install
 ```
 
-you can add the  --user option, so that the package is installed in the local folder for the python libraries.
+you can add the --user option, so that the package is installed in the local folder for the python libraries.
 
 You can also install the package using the pip installer, in this case from the same folder run
 
@@ -30,7 +30,7 @@ pip3 install --user -e .
 Note that the _editable_ -e option create a link from the location of the package to local python repository folder.
 In this way you do not need to recompile the package if you make some modifications, useful for coding.
 
-Finally you can also install the package inside a virtual environment.
+Finally, you can also install the package inside a virtual environment.
 
 Features
 --------

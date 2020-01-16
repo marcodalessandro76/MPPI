@@ -81,12 +81,14 @@ class Dataset(Runner):
         Append a run to the list of runs to be performed and associate to each appended
         item the corresponding runner instance. The method updates the class member
 
-            self.runs[icalc] = {`names` : [...], `inputs` : [...], kwargs}
+            self.runs[irun] = {'names' : name_from_id(input), 'input':input, kwargs}
+            self.calc[icalc] = {'calc' : runner, iruns : [...,irun]}
 
         where icalc is the cardinal index of the calculator.
 
         The name of the input file is not directly passed. Instead it is computed
-        from the id of the run using the function name_from_id.
+        from the id of the run using the function name_from_id. If, for instance, a jobname
+        has to be provided it can be passed as kwargs.
 
         Args:
             id : the id of the run, useful to identify the run in the dataset. It can be
@@ -123,16 +125,12 @@ class Dataset(Runner):
         if not calc_found:
             icalc = len(self.calculators)
             self.calculators.append({'calc': runner, 'iruns': [irun]})
-        # append the name and input to the runs names and inputs of the chosen calculator, then
-        # update the kwargs of runs
+        # append the parameters of the present run
         inp_to_append = deepcopy(self._global_options)
         inp_to_append.update(deepcopy(kwargs))
-        if calc_found:
-            self.runs[icalc]['names'].append(name_from_id(id))
-            self.runs[icalc]['inputs'].append(deepcopy(input))
-            self.runs[icalc].update(inp_to_append)
-        else:
-            self.runs.append({'names' : [name_from_id(id)],'inputs' : [deepcopy(input)], **inp_to_append})
+        name = name_from_id(id)
+        jobname = kwargs.get('jobname',name)
+        self.runs.append({'input':deepcopy(input), 'name':name_from_id(id), 'jobname':jobname, **inp_to_append})
 
     def process_run(self):
         """
@@ -152,24 +150,30 @@ class Dataset(Runner):
                 method.
 
         """
-
-        for icalc,c in enumerate(self.calculators):
+        for c in self.calculators:
             calc = c['calc']
             iruns = c['iruns']
             if selection is not None:
                 selected_iruns = [r for r in iruns if r in selection]
             else:
                 selected_iruns = iruns
-
-            inputs = [self.runs[icalc]['inputs'][iruns.index(r)] for r in selected_iruns]
-            names = [self.runs[icalc]['names'][iruns.index(r)] for r in selected_iruns]
+            # build the inputs,names,jobnames,args parameters passed to the run method of the calculator
+            inputs = [self.runs[irun]['input'] for irun in selected_iruns]
+            names = [self.runs[irun]['name'] for irun in selected_iruns]
+            jobnames = [self.runs[irun]['jobname'] for irun in selected_iruns]
             args = {}
-            for key,value in self.runs[icalc].items():
-                if key not in ['inputs','names']:
-                    args[key] = value
-            results =  calc.run(names=names,inputs=inputs,**args)
-            for k,v in zip(selected_iruns,results):
-                self.results[k] = v
+            for irun in selected_iruns:
+                args.update(self.runs[irun])
+            args.pop('input')
+            args.pop('name')
+            args.pop('jobname')
+            #run the calculation and append the results to the self.results
+            results =  calc.run(inputs=inputs,names=names,jobnames=jobnames,**args)
+            for irun in selected_iruns:
+                self.results[irun] = {}
+                for key,value in results.items():
+                    #print('value',value,selected_iruns.index(irun))
+                    self.results[irun][key] = value[selected_iruns.index(irun)]
 
     def set_postprocessing_function(self, func):
         """

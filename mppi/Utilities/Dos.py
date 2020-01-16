@@ -45,7 +45,6 @@ def build_histogram(values,weights=None,minVal=None,maxVal=None,
 
             (:py:class:`numpy.array`) :histogram values
 
-
     """
     import numpy as np
     # set the weights and the range
@@ -99,7 +98,7 @@ class Dos():
     Attributes:
         dos :
         labels :
-        
+
     """
 
     def __init__(self, energies = None, weights = None, label = None, **kwargs):
