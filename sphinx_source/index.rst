@@ -17,32 +17,41 @@ Python package for managing computations and performing post-processing in Quant
 Module Members
 --------------
 
-QuantumESPRESSO input file representation and usage
+Manage the input files with classes able to create and modify the input files of QuantumESPRESSO
+and Yambo
 
-.. toctree:: pwIn
+.. toctree:: pwInput
+.. toctree:: yamboInput
 
-Yambo input file representation and usage
+Run (many) calculations in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
+the programs (pw.x,ph.x,...) of the suite.
 
-.. toctree:: yamboIn
-.. toctree:: yppIn
+The YamboCalculator object manage the yambo and ypp executables and also their time-dependent variants
 
-Calculator for QuantumESPRESSO
+.. toctree:: qeCalculator
+.. toctree:: yamboCalculator
 
-.. toctree:: qeCalc
+Parsers to manage the results of the QuantumESPRESSO and Yambo computations
 
-Calculator for Yambo. The module contain also a parses for the output of Yambo computation
-
-.. toctree:: yamboCalc
+.. toctree:: pwParser
 .. toctree:: yamboParser
 
-Organize runs and analyze output in a dataset. A set of pre-processing functions
-needed before launching the various type of datasets are given in the PreProcessings
-module
+Organize runs and analyze output in a dataset
 
 .. toctree:: datasets
-.. toctree:: preProcessings
 
-MPPI Tutorial page
+The Utilities module collects some useful functions and classes. The module is organized in several files.
+
+.. toctree:: attributeDict.rst
+.. toctree:: pwUtils.rst
+.. toctree:: yamboUtils.rst
+.. toctree:: bandStructure.rst
+.. toctree:: dos.rst
+
+MPPI Tutorials page
+-------------------
+
+In this page you find some tutorials and examples that explain the usage of the package.
 
 .. toctree::
    :maxdepth: 1

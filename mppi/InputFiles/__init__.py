@@ -1,3 +1,2 @@
-from .PwIn import PwIn
-from .YamboIn import YamboIn
-from .YppIn import YppIn
+from .PwInput import PwInput
+from .YamboInput import YamboInput

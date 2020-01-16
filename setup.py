@@ -10,9 +10,9 @@ URL = 'https://github.com/........'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
 REQUIRES_PYTHON = '>=3.6'
-VERSION = '1.0'
+VERSION = '1.1'
 REQUIRED = ['numpy']
-QEPPPY_URL = 'https://github.com/Crivella/QEPPpy'
+#QEPPPY_URL = 'https://github.com/Crivella/QEPPpy'
 #-----------------------------------------------
 
 here = path.abspath(path.dirname(__file__))
@@ -42,5 +42,5 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires=REQUIRES_PYTHON,
     install_requires=REQUIRED,
-    dependency_links=[QEPPPY_URL]
+    #dependency_links=[QEPPPY_URL]
 )

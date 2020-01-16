@@ -1,7 +1,7 @@
-Dataset
--------
+PwParser
+--------
 
-.. automodule:: mppi.Datasets.Dataset
+.. automodule:: mppi.Parsers.PwParser
     :members:
     :undoc-members:
     :show-inheritance:

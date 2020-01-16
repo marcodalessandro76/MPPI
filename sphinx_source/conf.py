@@ -27,7 +27,7 @@ author = u'Marco D\'Alessandro'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'1.0'
+release = u'1.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -49,23 +49,25 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
+    'sphinx_rtd_theme',
     'nbsphinx'
 ]
 
-#from the PyBigDFT conf.py
-import guzzle_sphinx_theme
+######################################################
 
-html_theme_path = guzzle_sphinx_theme.html_theme_path()
-html_theme = 'guzzle_sphinx_theme'
-
+# set guzzle_sphinx_theme (from the PyBigDFT conf.py)
+#import guzzle_sphinx_theme
+#html_theme_path = guzzle_sphinx_theme.html_theme_path()
+#html_theme = 'guzzle_sphinx_theme'
 # Register the theme as an extension to generate a sitemap.xml
-extensions.append("guzzle_sphinx_theme")
-
+#extensions.append("guzzle_sphinx_theme")
 #Guzzle theme options (see theme.conf for more information)
-html_theme_options = {
-   # Set the name of the project to appear in the sidebar
-   'project_nav_name': 'MPPI',
-}
+#html_theme_options = {
+#   # Set the name of the project to appear in the sidebar
+#   'project_nav_name': 'MPPI',
+#}
+
+#######################################################
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -84,7 +86,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -100,6 +102,9 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
+#html_theme = 'classic'
+html_theme = 'bizstyle'
+#html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

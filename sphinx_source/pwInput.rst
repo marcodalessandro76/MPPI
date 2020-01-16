@@ -1,7 +1,7 @@
-Dataset
+PwInput
 -------
 
-.. automodule:: mppi.Datasets.Dataset
+.. automodule:: mppi.InputFiles.PwInput
     :members:
     :undoc-members:
     :show-inheritance:
