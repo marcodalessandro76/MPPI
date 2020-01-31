@@ -39,9 +39,11 @@ Parsers to manage the results of the QuantumESPRESSO and Yambo computations
 Organize runs and analyze output in a dataset
 
 .. toctree:: datasets
+.. toctree:: postProcessing
 
 The Utilities module collects some useful functions and classes. The module is organized in several files.
 
+.. toctree:: constants.rst
 .. toctree:: attributeDict.rst
 .. toctree:: pwUtils.rst
 .. toctree:: yamboUtils.rst

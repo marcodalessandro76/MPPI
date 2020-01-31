@@ -3,6 +3,26 @@ Class to perform the parsing of a QuantumESPRESSO XML file. Makes usage of the
 data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 """
 
+def _compute_transitions(bands,in_list,fin_list):
+    """
+    Compute the (positive) transition energies for the bands (on a single kpoint)
+
+    Args:
+        bands (list) : list with the energies
+        in_list (list) : indexes of the bands used as starting points of the transitions
+        fin_list (list) : indexes of the bands used as final points of the transitions
+
+    Returns:
+        transitions (list) : list with the transition energies for each possible couple
+        of (distinct) in and out bands
+    """
+    transitions = []
+    for v in in_list:
+        for c in fin_list:
+            if c > v:
+                transitions.append(bands[c]-bands[v])
+    return transitions
+
 from mppi.Utilities import HaToeV
 
 class PwParser():
@@ -157,7 +177,7 @@ class PwParser():
             print('Fermi energy attribute not found in the ouput file. Maybe `fixed` occupation type is used?')
             return None
 
-    def get_evals(self, set_gap=None, set_direct_gap=None):
+    def get_evals(self, set_gap = None, set_direct_gap = None):
         """
         Return the ks energies for each kpoint (in eV). The top of the valence band is used as the
         reference energy value. It is possible to shift the energies of the empty bands by setting an arbitrary
@@ -192,25 +212,49 @@ class PwParser():
             evals[:,self.nbands_valence:] += scissor
             return evals
 
-    # from whypy
-    # def get_transitions(self):
-    #         """
-    #         Calculate transition energies
-    #         """
-    #         eigenvalues = self.eigenvalues_ibz
-    #         nvalence  = self.nbandsv
-    #         nconduction  = self.nbandsc
-    #         nkpoints = self.nkpoints_ibz
-    #
-    #         transitions = np.zeros([nkpoints,nvalence*nconduction])
-    #         for k,v,c in product(range(nkpoints),range(nvalence),range(nconduction)):
-    #             vc = v*nvalence+c
-    #             transitions[k,vc] = eigenvalues[k,c+nvalence]-eigenvalues[k,v]
-    #         self.transitions = transitions
-    #
-    #         return self.transitions
+    def get_transitions(self, initial = 'full', final = 'empty',set_gap = None, set_direct_gap = None):
+        """
+        Compute the (vertical) transitions energies. For each kpoint compute the transition energies, i.e.
+        the (positive) energy difference (in eV) between the final and the initial states.
 
-    def get_gap(self,verbose=True):
+        Args:
+            initial (string or list) : specifies the bands from which electrons can be extracted. It can be set to `full` or
+                `empty` to select the occupied or empty bands, respectively. Otherwise a list of bands can be
+                provided
+            final  (string or list) : specifies the final bands of the excited electrons. It can be set to `full` or
+                `empty` to select the occupied or empty bands, respectively. Otherwise a list of bands can be
+                provided
+            set_gap (float) : set the value of the gap (in eV) of the system
+            set_direct_gap (float) : set the value of the direct gap (in eV) of the system. If set_gap
+                            is provided this parameter is ignored
+
+        Return:
+            :py:class:`numpy.array`  : an array with the transition energies for each kpoint
+
+        """
+        import numpy as np
+        if initial == 'full':
+            in_list = [ind for ind in range(self.nbands_valence)]
+        elif initial == 'empty':
+            in_list = [ind for ind in range(self.nbands_valence,self.nbands)]
+        else:
+            in_list = initial
+        if final == 'full':
+            fin_list = [ind for ind in range(self.nbands_valence)]
+        elif final == 'empty':
+            fin_list = [ind for ind in range(self.nbands_valence,self.nbands)]
+        else:
+            fin_list = final
+
+        evals = self.get_evals(set_gap=set_gap,set_direct_gap=set_direct_gap)
+        transitions = []
+        for bands in evals:
+            transitions.append(_compute_transitions(bands,in_list,fin_list))
+        transitions = np.array(transitions)
+
+        return transitions
+
+    def get_gap(self, verbose = True):
         """
         Compute the energy gap of the system (in eV). The method check if the gap is direct or
         indirect. Implemented and tested only for semiconductors.

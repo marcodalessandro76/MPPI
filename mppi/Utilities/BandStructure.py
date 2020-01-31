@@ -14,28 +14,6 @@ or, for instance, to load only BandStructure
 
 """
 
-def build_kpath(*kpoints,numstep=40):
-    """
-    Build a list of kpoints to be passed to the set_kpoints methods of the :class:`PwInput`
-    for computing the band structure along a path.
-
-    Example:
-        >>> build_kpath(L,G,X,K,G,numstep=30)
-
-    Args:
-        kpoints : arguments that specify the high symmetry points along the k-path
-        numstep (int): specifies the number of intermediate points used to build the path
-
-    Returns:
-        :py:class:`list` : list of kpoints as nedded by pw in the bands computation with tpiba_b option
-
-    """
-    klist = []
-    for k in kpoints[:-1]:
-        klist.append(k+[numstep])
-    klist.append(kpoints[-1]+[0])
-    return klist
-
 def _parse_Ypp_output(data):
     """
     Extract the kpoints and bands from the dictionary results['output'][type]
@@ -118,7 +96,6 @@ class BandStructure():
         """
         from mppi import Parsers as P
         import numpy as np
-        #data = P.YamboParser(results['output'])
         data = P.YamboParser(results)
         kpoints, bands = _parse_Ypp_output(data[suffix])
         return cls(bands=bands,kpoints=kpoints,high_sym_points=high_sym_points)

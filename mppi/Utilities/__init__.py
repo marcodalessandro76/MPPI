@@ -1,6 +1,6 @@
 from .AttributeDict import AttributeDict
 from .YamboUtils import build_SAVE
-from .BandStructure import BandStructure, build_kpath
+from .PwUtils import build_kpath
+from .BandStructure import BandStructure
 from .Dos import Dos, gaussian, lorentzian
-#from .PwUtils import ....
 from .Constants import *

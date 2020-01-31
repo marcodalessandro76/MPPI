@@ -354,20 +354,6 @@ class QeCalculator(Runner):
         comm_str =  command + ' -inp %s > %s'%(input_name,output_name)
         return comm_str
 
-    # def _get_results(self):
-    #     """
-    #     Return a list with the name, including the path, of the data-file-schema.xml
-    #     file built by pw.
-    #     """
-    #     run_dir = self.run_options.get('run_dir', '.')
-    #     inputs = self.run_options['inputs']
-    #     results = []
-    #     for input in inputs:
-    #         prefix = input['control']['prefix'].strip("'")
-    #         prefix += '.save'
-    #         results.append(os.path.join(run_dir,prefix,'data-file-schema.xml'))
-    #     return results
-
     def _ensure_run_directory(self):
         from mppi.Utilities import FutileUtils as f
         run_dir = self.run_options.get('run_dir', '.')

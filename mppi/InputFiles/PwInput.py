@@ -398,7 +398,7 @@ class PwInput(dict):
         if celldm5 is not None: self['system']['celldm(5)'] = celldm5
         if celldm6 is not None: self['system']['celldm(6)'] = celldm6
 
-    def set_kpoints(self,type='automatic',points=[1.,1.,1.],shift=[0.,0.,0.],path=[]):
+    def set_kpoints(self,type='automatic',points=[1.,1.,1.],shift=[0.,0.,0.],klist=[]):
         """
         Define the sampling of the Brillouin zone.
 
@@ -408,14 +408,14 @@ class PwInput(dict):
                        type is automatic
             shift(list) : shifts in the x,y,z directions. Used only is
                        type is automatic
-            path(list) : list with the structure:
+            klist(list) : list with the structure:
                        [[k1x,k1y,k1z,w1],[k2x,k2y,k2z,w2],....]
                        Used only if type is not automatic
         """
         if type == 'automatic':
             k = {'type' : type, 'values' : (points,shift)}
         else:
-            k = {'type' : type, 'values' : path}
+            k = {'type' : type, 'values' : klist}
         self['kpoints'] = k
 
     def set_spinorbit(self):
