@@ -28,7 +28,7 @@ class YamboCalculator(Runner):
 
     Example:
      >>> code = YamboCalculator(omp=1,mpi_run='mpirun -np 4',executable='yambo',skip=True,verbose=True,scheduler='direct')
-     >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ...)
+     >>> code.run(inputs = ..., run_dir = ...,names = ...,jobnames = ...)
 
      where the arguments of the run method are:
 

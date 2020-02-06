@@ -6,7 +6,7 @@ The module can be loaded in the notebook in one of the following way
 
 >>> U.build_SAVE
 
-or to load directly some elements 
+or to load directly some elements
 
 >>> from mppi.Utilities import build_SAVE
 
@@ -41,23 +41,25 @@ def build_SAVE(source_dir,run_dir,command = 'p2y -a 2',make_link = True):
     if not os.path.isdir(run_dir):
         os.mkdir(run_dir)
         print('Create folder %s'%run_dir)
-    # check if the SAVE folder already exists in the run_dir
+    # check if the SAVE folder is already present in the run_dir
     if os.path.isdir(os.path.join(run_dir,'SAVE')):
         print('SAVE folder already present in %s'%run_dir)
-    else: # actions if the SAVE folder does not exists
+    else: # actions performed if the SAVE folder does not exists
         comm_str = 'cd %s; %s'%(source_dir,command)
         print('Executing command:', comm_str)
         os.system(comm_str)
         # copy (or create a symbolik link) of the SAVE folder in the run_dir
         src = os.path.abspath(os.path.join(source_dir,'SAVE'))
-        dest = os.path.abspath(run_dir)
+        dest = os.path.abspath(os.path.join(run_dir,'SAVE'))
         if make_link:
-            comm_str = 'ln -s %s %s'%(src,dest)
+            os.symlink(src,dest,target_is_directory=True)
+            print('Create a symlink of %s in %s'%(src,run_dir))
         else:
-            comm_str = 'cp -r %s %s'%(src,dest)
-        print('Executing command:', comm_str)
-        os.system(comm_str)
+            from shutil import copytree
+            copytree(src,dest)
+            print('Create a copy of %s in %s'%(src,run_dir))
         # build the r_setup
         comm_str = 'cd %s;OMP_NUM_THREADS=1 yambo'%run_dir
         print('Executing command:', comm_str)
         os.system(comm_str)
+        

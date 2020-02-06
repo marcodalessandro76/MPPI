@@ -10,7 +10,7 @@ import numpy as np
 reference_column_names_extendOut = {
     'hf' : ['kpoint','band','e0','ehf','dft','hf'],
     'qp' : ['kpoint','band','e0','e','eme0','dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs'],
-    # complete the list for these run levels.....
+    # The rt outputs are not modified by the extendOut option
     'carriers' : ['time','dnhmne','dnh','dne'],
     'currents' : ['time','j_x','j_y','j_z'],
     'polarization' : ['time','Pol_x','Pol_y','Pol_z'],
@@ -38,12 +38,12 @@ reference_column_names = {
 
 def file_to_list(filename,skip='#'):
     """
-    Read the filename and append all the lines, that do not start
+    Read the filename and append all the lines that do not start
     with the skip string, to a list.
 
     Args:
-        filename(str) : name of the file
-        skip(str) : first elements of the skipped lines
+        filename (str): name of the file
+        skip (str): first elements of the skipped lines
     """
     lines = []
     with open(filename) as f:
@@ -53,7 +53,8 @@ def file_to_list(filename,skip='#'):
 
 def _floats_from_string(line):
   """
-  Split a string using blank spaces and convert the elements to float.
+  Split a string using blank spaces and convert the elements to float. If an element
+  cannot be converted it is skipped. 
   """
   line_float = []
   for value in line.split():

@@ -67,15 +67,15 @@ class YamboInput(dict):
 
     def write(self,folder,filename,reformat=True):
         """
-        Write the yambo input on file. If the args of the object is not empty run yambo to recover
-        the original format of the yambo input.
+        Write the yambo input on file. If the args of the object is not empty and
+        the reformat variable is True run yambo to recover the original format of
+        the yambo input.
         """
         f = open(os.path.join(folder,filename),'w')
         f.write(self.convert_string())
         f.close()
         if self['args'] != '' and reformat:
             action = 'cd %s; %s -F %s'%(folder,self['args'],filename)
-            #print('Reformat yambo input : ',action)
             os.system(action)
 
     def parseInputFile(self,file):
@@ -176,7 +176,7 @@ class YamboInput(dict):
             raise ValueError( "Unknown type %s for variable: %s" %( type(value), key) )
         return s
 
-    # Set Methods
+    # Set methods useful for Yambo inputs
 
     def set_extendOut(self):
         """
@@ -217,3 +217,59 @@ class YamboInput(dict):
         """
         bands = [first_band,last_band]
         self['variables']['BndsRnXp'] = [bands,'']
+
+    # Set methods useful for Yambo_rt inputs
+
+    def set_rt_field(self,int=1e3,int_units='kWLm2',width=100,width_units='fs',
+                    freq=1.5,freq_units='eV',kind='QSSIN',polarization='linear',
+                    direction=[1.,0.,0.],direction_circ=[0.,1.,0.]):
+        """
+        Set the parameters of the field
+        """
+        self['variables']['Field1_Int'] = [int,int_units]
+        self['variables']['Field1_Width'] = [width,width_units]
+        self['variables']['Field1_Freq'] = [[freq,freq],freq_units]
+        self['variables']['Field1_kind'] = kind
+        self['variables']['Field1_pol'] = polarization
+        self['variables']['Field1_Dir'] = [direction,'']
+        self['variables']['Field1_Dir_circ'] = [direction_circ,'']
+
+    def set_rt_bands(self,bands=None,scissor=0.,damping_valence=0.05,damping_conduction=0.05):
+        """
+        Set the bands, the scissor and the damping parameters for the RT analysis
+        """
+        if bands is not None:
+            self['variables']['RTBands'] = [bands,'']
+        self['variables']['GfnQP_E'] = [[scissor, 1.0, 1.0], '']
+        self['variables']['GfnQP_Wv'] = [[damping_valence, 0.0, 0.0], '']
+        self['variables']['GfnQP_Wc'] = [[damping_conduction, 0.0, 0.0], '']
+
+    def set_rt_simulationTimes(self,time_step=10,step_units='as',sim_time=1.,time_units='ps',
+                                io_time = [1.,5.,1.],io_units='fs'):
+        """
+        Set the time parameters of the simulation
+        """
+        self['variables']['RTstep'] = [time_step,step_units]
+        self['variables']['NETime'] = [sim_time,time_units]
+        self['variables']['IOtime'] = [io_time,io_units]
+
+    def set_rt_cpu(self,k):
+        """
+        Set the parallelization of the run
+        """
+        self['variables']['RT_CPU'] = '%s.1.1.1'%k
+
+    # Set methods useful for Ypp inputs
+
+    def removeTimeReversal(self):
+        """
+        Remove the time reversal symmetry
+        """
+        self['arguments'].append('RmTimeRev')
+
+    def set_ypp_extFields(self, Efield1 = [0.,0.,0.], Efield2 = [0.,0.,0.]):
+        """
+        Set the direction of the external electric field(s)
+        """
+        self['variables']['Efield1'] = [Efield1,'']
+        self['variables']['Efield2'] = [Efield2,'']

@@ -7,6 +7,11 @@ HaToeV = 27.211386
 Energy conversion factor from Hartree to eV units
 """
 
+Planck_ev_ps = 4.135667696e-3
+"""
+Planck constant in eV*ps.
+"""
+
 high_sym_fcc = {'G':[0.,0.,0.],
                 'X':[0.,0.,1.],
                 'L':[0.5,0.5,0.5],
