@@ -7,10 +7,8 @@ import numpy as np
 # Specifies the name of the columns of the o- files for various type of runs. There are
 # two distint dictionaries depending if the ExtendOut option has been activated or not.
 
-reference_column_names_extendOut = {
-    'hf' : ['kpoint','band','e0','ehf','dft','hf'],
-    'qp' : ['kpoint','band','e0','e','eme0','dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs'],
-    # The rt outputs are not modified by the extendOut option
+# The rt outputs are not modified by the extendOut option
+rt_column_names = {
     'carriers' : ['time','dnhmne','dnh','dne'],
     'currents' : ['time','j_x','j_y','j_z'],
     'polarization' : ['time','Pol_x','Pol_y','Pol_z'],
@@ -22,19 +20,17 @@ reference_column_names_extendOut = {
         ['time','Ex_Re','Ey_Re','Ez_Re','Ex_Im','Ey_Im','Ez_Im','Intensity','Fluence']
 }
 
+reference_column_names_extendOut = {
+    'hf' : ['kpoint','band','e0','ehf','dft','hf'],
+    'qp' : ['kpoint','band','e0','e','eme0','dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs'],
+}
+reference_column_names_extendOut.update(rt_column_names)
+
 reference_column_names = {
     'hf' : ['kpoint','band','e0','ehf','dft','hf'],
     'qp' : ['kpoint','band','e0','eme0','sce0'],
-    'carriers' : ['time','dnhmne','dnh','dne'],
-    'currents' : ['time','j_x','j_y','j_z'],
-    'polarization' : ['time','Pol_x','Pol_y','Pol_z'],
-    'spin_magnetization' :
-        ['time','Ms_x','Ms_y','Ms_z','Mv_x','Mv_y','Mv_z','Mc_x','Mc_y','Mc_z'],
-    'orb_magnetization' :
-        ['time','Ml_x','Ml_y','Ml_z','Mi_x','Mi_y','Mi_z'],
-    'external_field' :
-        ['time','Ex_Re','Ey_Re','Ez_Re','Ex_Im','Ey_Im','Ez_Im','Intensity','Fluence']
 }
+reference_column_names.update(rt_column_names)
 
 def file_to_list(filename,skip='#'):
     """
@@ -54,7 +50,7 @@ def file_to_list(filename,skip='#'):
 def _floats_from_string(line):
   """
   Split a string using blank spaces and convert the elements to float. If an element
-  cannot be converted it is skipped. 
+  cannot be converted it is skipped.
   """
   line_float = []
   for value in line.split():
