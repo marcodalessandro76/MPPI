@@ -6,10 +6,10 @@ from os import path
 NAME = 'mppi'
 DESCRIPTION = 'Multi Purpose Python Interface. A python package for managing computations and performing \
 post-processing in QuantumESPRESSO and Yambo'
-URL = 'https://github.com/........'
+URL = 'https://github.com/marcodalessandro76/MPPI'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
-REQUIRES_PYTHON = '>=3.6'
+REQUIRES_PYTHON = '>=3.0'
 VERSION = '1.1'
 REQUIRED = ['numpy']
 #QEPPPY_URL = 'https://github.com/Crivella/QEPPpy'
@@ -35,12 +35,10 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6'
+        'Programming Language :: Python :: 3'
     ],
     keywords='python post-processing QuantumESPRESSO Yambo',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires=REQUIRES_PYTHON,
-    install_requires=REQUIRED,
-    #dependency_links=[QEPPPY_URL]
+    install_requires=REQUIRED
 )
