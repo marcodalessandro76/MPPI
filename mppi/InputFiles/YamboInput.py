@@ -227,7 +227,8 @@ class YamboInput(dict):
         Set the parameters of the field
         """
         self['variables']['Field1_Int'] = [int,int_units]
-        self['variables']['Field1_Width'] = [width,width_units]
+        #self['variables']['Field1_Width'] = [width,width_units]
+        self['variables']['Field1_FWHM'] = [width,width_units]
         self['variables']['Field1_Freq'] = [[freq,freq],freq_units]
         self['variables']['Field1_kind'] = kind
         self['variables']['Field1_pol'] = polarization
