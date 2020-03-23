@@ -75,7 +75,7 @@ class QeCalculator(Runner):
         run_dir = self.run_options.get('run_dir', '.')
         inputs = self.run_options.get('inputs')
         names = self.run_options.get('names')
-        verbose = self.run_options['verbose']
+        skip = self.run_options.get('skip')
 
         # Create the run_dir and write the input file
         self._ensure_run_directory()
@@ -86,7 +86,6 @@ class QeCalculator(Runner):
             print('input list not provided')
 
         # if skip = False clean the run_dir
-        skip = self.run_options['skip']
         if not skip:
             self._clean_run_dir()
 

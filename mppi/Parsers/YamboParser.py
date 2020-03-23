@@ -81,7 +81,7 @@ def make_dict(columns,suffix,extendOut):
     from zero. The choice of the ref dictionary depends on the value of extendOut.
 
     Args:
-        columns (:numpy:class:`array`) : array with the data sorted in columns
+        columns (:py:class:`array`) : array with the data sorted in columns
         suffix (string) : specifies the run level
         extendOut (bool) : specifies which dictionary has to be used as reference
             values of the columns names
@@ -98,6 +98,22 @@ def make_dict(columns,suffix,extendOut):
             key = 'col'+str(ind)
         data[key] = col
     return data
+
+def files_from_folder(path):
+    """
+    Scan the files in the folder and build a list with the names of all the files
+    that contain the 'o-' term in their name.
+
+    Args:
+        path (string) : name of the folder
+    """
+    import os
+    listdir= os.listdir(path)
+    ofiles = []
+    for file in listdir:
+        if 'o-' in file:
+            ofiles.append(os.path.join(path,file))
+    return ofiles
 
 class YamboParser(dict):
 
@@ -117,6 +133,20 @@ class YamboParser(dict):
             self[suffix] = {}
             if verbose: print('Parse file',file)
             self.parseYamboOutput(file,suffix,extendOut)
+
+    @classmethod
+    def from_path(cls,path,verbose = False, extendOut = True):
+        """
+        Init the a YamboParser instance using all the 'o-' files found inside the path.
+
+        Args:
+            path (string): name of the folder that contains the 'o-' files
+            verbose (bool) : Determine the amount of information provided on terminal
+            extendOut (bool) : Determine which dictionary is used as reference for the
+                            names of the variables
+        """
+        files = files_from_folder(path)
+        return cls(files,verbose=verbose,extendOut=extendOut)
 
     def parseYamboOutput(self,file,suffix,extendOut):
         """

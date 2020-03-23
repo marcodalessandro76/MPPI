@@ -23,6 +23,8 @@ class YamboCalculator(Runner):
        skip (:py:class:`bool`) : if True evaluate if one (or many) computations can be skipped.
            This is done by checking that the folder where yambo write the results contains at least
            one file 'o-*', for each name in names
+       clean_restart (:py:class:`bool`) : if True the delete the folder(s) with the output files and database before
+            running the computation
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        IO_time (int) : time step (in second) used by the wait method to check that the job is completed
 
@@ -52,12 +54,12 @@ class YamboCalculator(Runner):
                  omp = os.environ.get('OMP_NUM_THREADS', 1), executable = 'yambo',
                  multiTask = True, scheduler = 'direct',
                  mpi_run = 'mpirun -np 2', cpus_per_task = 4, ntasks = 3,
-                 skip = False, verbose = True, IO_time = 5):
+                 skip = False, clean_restart = True, verbose = True, IO_time = 5):
         # Use the initialization from the Runner class (all options inside _global_options)
         Runner.__init__(self, omp=omp, executable=executable,
                         multiTask=multiTask, scheduler=scheduler,
                         mpi_run=mpi_run, cpus_per_task=cpus_per_task, ntasks=ntasks,
-                        skip=skip, verbose=verbose, IO_time=IO_time)
+                        skip=skip, clean_restart=clean_restart, verbose=verbose, IO_time=IO_time)
         if multiTask: task_str = 'parallel'
         else: task_str = 'serial'
         print('Initialize a %s Yambo calculator with scheduler %s' %
@@ -80,7 +82,9 @@ class YamboCalculator(Runner):
         inputs = self.run_options.get('inputs')
         names = self.run_options.get('names')
         SAVE = os.path.join(run_dir,'SAVE')
-        verbose = self.run_options['verbose']
+        skip = self.run_options.get('skip')
+        clean_restart= self.run_options.get('clean_restart')
+        verbose = self.run_options.get('verbose')
 
         # check if the run_dir and SAVE folder exist and write the input
         if not os.path.isdir(run_dir):
@@ -95,9 +99,11 @@ class YamboCalculator(Runner):
                 print('input list not provided')
 
         # if skip = False clean the run_dir
-        skip = self.run_options['skip']
         if not skip:
-            self._clean_run_dir()
+            if clean_restart:
+                self._clean_run_dir()
+            else:
+                if verbose: print('run performed starting from existing results')
 
         return {}
 

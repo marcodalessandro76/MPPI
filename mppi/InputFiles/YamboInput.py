@@ -19,8 +19,11 @@ class YamboInput(dict):
     _stringexp  = '["\']([a-zA-Z0-9_ ]+?)["\']' #string
     _arrayexp   = '%'+_spacexp+_variaexp+'\s+(?:\#.+)?((?:(?:\s|\.|[+-]?\d)+?\|)+)\s+([a-zA-Z]+)?' #arrays
     _complexexp = '\('+_spacexp+_numexp+_spacexp+','+_spacexp+_numexp+_spacexp+'\)' #complex numbers
-    _runexp     = '([a-zA-Z0-9_]+)' #runlevels
-    # list of available runlevels to be stored in the arguments array
+    _runexp     = '([a-zA-Z0-9_]+)'
+    # list of available runlevels to be stored in the arguments array.
+    # Also the 'options' like RmTimeRev or DephCVonly were included in the _runlevels list but they have
+    # been removed since otherwise it seems that these values are always included in the arguments list
+    # after the parsing of the input file.
     _runlevels  = ['rim_cut','chi','em1s','bse','optics','bsk','bss','em1d','gw0','HF_and_locXC','setup',
                    'ppa','cohsex','life','collisions','negf','el_ph_scatt','el_el_scatt','excitons',
                    'wavefunction','fixsyms','QPDBs', 'QPDB_merge','RealTime','RT_X','RToccDos',
@@ -224,7 +227,9 @@ class YamboInput(dict):
                     freq=1.5,freq_units='eV',kind='QSSIN',polarization='linear',
                     direction=[1.,0.,0.],direction_circ=[0.,1.,0.]):
         """
-        Set the parameters of the field
+        Set the parameters of the field. The width parameter set the Yambo
+        `Field1_FWHM` input parameter that specifies the width of the Intensity
+        of the pump.
         """
         self['variables']['Field1_Int'] = [int,int_units]
         #self['variables']['Field1_Width'] = [width,width_units]

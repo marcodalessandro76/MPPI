@@ -214,22 +214,7 @@ class Dos():
 
         """
         to_plot = include if include is not None else range(len(self.dos))
-        #for ind,dos in enumerate(self.dos):
         for ind in to_plot:
             scale = 1.0
             if rescale: scale = max(self.dos[ind][1])
             plt.plot(self.dos[ind][0],self.dos[ind][1]/scale,label=self.labels[ind])
-
-#from whypy
-#     def getJDOS(self,broad=0.1,emin=0,emax=10,step=0.01,ctype="lorentzian"):
-#         """
-#         Calculate the joint density of states
-#         """
-#         transitions = self.get_transitions()
-#         weights = self.weights_ibz
-#
-#         na = np.newaxis
-#         weights_transitions = np.ones(transitions.shape,dtype=np.float32)*weights[:,na]
-#         energies, self.jdos = histogram_eiv(self.transitions,weights_transitions,emin=emin,emax=emax,step=step,sigma=broad,ctype=ctype)
-#
-#         return energies, self.jdos

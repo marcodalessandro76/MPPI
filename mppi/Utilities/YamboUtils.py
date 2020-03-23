@@ -62,4 +62,20 @@ def build_SAVE(source_dir,run_dir,command = 'p2y -a 2',make_link = True):
         comm_str = 'cd %s;OMP_NUM_THREADS=1 yambo'%run_dir
         print('Executing command:', comm_str)
         os.system(comm_str)
-        
+   
+def get_variable_from_db(ndb_file,var_name):
+    """
+    Extract the value of a variable from a ndb database
+
+    Args:
+        ndb_file (string) : the name of the database
+        var_name (string) : name of the variable
+
+    Return:
+        :py:class:`numpy.ndarray`  : array with the values of the variable
+    """
+    from netCDF4 import Dataset as Ds
+    import numpy as np
+    db = Ds(ndb_file)
+    var = np.array(db.variables[var_name][0])
+    return var

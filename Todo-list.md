@@ -17,6 +17,9 @@ TODO
 
 - Study the getFermi method of electronsdb of YamboPy. It can be an easy addon to the fermi method of PwParser
 
+- Extend and/or modify the get_transitions methods of PwParser. We need to build weight array associated to the transitions
+  that is needed for computing the JDOS (if non equal weights are associated to all the kpoints) and also to build the
+  absorption spectrum.
 
 FUTURE DEVELOPMENT
 ------------------
