@@ -51,5 +51,5 @@ def Yambo_parse_data(dataset):
     from mppi import Parsers as P
     results = {}
     for run,data in dataset.results.items():
-        results[run] = P.YamboParser(data['output'],verbose=True)
+        results[run] = P.YamboParser(data['output'],verbose=False)
     return results
