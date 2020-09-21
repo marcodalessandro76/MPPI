@@ -14,20 +14,22 @@ class QeCalculator(Runner):
 
     Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
+       mpi (:py:class:`int`) : number of mpi processes
+       mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. 'mpirun -np' or 'mpiexec -np'
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
+       scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
+            'direct' that runs the computation using the python multiprocessing package and 'slurm' that creates a slurm script
        multiTask  (:py:class:`bool`) : if true a single run_script is built and all the computations are performed in parallel,
             otherwise an independent script is built for each elements of inputs and the computations are performed sequentially
-       mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. 'mpirun -np 4'
-       cpus_per_task (:py:class:`int`) : set the `cpus_per_task` variable for the slurm script
-       ntasks (:py:class:`int`) : `set the ntasks` variable for the slurm script
        skip (:py:class:`bool`) : if True evaluate if one (or many) computations can be skipped.
            This is done by checking if the file $name.xml is present in the prefix folder,
            for each name in names
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        IO_time (int) : time step (in second) used by the wait method to check that the job is completed
+       kwargs : other parameters that are stored in the _global_options dictionary
 
     Example:
-     >>> code = calculator(omp=1,mpi_run='mpirun -np 4',skip=True,verbose=True,scheduler='direct')
+     >>> code = calculator(omp=1,mpi=4,mpi_run='mpirun -np',skip=True,verbose=True,scheduler='direct')
      >>> code.run(inputs = [...], run_dir = ...,names = [...], source_dir = ..., **kwargs)
 
      where the arguments of the run method are:
@@ -48,15 +50,13 @@ class QeCalculator(Runner):
     """
 
     def __init__(self,
-                 omp = os.environ.get('OMP_NUM_THREADS', 1), executable = 'pw.x',
-                 multiTask = True, scheduler = 'direct',
-                 mpi_run = 'mpirun -np 2', cpus_per_task = 4, ntasks = 3,
-                 skip = False, verbose = True, IO_time = 5):
+                 omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
+                 executable = 'pw.x', scheduler = 'direct', multiTask = True,
+                 skip = False, verbose = True, IO_time = 5, **kwargs):
         # Use the initialization from the Runner class (all options inside _global_options)
-        Runner.__init__(self, omp=omp, executable=executable,
-                        multiTask=multiTask, scheduler=scheduler,
-                        mpi_run=mpi_run, cpus_per_task=cpus_per_task, ntasks=ntasks,
-                        skip=skip, verbose=verbose, IO_time=IO_time)
+        Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
+                        scheduler=scheduler, multiTask=multiTask,
+                        skip=skip, verbose=verbose, IO_time=IO_time, **kwargs)
         if multiTask: task_str = 'parallel'
         else: task_str = 'serial'
         print('Initialize a %s QuantumESPRESSO calculator with scheduler %s' %
@@ -98,39 +98,31 @@ class QeCalculator(Runner):
 
     def process_run(self):
         """
-        Method associated to the running of the executable. The method prepare the
-        job script in a way that depend on the chosen scheduler, then submit the job
-        and wait the end of the computation before passing to the :meth:`post_processing` method.
-
-        Note:
-            The wait method is actually not implemented for the slurm scheduler
-
-        Returns:
-           :py:class:`dict`: The dictionary `results_file`
-             values to be passed to the :meth:`post_processing` method
+        Method associated to the running of the executable. The method prepares the
+        jobs script(s), then submit the jobs and wait the end of the computation before
+        passing to the :meth:`post_processing` method. Computations are performed
+        in parallel or serially accordingly to the value of the multiTask option.
 
         """
-        # Set the OMP_NUM_THREADS variable in the environment
-        os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
-        names = self.run_options.get('names')
         multiTask = self.run_options.get('multiTask')
 
+        to_run = self.select_to_run()
+        jobs = self.build_run_script(to_run)
+
         if multiTask:
-            job = self.build_run_script(names)
-            self.submit_job(job)
-            self.wait(job)
+            self.submit_job(jobs)
+            self.wait(jobs,to_run)
         else:
-            for name in names:
-                job = self.build_run_script([name])
-                self.submit_job(job)
-                self.wait(job)
+            for index,job in zip(to_run,jobs):
+                self.submit_job([job])
+                self.wait([job],[index])
 
         return {}
 
     def post_processing(self):
         """
         Return a list with the names, including the path, of the data-file-schema.xml
-        files built by pw, for each element of inputs. If a file is absent the method returns
+        files for each element of inputs. If a file is absent the method returns
         None in the associated element of the list, making easy to understand if a specific
         computation has been correctly performed.
 
@@ -154,88 +146,118 @@ class QeCalculator(Runner):
 
         return results
 
-    def build_run_script(self,names):
+    def select_to_run(self):
         """
-        Create the run script that is executed by the :meth:`submit_job` method.
-        The script depends on the scheduler adopted, and specific methods for
+        If the skip attribute of run_options is True the method evaluates which
+        computations can be skipped. This is done by  checking if the file
+        $prefix.xml is already present in the run_dir.
+
+        Return:
+            :py:class:`list` : list with numbers of the computations that have to
+            be performed, in the same order provided in the run method
+        """
+        skip = self.run_options.get('skip')
+        run_dir = self.run_options.get('run_dir', '.')
+        inputs = self.run_options.get('inputs')
+        names = self.run_options.get('names')
+        verbose = self.run_options.get('verbose')
+
+        if not skip:
+            to_run = [index for index in range(len(inputs))]
+            return to_run
+        else:
+            to_run = []
+            for index,input in enumerate(inputs):
+                prefix = input['control']['prefix'].strip("'")
+                skipfile = os.path.join(run_dir,prefix)+'.xml'
+                if os.path.isfile(skipfile):
+                    if verbose: print('Skip the run of',names[index])
+                else:
+                    to_run.append(index)
+            return to_run
+
+    def build_run_script(self,to_run):
+        """
+        Create the run script(s) that are executed by the :meth:`submit_job` method.
+        The scripts depend on the scheduler adopted, and specific methods for
         `direct` and `slurm` scheduler are implemented.
 
         Args:
-            names (:py:class:`list`) : list with names of the input files included in the
-                script. If multiTask is False this list is composed by a single element
+            to_run (:py:class:`string`) : list with the cardinal numbers of the runs
+                to be performed
+
+        Return:
+            :py:class:`list` : list with jobs to run. The type of the object in the
+            list depends on the chosen scheduler
 
         """
         scheduler = self.run_options['scheduler']
 
-        job = None
+        jobs = None
         if scheduler == 'direct':
-            job = self.direct_runner(names)
+            jobs = self.direct_scheduler(to_run)
         elif scheduler == 'slurm':
-            job = self.slurm_runner(names)
+            jobs = self.slurm_scheduler(to_run)
         else:
             print('scheduler unknown')
-        return job
+        return jobs
 
-    def submit_job(self,job):
+    def submit_job(self,jobs):
         """
         Submit the job.
+
+        Args:
+            jobs : The reference to the jobs to be executed. If the scheduler is `direct`
+                jobs is a list with the instance of :py:class:multiprocessing. If the
+                scheduler is `slurm` jobs is a list with the names of the slurm scripts
         """
         scheduler = self.run_options['scheduler']
 
         if scheduler == 'direct':
-            for run in job:
+            # Set the OMP_NUM_THREADS variable in the environment
+            os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
+            for run in jobs:
                 run.start()
         if scheduler == 'slurm':
-            print('slurm submit to be implemented')
+            run_dir = self.run_options.get('run_dir', '.')
+            for job in jobs:
+                os.system('cd %s ; cat %s.sh' %(run_dir,job))
 
-    def wait(self,job):
+    def wait(self,jobs,to_run):
         """
-        Wait the end of the job.
+        Wait the end of the jobs.
 
         Args:
-            job : The reference to the job to be executed. If the scheduler is `direct`
-                job is a list with the instance of :py:class:multiprocessing. If the
-                scheduler is `slurm` job is the name of the slurm script
+            jobs : The reference to the jobs to be executed. If the scheduler is `direct`
+                jobs is a list with the instance of :py:class:multiprocessing. If the
+                scheduler is `slurm` jobs is a list with the names of the slurm scripts
 
-        Note:
-            Actually implemented only for scheduler `direct`
+            to_run (:py:class:`string`) : list with the cardinal numbers of the runs
+                to be performed
 
         """
-        verbose = self.run_options['verbose']
-        IO_time = self.run_options['IO_time']
+
+        verbose = self.run_options.get('verbose')
+        IO_time = self.run_options.get('IO_time')
         import time
 
-        while not self._is_terminated(job):
+        while not all(self._jobs_terminated(jobs)):
             if verbose:
                 s = ''
-                for ind,run in enumerate(job):
-                    s+='run'+str(ind)+'_is_running:'+str(run.is_alive()) + '  '
+                for index,status in zip(to_run,self._jobs_terminated(jobs)):
+                    s+='run'+str(index)+'_is_running: '+str(not status) + ' '
                 print(s)
             time.sleep(IO_time)
         if verbose : print('Job completed')
 
-    def _is_terminated(self,job):
-        """
-        Check if all the runs of the jobs list have been performed.
-        """
-        scheduler = self.run_options['scheduler']
-
-        if scheduler == 'direct':
-            terminated = all([not run.is_alive() for run in job])
-            return terminated
-        if scheduler == 'slurm':
-            print('is_terminated method to be implemented for slurm scheduler')
-            return True
-
-    def direct_runner(self,names):
+    def direct_scheduler(self,to_run):
         """
         Define the list of Process (methods of multiprocessing) associated to the
-        runs of the job. If a run can be skipped it is not included in the list of
-        the job processes.
+        runs specified in the list to_run.
 
         Args:
-            names (:py:class:`list`) : list with names of the input files included in the
-                script. If multiTask is False this list is composed by a single element
+            to_run (:py:class:`string`) : list with the cardinal numbers of the runs
+                to be performed
 
         Return:
             :py:class:`list` : list of the :py:class:`multiprocessing` objects
@@ -246,112 +268,138 @@ class QeCalculator(Runner):
         def os_system_run(comm_str):
             os.system(comm_str)
 
-        job = []
-        for name in names:
-            run_command = self.run_command(name)
-            if run_command is not None:
-                p = multiprocessing.Process(target=os_system_run, args=(run_command,))
-                job.append(p)
-        return job
+        jobs = []
+        for index in to_run:
+            comm_str = self.run_command(index)
+            p = multiprocessing.Process(target=os_system_run, args=(comm_str,))
+            jobs.append(p)
+        return jobs
 
-    def slurm_runner(self,names):
+    def slurm_scheduler(self,to_run):
         """
-        Create the slurm script associated to the runs of the job.
+        Create the slurm script(s) associated to the runs specified in the list to_run.
 
         Args:
-            names (:py:class:`list`) : list with names of the input files included in the
-                script. If multiTask is False this list is composed by a single element
+            to_run (:py:class:`string`) : list with the cardinal numbers of the runs
+                to be performed
 
         Return:
-            :py:class:`string`: the name of the slurm script
+            :py:class:`list`: list with the names of the slurm scripts associated to the
+            computations that are not skipped
 
         """
-        cpus_per_task = self.run_options['cpus_per_task']
-        ntasks = self.run_options['ntasks']
+        omp = self.run_options.get('omp')
+        mpi = self.run_options.get('mpi')
+        names = self.run_options.get('names')
         run_dir = self.run_options.get('run_dir', '.')
-
-        job_name = os.path.join(run_dir,'job_'+names[0])+'.sh'
-        if os.path.isfile(job_name):
-            print('delete slurm script %s'%job_name)
-            os.system('rm %s'%job_name)
+        sbatch_options = self.run_options.get('sbatch_options', None)
 
         lines_options = []
-        #SBATCH options
         lines_options.append('#!/bin/bash')
-        lines_options.append('#SBATCH --ntasks=%s'%ntasks)
-        lines_options.append('#SBATCH --cpus_per_task = %s'%cpus_per_task)
-        lines_options.append('')
-        #add the srun of the taks
-        lines_run = []
-        for name in names:
-            comm_str = self.run_command(name)
-            if comm_str is not None:
-                lines_run.append(comm_str)
-        if len(lines_run) == 0:
-            print('No tasks for srun. Slurm script not submitted')
-            return None
+        lines_options.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
+        lines_options.append('#SBATCH --cpus_per_task=%s    ### Number of threads per task (OMP threads)'%omp)
+        if sbatch_options is not None: # add other options if present in the run_options of the calculator
+            for option in sbatch_options:
+                lines_options.append('#SBATCH %s'%option)
+        jobs = []
+        for index in to_run:
+            job_name = 'job_'+names[index]
+            jobs.append(job_name)
+            comm_str = self.run_command(index)
+            lines_run = []
+            lines_run.append('#SBATCH --output=%s.out'%job_name)
+            lines_run.append('')
+            lines_run.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
+            lines_run.append('')
+            lines_run.append('echo "Job id $SLURM_JOB_ID"')
+            lines_run.append('echo "Number of mpi  $SLURM_NTASKS"')
+            lines_run.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
+            lines_run.append('')
+            lines_run.append('echo "execute : %s"'%comm_str)
+            lines_run.append(comm_str)
+            lines_run.append('')
+            lines_run.append('echo "JOB_DONE"')
+            f = open(os.path.join(run_dir,job_name+'.sh'),'w')
+            f.write('\n'.join(lines_options+lines_run))
+            f.close()
 
-        lines = lines_options+lines_run
-        f = open(job_name,'w')
-        f.write('\n'.join(lines))
-        f.close()
+        return jobs
 
-        return job_name
-
-    def run_command(self,name):
+    def run_command(self,index):
         """
         Define the run command used to run the computation associated to the
-        input file $name.
-        If the skip attribute of run_options is True the method evaluated if
-        the computation can be skipped. This is done by  checking if the file
-        $name.xml is already present in the path run_dir/prefix.save
+        input file $names[index]. The value of the command depends on the
+        chosen scheduler.
+
+        Args:
+            index (:py:class:`int`) : index of the computation to be performed
 
         Return:
-            :py:class:`string` : command that run the executable with the $name input file.
-                If the computation can be skipped the method returns None
-
+            :py:class:`string` : command that runs the computation associated to
+            the $names[index] input file
         """
-        verbose = self.run_options['verbose']
-        skip = self.run_options['skip']
+        scheduler = self.run_options.get('scheduler')
+        executable = self.run_options.get('executable')
+        mpi = self.run_options.get('mpi')
+        mpi_run = self.run_options.get('mpi_run')
         run_dir = self.run_options.get('run_dir', '.')
-        skipfile = os.path.join(run_dir,name)+'.xml'
+        names = self.run_options.get('names')
+        verbose = self.run_options.get('verbose')
 
-        # check if the computation can be skipped and return the proper comm_str
-        can_skip = all([skip,os.path.isfile(skipfile)])
-        if can_skip:
-            if verbose: print('Skip the computation for input',name)
-            return None
-        else:
-            comm_str = self._get_comm_str(name)
-            if verbose: print('Executing command:', self._get_comm_str(name))
-            return comm_str
-
-    def _get_comm_str(self,name):
-        """
-        Define the command string used to run the computation. The command string depends on the
-        choice of the scheduler. For `direct` scheduler the string set the directory to the run_dir
-        and use the mpi_run parameter of the calculator. For `slurm` scheduler the string set the
-        srun command.
-
-        Return:
-            :py:class:`string` : command that run the executable with the $name input file
-
-        """
-        verbose = self.run_options['verbose']
-        run_dir = self.run_options.get('run_dir', '.')
-
-        scheduler = self.run_options['scheduler']
         if scheduler == 'direct':
             set_run_dir = 'cd %s; '%run_dir
-            command = (set_run_dir + self._global_options['mpi_run'] + ' ' + self._global_options['executable']).strip()
+            command = set_run_dir + mpi_run + ' ' + str(mpi) + ' ' + executable
         if scheduler == 'slurm':
-            command = 'srun ' + self._global_options['executable']
+            command = mpi_run + ' ' + str(mpi) + ' ' + executable
 
-        input_name = name + '.in'
-        output_name = name + '.log'
+        input_name = names[index] + '.in'
+        output_name = names[index] + '.log'
 
         comm_str =  command + ' -inp %s > %s'%(input_name,output_name)
+        if verbose: print('run %s command: %s' %(index,comm_str))
+
         return comm_str
+
+    # def _is_terminated(self,jobs):
+    #     """
+    #     Check if all the runs of the jobs list have been performed.
+    #     """
+    #     scheduler = self.run_options['scheduler']
+    #
+    #     if scheduler == 'direct':
+    #         terminated = all([not run.is_alive() for run in jobs])
+    #         return terminated
+    #     if scheduler == 'slurm':
+    #         print('is_terminated method to be implemented for slurm scheduler')
+    #         return True
+
+    def _jobs_terminated(self,jobs):
+        """
+        Check the status of the running jobs.
+
+        Args:
+            jobs (:py:class:`list`) : list with the reference to the running jobs
+
+        Return:
+            :py:class:`list`: list with the status of the jobs. The elements are True
+                if the associated computation is terminated and False if it is running
+
+        """
+        scheduler = self.run_options.get('scheduler')
+        run_dir = self.run_options.get('run_dir', '.')
+
+        if scheduler == 'direct':
+            jobs_terminated = [not job.is_alive() for job in jobs]
+        if scheduler == 'slurm':
+            jobs_terminated = []
+            for job in jobs:
+                with open(os.path.join(run_dir,job+'.out'), 'r') as f:
+                    last_line = f.read().splitlines()[-1]
+                if last_line == 'JOB_DONE':
+                    jobs_terminated.append(True)
+                else: jobs_terminated.append(False)
+
+        return jobs_terminated
 
     def _ensure_run_directory(self):
         from mppi.Utilities import FutileUtils as f
@@ -375,9 +423,9 @@ class QeCalculator(Runner):
             QeCalculator can be used.
         """
         from shutil import copytree
-        verbose = self.run_options['verbose']
+        verbose = self.run_options.get('verbose')
         run_dir = self.run_options.get('run_dir', '.')
-        inputs = self.run_options['inputs']
+        inputs = self.run_options.get('inputs')
 
         for input in inputs:
             prefix = input['control']['prefix'].strip("'")
@@ -394,18 +442,18 @@ class QeCalculator(Runner):
     def _clean_run_dir(self):
         """
         Clean the run_dir before performing the computation. Delete the $name.log file,
-        the $name.xml file and the folder run_dir/prefix.save associated to all the
+        the $prefix.xml file and the folder run_dir/prefix.save associated to all the
         inputs and names.
         """
         run_dir = self.run_options.get('run_dir', '.')
         names = self.run_options.get('names','default')
         inputs = self.run_options.get('inputs')
-        verbose = self.run_options['verbose']
+        verbose = self.run_options.get('verbose')
 
         for input,name in zip(inputs,names):
             logfile = os.path.join(run_dir,name)+'.log'
-            xmlfile = os.path.join(run_dir,name)+'.xml'
             prefix = input['control']['prefix'].strip("'")
+            xmlfile = os.path.join(run_dir,prefix)+'.xml'
             outdir = os.path.join(run_dir,prefix)+'.save'
 
             if os.path.isfile(logfile):

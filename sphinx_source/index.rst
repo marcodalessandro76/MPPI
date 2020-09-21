@@ -10,6 +10,24 @@ Multi Purpose Python Interface.
 
 Python package for managing computations and performing post-processing in QuantumESPRESSO and Yambo.
 
+Install
+-------
+To install the package you can clone this repository in a local folder, e.g. /home/username/Applications/MPPI.
+Then move inside the folder and install the package using the pip or the python tools,
+
+python3 setupy install
+
+you can add the --user option, so that the package is installed in the local folder for the python libraries.
+
+You can also install the package using the pip installer, in this case from the same folder run
+
+pip3 install -e .
+
+Note that the _editable_ -e option creates a link from the location of the package to local python repository folder.
+In this way you do not need to recompile the package if you make some modifications, useful for coding.
+
+Finally, you can also install the package inside a virtual environment.
+
 .. toctree::
    :maxdepth: 1
    :caption: Contents:

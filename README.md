@@ -24,10 +24,10 @@ you can add the --user option, so that the package is installed in the local fol
 You can also install the package using the pip installer, in this case from the same folder run
 
 ```console
-pip3 install --user -e .
+pip3 install -e .
 
 ```
-Note that the _editable_ -e option create a link from the location of the package to local python repository folder.
+Note that the _editable_ -e option creates a link from the location of the package to local python repository folder.
 In this way you do not need to recompile the package if you make some modifications, useful for coding.
 
 Finally, you can also install the package inside a virtual environment.
@@ -49,8 +49,8 @@ We provide some jupyter notebooks to show the functionality of the package.
 
 Requirements
 ------------
-- Quantum Espresso (tested with 6.3): http://www.quantum-espresso.org/
-- yambo (tested with 4.4 devel): http://www.yambo-code.org/
+- Quantum Espresso (tested with 6.6): http://www.quantum-espresso.org/
+- yambo (tested with 4.5 devel): http://www.yambo-code.org/
 - numpy: http://www.numpy.org/
 
 Authors
