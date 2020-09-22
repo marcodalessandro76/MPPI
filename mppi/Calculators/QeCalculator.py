@@ -221,7 +221,9 @@ class QeCalculator(Runner):
         if scheduler == 'slurm':
             run_dir = self.run_options.get('run_dir', '.')
             for job in jobs:
-                os.system('cd %s ; cat %s.sh' %(run_dir,job))
+                slurm_submit = 'cd %s ; sbatch %s.sh' %(run_dir,job)
+                print('slurm submit: ',slurm_submit )
+                os.system(slurm_submit)
 
     def wait(self,jobs,to_run):
         """
@@ -393,11 +395,14 @@ class QeCalculator(Runner):
         if scheduler == 'slurm':
             jobs_terminated = []
             for job in jobs:
-                with open(os.path.join(run_dir,job+'.out'), 'r') as f:
-                    last_line = f.read().splitlines()[-1]
-                if last_line == 'JOB_DONE':
-                    jobs_terminated.append(True)
-                else: jobs_terminated.append(False)
+                job_out = os.path.join(run_dir,job+'.out')
+                if not os.path.isfile(job_out):
+                    jobs_terminated.append(False)
+                else:
+                    with open(job_out, 'r') as f:
+                        last_line = f.read().splitlines()[-1]
+                    if last_line == 'JOB_DONE': jobs_terminated.append(True)
+                    else: jobs_terminated.append(False)
 
         return jobs_terminated
 
