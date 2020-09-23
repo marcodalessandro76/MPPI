@@ -26,7 +26,8 @@ class QeCalculator(Runner):
            for each name in names
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        IO_time (int) : time step (in second) used by the wait method to check that the job is completed
-       kwargs : other parameters that are stored in the _global_options dictionary
+       kwargs : other parameters that are stored in the _global_options dictionary. For instance the variable
+           sbatch_options = [option1,option2,....] allows the user to include further options in the slurm script
 
     Example:
      >>> code = calculator(omp=1,mpi=4,mpi_run='mpirun -np',skip=True,verbose=True,scheduler='direct')
@@ -52,7 +53,7 @@ class QeCalculator(Runner):
     def __init__(self,
                  omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
                  executable = 'pw.x', scheduler = 'direct', multiTask = True,
-                 skip = False, verbose = True, IO_time = 5, **kwargs):
+                 skip =  True, verbose = True, IO_time = 5, **kwargs):
         # Use the initialization from the Runner class (all options inside _global_options)
         Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
                         scheduler=scheduler, multiTask=multiTask,
@@ -103,19 +104,24 @@ class QeCalculator(Runner):
         passing to the :meth:`post_processing` method. Computations are performed
         in parallel or serially accordingly to the value of the multiTask option.
 
+        Note:
+            The wait of the end of the run can be suppressed by adding the variable
+            wait_end_run=False in the run_options of the calculator.
+
         """
         multiTask = self.run_options.get('multiTask')
+        wait_end_run = self.run_options.get('wait_end_run',True)
 
         to_run = self.select_to_run()
         jobs = self.build_run_script(to_run)
 
         if multiTask:
             self.submit_job(jobs)
-            self.wait(jobs,to_run)
+            if wait_end_run: self.wait(jobs,to_run)
         else:
             for index,job in zip(to_run,jobs):
                 self.submit_job([job])
-                self.wait([job],[index])
+                if wait_end_run: self.wait([job],[index])
 
         return {}
 
@@ -238,7 +244,6 @@ class QeCalculator(Runner):
                 to be performed
 
         """
-
         verbose = self.run_options.get('verbose')
         IO_time = self.run_options.get('IO_time')
         import time
@@ -299,7 +304,7 @@ class QeCalculator(Runner):
         lines_options = []
         lines_options.append('#!/bin/bash')
         lines_options.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
-        lines_options.append('#SBATCH --cpus_per_task=%s    ### Number of threads per task (OMP threads)'%omp)
+        lines_options.append('#SBATCH --cpus-per-task=%s    ### Number of threads per task (OMP threads)'%omp)
         if sbatch_options is not None: # add other options if present in the run_options of the calculator
             for option in sbatch_options:
                 lines_options.append('#SBATCH %s'%option)
@@ -361,19 +366,6 @@ class QeCalculator(Runner):
         if verbose: print('run %s command: %s' %(index,comm_str))
 
         return comm_str
-
-    # def _is_terminated(self,jobs):
-    #     """
-    #     Check if all the runs of the jobs list have been performed.
-    #     """
-    #     scheduler = self.run_options['scheduler']
-    #
-    #     if scheduler == 'direct':
-    #         terminated = all([not run.is_alive() for run in jobs])
-    #         return terminated
-    #     if scheduler == 'slurm':
-    #         print('is_terminated method to be implemented for slurm scheduler')
-    #         return True
 
     def _jobs_terminated(self,jobs):
         """
