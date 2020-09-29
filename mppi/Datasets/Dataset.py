@@ -84,7 +84,7 @@ class Dataset(Runner):
             self.runs[irun] = {'names' : name_from_id(input), 'input':input, kwargs}
             self.calc[icalc] = {'calc' : runner, iruns : [...,irun]}
 
-        where icalc is the cardinal index of the calculator.
+        where `irun` is the cardinal index of the calculator.
 
         The name of the input file is not directly passed. Instead it is computed
         from the id of the run using the function name_from_id. If, for instance, a jobname
@@ -113,7 +113,7 @@ class Dataset(Runner):
                              ' is already provided, modify the run id.')
         irun = len(self.ids) # get the cardinal number of this run and append its id
         self.ids.append(id)
-        # check if runner has been already used, otherwise add it to self.calculators
+        # check if the calculator has been already used, otherwise add it to self.calculators
         # icalc identifies the position of the calculator in the self.calculators list
         calc_found = False
         for ind,calc in enumerate(self.calculators):
@@ -137,10 +137,10 @@ class Dataset(Runner):
         Run the dataset by performing explicit run of each of the item of the
            runs list.
         """
-        self._run_the_calculations()
+        self.run_the_calculations()
         return {}
 
-    def _run_the_calculations(self, selection=None):
+    def run_the_calculations(self, selection=None):
         """
         Method that manage the execution of the runs of the Dataset.
 
@@ -157,23 +157,28 @@ class Dataset(Runner):
                 selected_iruns = [r for r in iruns if r in selection]
             else:
                 selected_iruns = iruns
-            # build the inputs,names,jobnames,args parameters passed to the run method of the calculator
-            inputs = [self.runs[irun]['input'] for irun in selected_iruns]
-            names = [self.runs[irun]['name'] for irun in selected_iruns]
-            jobnames = [self.runs[irun]['jobname'] for irun in selected_iruns]
-            args = {}
-            for irun in selected_iruns:
-                args.update(self.runs[irun])
-            args.pop('input')
-            args.pop('name')
-            args.pop('jobname')
-            #run the calculation and append the results to the self.results
-            results =  calc.run(inputs=inputs,names=names,jobnames=jobnames,**args)
-            for irun in selected_iruns:
-                self.results[irun] = {}
-                for key,value in results.items():
-                    #print('value',value,selected_iruns.index(irun))
-                    self.results[irun][key] = value[selected_iruns.index(irun)]
+            #print('selected_iruns',selected_iruns)
+            # if the selected calculator has some computation to run build the inputs,
+            # names,jobnames,args parameters passed to the run method of the calculator
+            if len(selected_iruns) > 0:
+                inputs = [self.runs[irun]['input'] for irun in selected_iruns]
+                names = [self.runs[irun]['name'] for irun in selected_iruns]
+                jobnames = [self.runs[irun]['jobname'] for irun in selected_iruns]
+                args = {}
+                for irun in selected_iruns:
+                    args.update(self.runs[irun])
+                args.pop('input')
+                args.pop('name')
+                args.pop('jobname')
+                #run the calculation and append the results to the self.results
+                results = calc.run(inputs=inputs,names=names,jobnames=jobnames,**args)
+                #print('irun',irun)
+                #print(calc.run_options)
+                #print('')
+                for irun in selected_iruns:
+                    self.results[irun] = {}
+                    for key,value in results.items():
+                        self.results[irun][key] = value[selected_iruns.index(irun)]
 
     def set_postprocessing_function(self, func):
         """
@@ -233,7 +238,7 @@ class Dataset(Runner):
         id_name = name_from_id(id)
         fetch_indices = []
         selection_to_run = []
-        # identify the elements of the dataset that match the id, if selection_to_run
+        # identify the elements of the dataset that match the id, if run_if_not_present
         # is True perform the associated runs if they are not present
         for irun,name in enumerate(names):
             if id_name in name :
@@ -241,7 +246,7 @@ class Dataset(Runner):
                 if run_if_not_present and irun not in self.results:
                     selection_to_run.append(irun)
         if len(selection_to_run) > 0:
-            self._run_the_calculations(selection=selection_to_run)
+            self.run_the_calculations(selection=selection_to_run)
 
         data = []
         if self._post_processing_function is not None:

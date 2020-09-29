@@ -37,6 +37,25 @@ def QE_get_energy(dataset):
         energy[run] = results.get_energy(convert_eV = False)
     return energy
 
+def QE_get_gap(dataset):
+    """
+    Extract the value of the gap from the results dictionary of the dataset.
+
+    Args:
+        dataset(:class:`Dataset`) : the instance of Dataset
+
+    Returns:
+        :py:class:`dict` : dictionary with the gap (in eV) for all the (computed) runs
+            of the dataset. Information on the nature of the gap (direct or indirect) are
+            written on the screen.
+    """
+    from mppi import Parsers as P
+    gap = {}
+    for run,data in dataset.results.items():
+        results = P.PwParser(data['output'],verbose=False)
+        gap[run] = results.get_gap()['gap']
+    return gap
+
 def Yambo_parse_data(dataset):
     """
     Apply the YamboParser to the elements of the results dictionary of the dataset.

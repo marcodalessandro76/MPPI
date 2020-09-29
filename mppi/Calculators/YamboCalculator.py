@@ -50,6 +50,14 @@ class YamboCalculator(Runner):
     When the run method is called the class runs the command:
                 executable_name -F name.in -J jobname -C name
 
+    The calculator looks for the following variables in the run_options dictionary. These options
+    may be useful for _asincronous_ computation managed the slurm scheduler.
+
+        `dry_run=True` with this option the calculator setup the calculations and write the scrpt
+        for submitting the jobs, but the computations are not run.
+
+        `wait_end_run=False` with this option the wait of the end of the run is suppressed.
+
     """
 
     def __init__(self,
@@ -115,24 +123,22 @@ class YamboCalculator(Runner):
         passing to the :meth:`post_processing` method. Computations are performed
         in parallel or serially accordingly to the value of the multiTask option.
 
-        Note:
-            The wait of the end of the run can be suppressed by adding the variable
-            wait_end_run=False in the run_options of the calculator.
-
         """
         multiTask = self.run_options.get('multiTask')
+        dry_run = self.run_options.get('dry_run',False)
         wait_end_run = self.run_options.get('wait_end_run',True)
 
         to_run = self.select_to_run()
         jobs = self.build_run_script(to_run)
 
-        if multiTask:
-            self.submit_job(jobs)
-            if wait_end_run: self.wait(jobs,to_run)
-        else:
-            for index,job in zip(to_run,jobs):
-                self.submit_job([job])
-                if wait_end_run: self.wait([job],[index])
+        if not dry_run:
+            if multiTask:
+                self.submit_job(jobs)
+                if wait_end_run: self.wait(jobs,to_run)
+            else:
+                for index,job in zip(to_run,jobs):
+                    self.submit_job([job])
+                    if wait_end_run: self.wait([job],[index])
 
         return {}
 
