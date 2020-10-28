@@ -1,6 +1,6 @@
 class Runner():
     """
-    This object is associated with the concept of execution of a action.
+    This object is associated with the concept of execution of an action.
     It may be customized to be used inside workflows and datasets.
     The central functionality is the `run` method that can be customized on
     subclasses of `Runner`. In this object there are global and local options

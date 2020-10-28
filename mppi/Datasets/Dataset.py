@@ -157,7 +157,6 @@ class Dataset(Runner):
                 selected_iruns = [r for r in iruns if r in selection]
             else:
                 selected_iruns = iruns
-            #print('selected_iruns',selected_iruns)
             # if the selected calculator has some computation to run build the inputs,
             # names,jobnames,args parameters passed to the run method of the calculator
             if len(selected_iruns) > 0:
@@ -172,9 +171,6 @@ class Dataset(Runner):
                 args.pop('jobname')
                 #run the calculation and append the results to the self.results
                 results = calc.run(inputs=inputs,names=names,jobnames=jobnames,**args)
-                #print('irun',irun)
-                #print(calc.run_options)
-                #print('')
                 for irun in selected_iruns:
                     self.results[irun] = {}
                     for key,value in results.items():

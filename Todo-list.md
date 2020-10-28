@@ -8,8 +8,6 @@ TODO
 
 - Complete the Analysis_Dos notebook.
 
-- Add a makeFixSymm function in the YamboUtils module
-
 - Add a from_Yambo method in the Dos class. The output of the YamboParser does not contain
   information on the weights of the kpoints. These information can be extracted from ns.db1
   using the YamboElectronsDB class of yambopy or from the xml file of the pw output used to
