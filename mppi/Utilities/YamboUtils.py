@@ -101,8 +101,8 @@ def get_variable_from_db(ndb_file,var_name):
     Extract the value of a variable from a ndb database
 
     Args:
-        ndb_file (string) : the name of the database
-        var_name (string) : name of the variable
+        ndb_file (:py:class:`string`) : the name of the database
+        var_name (:py:class:`string`) : name of the variable
 
     Return:
         :py:class:`numpy.ndarray`  : array with the values of the variable

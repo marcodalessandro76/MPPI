@@ -51,7 +51,6 @@ Requirements
 ------------
 - Quantum Espresso (tested with 6.6): http://www.quantum-espresso.org/
 - yambo (tested with 5.0 devel): http://www.yambo-code.org/
-- numpy: http://www.numpy.org/
 
 Authors
 ------

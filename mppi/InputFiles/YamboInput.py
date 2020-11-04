@@ -223,22 +223,25 @@ class YamboInput(dict):
 
     # Set methods useful for Yambo_rt inputs
 
-    def set_rt_field(self,int=1e3,int_units='kWLm2',width=100,width_units='fs',
+    def set_rt_field(self,index=1,int=1e3,int_units='kWLm2',width=100,width_units='fs',
                     freq=1.5,freq_units='eV',kind='QSSIN',polarization='linear',
-                    direction=[1.,0.,0.],direction_circ=[0.,1.,0.]):
+                    direction=[1.,0.,0.],direction_circ=[0.,1.,0.],tstart=0,tstart_units='fs'):
         """
         Set the parameters of the field. The width parameter set the Yambo
         `Field1_FWHM` input parameter that specifies the width of the Intensity
         of the pump.
+        The index parameter is an integer thaat defines the name of the Field$index.
+        Useful to set more than one field
         """
-        self['variables']['Field1_Int'] = [int,int_units]
-        #self['variables']['Field1_Width'] = [width,width_units]
-        self['variables']['Field1_FWHM'] = [width,width_units]
-        self['variables']['Field1_Freq'] = [[freq,freq],freq_units]
-        self['variables']['Field1_kind'] = kind
-        self['variables']['Field1_pol'] = polarization
-        self['variables']['Field1_Dir'] = [direction,'']
-        self['variables']['Field1_Dir_circ'] = [direction_circ,'']
+        field_name = 'Field'+str(index)
+        self['variables'][field_name+'_Int'] = [int,int_units]
+        self['variables'][field_name+'_FWHM'] = [width,width_units]
+        self['variables'][field_name+'_Freq'] = [[freq,freq],freq_units]
+        self['variables'][field_name+'_kind'] = kind
+        self['variables'][field_name+'_pol'] = polarization
+        self['variables'][field_name+'_Dir'] = [direction,'']
+        self['variables'][field_name+'_Dir_circ'] = [direction_circ,'']
+        self['variables'][field_name+'_Tstart'] = [tstart,tstart_units]
 
     def set_rt_bands(self,bands=None,scissor=0.,damping_valence=0.05,damping_conduction=0.05):
         """

@@ -11,8 +11,7 @@ EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
 REQUIRES_PYTHON = '>=3.0'
 VERSION = '1.1'
-REQUIRED = ['numpy']
-#QEPPPY_URL = 'https://github.com/Crivella/QEPPpy'
+REQUIRED = ['numpy','matplotlib','sphinx_rtd_theme','nbsphinx']
 #-----------------------------------------------
 
 here = path.abspath(path.dirname(__file__))
