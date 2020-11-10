@@ -122,9 +122,9 @@ class YamboParser(dict):
         Initialize the data member of the class.
 
         Args:
-            files(list): The list of strings with the names of the file to be parsed.
-            verbose (bool) : Determine the amount of information provided on terminal.
-            extendOut (bool) : Determine which dictionary is used as reference for the
+            files(:py:class:`list`): The list of strings with the names of the file to be parsed.
+            verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal.
+            extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
                             names of the variables
         """
         dict.__init__(self)
@@ -140,9 +140,9 @@ class YamboParser(dict):
         Init the a YamboParser instance using all the 'o-' files found inside the path.
 
         Args:
-            path (string): name of the folder that contains the 'o-' files
-            verbose (bool) : Determine the amount of information provided on terminal
-            extendOut (bool) : Determine which dictionary is used as reference for the
+            path (:py:class:`string`): name of the folder that contains the 'o-' files
+            verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
+            extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
                             names of the variables
         """
         files = files_from_folder(path)

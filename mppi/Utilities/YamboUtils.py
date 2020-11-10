@@ -46,10 +46,9 @@ def build_SAVE(source_dir,run_dir,command = 'p2y -a 2',make_link = True):
         comm_str = 'cd %s; %s'%(source_dir,command)
         print('Executing command:', comm_str)
         os.system(comm_str)
-        # copy (or create a symbolik link) of the SAVE folder in the run_dir
         src = os.path.abspath(os.path.join(source_dir,'SAVE'))
         dest = os.path.abspath(os.path.join(run_dir,'SAVE'))
-        if make_link:
+        if make_link: # copy (or create a symbolik link) of the SAVE folder in the run_dir
             os.symlink(src,dest,target_is_directory=True)
             print('Create a symlink of %s in %s'%(src,run_dir))
         else:

@@ -3,27 +3,28 @@ Class to perform the parsing of a QuantumESPRESSO XML file. Makes usage of the
 data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 """
 
-def _compute_transitions(bands,in_list,fin_list):
-    """
-    Compute the (positive) transition energies for the bands (on a single kpoint)
-
-    Args:
-        bands (list) : list with the energies
-        in_list (list) : indexes of the bands used as starting points of the transitions
-        fin_list (list) : indexes of the bands used as final points of the transitions
-
-    Returns:
-        transitions (list) : list with the transition energies for each possible couple
-        of (distinct) in and out bands
-    """
-    transitions = []
-    for v in in_list:
-        for c in fin_list:
-            if c > v:
-                transitions.append(bands[c]-bands[v])
-    return transitions
+# def _compute_transitions(bands,in_list,fin_list):
+#     """
+#     Compute the (positive) transition energies for the bands (on a single kpoint)
+#
+#     Args:
+#         bands (list) : list with the energies
+#         in_list (list) : indexes of the bands used as starting points of the transitions
+#         fin_list (list) : indexes of the bands used as final points of the transitions
+#
+#     Returns:
+#         transitions (list) : list with the transition energies for each possible couple
+#         of (distinct) in and out bands
+#     """
+#     transitions = []
+#     for v in in_list:
+#         for c in fin_list:
+#             if c > v:
+#                 transitions.append(bands[c]-bands[v])
+#     return transitions
 
 from mppi.Utilities import HaToeV
+from mppi.Parsers import Functions as F
 
 class PwParser():
     """
@@ -55,14 +56,12 @@ class PwParser():
         lsda : True if collinear spin is activated
         noncolin : True if noncollinear spin calculation is activated
         spinorbit : True if spin-orbit couping is present
-        spin_degen : 1 if lsda or non collinear spin is activated, 0 otherwise
+        spin_degen : 1 if lsda or non collinear spin is activated, 2 otherwise
 
     """
 
     def __init__(self,file,verbose=True):
-
         self.file = file
-
         if verbose: print('Parse file : %s'%self.file)
         try:
             self.parseXML(self.file)
@@ -133,8 +132,7 @@ class PwParser():
 
         kstates = self.data.findall('output/band_structure/ks_energies')
 
-        #lists with the kpoints and the associated weights,
-        #arrays with the ks energies and with the occupations
+        #arrays with the kpoints, the associated weights, the ks energies and the occupations
         self.kpoints = []
         self.weights = []
         self.evals = []
@@ -148,6 +146,7 @@ class PwParser():
             self.weights.append(weight)
             self.evals.append(eval)
             self.occupations.append(occ)
+        self.kpoints = np.array(self.kpoints)
         self.weights = np.array(self.weights)
         self.evals = np.array(self.evals)
         self.occupations = np.array(self.occupations)
@@ -193,24 +192,43 @@ class PwParser():
             :py:class:`numpy.array`  : an array with the ks energies for each kpoint
 
         """
-        evals = self.evals*HaToeV
-        homo_band = evals[:,self.nbands_valence-1]
-        VBM = homo_band.max()
-        evals -= VBM
+        evals = F.get_evals(self.evals,self.nbands,self.nbands_valence,set_gap=set_gap,set_direct_gap=set_direct_gap)
+        return evals
 
-        if set_gap == None and set_direct_gap == None:
-            return evals
-        elif self.nbands_valence == self.nbands: # only occupied bands are present
-            print('There are no empty bands. `Set gap` has not been applied')
-            return evals
-        else: # shift the energy level of the empty bands if needed
-            gap = self.get_gap(verbose=False)
-            scissor = 0.
-            if set_gap is not None: scissor = set_gap - gap['gap']
-            elif set_direct_gap is not None: scissor = set_direct_gap - gap['direct_gap']
-            print('Apply a scissor of',scissor,'eV')
-            evals[:,self.nbands_valence:] += scissor
-            return evals
+    # def get_evals(self, set_gap = None, set_direct_gap = None):
+    #     """
+    #     Return the ks energies for each kpoint (in eV). The top of the valence band is used as the
+    #     reference energy value. It is possible to shift the energies of the empty bands by setting an arbitrary
+    #     value for the gap (direct or indirect).
+    #     Implemented only for semiconductors, the energy shift of empty bands does not update their occupation levels.
+    #
+    #     Args:
+    #         set_gap (float) : set the value of the gap (in eV) of the system
+    #         set_direct_gap (float) : set the value of the direct gap (in eV) of the system. If set_gap
+    #                         is provided this parameter is ignored
+    #
+    #     Return:
+    #         :py:class:`numpy.array`  : an array with the ks energies for each kpoint
+    #
+    #     """
+    #     evals = self.evals*HaToeV
+    #     homo_band = evals[:,self.nbands_valence-1]
+    #     VBM = homo_band.max()
+    #     evals -= VBM
+    #
+    #     if set_gap == None and set_direct_gap == None:
+    #         return evals
+    #     elif self.nbands_valence == self.nbands: # only occupied bands are present
+    #         print('There are no empty bands. `Set gap` has not been applied')
+    #         return evals
+    #     else: # shift the energy level of the empty bands if needed
+    #         gap = self.get_gap(verbose=False)
+    #         scissor = 0.
+    #         if set_gap is not None: scissor = set_gap - gap['gap']
+    #         elif set_direct_gap is not None: scissor = set_direct_gap - gap['direct_gap']
+    #         print('Apply a scissor of',scissor,'eV')
+    #         evals[:,self.nbands_valence:] += scissor
+    #         return evals
 
     def get_transitions(self, initial = 'full', final = 'empty',set_gap = None, set_direct_gap = None):
         """
@@ -232,27 +250,50 @@ class PwParser():
             :py:class:`numpy.array`  : an array with the transition energies for each kpoint
 
         """
-        import numpy as np
-        if initial == 'full':
-            in_list = [ind for ind in range(self.nbands_valence)]
-        elif initial == 'empty':
-            in_list = [ind for ind in range(self.nbands_valence,self.nbands)]
-        else:
-            in_list = initial
-        if final == 'full':
-            fin_list = [ind for ind in range(self.nbands_valence)]
-        elif final == 'empty':
-            fin_list = [ind for ind in range(self.nbands_valence,self.nbands)]
-        else:
-            fin_list = final
-
-        evals = self.get_evals(set_gap=set_gap,set_direct_gap=set_direct_gap)
-        transitions = []
-        for bands in evals:
-            transitions.append(_compute_transitions(bands,in_list,fin_list))
-        transitions = np.array(transitions)
-
+        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_valence,initial=initial,final=final,set_gap=set_gap,set_direct_gap=set_direct_gap)
         return transitions
+
+    # def get_transitions(self, initial = 'full', final = 'empty',set_gap = None, set_direct_gap = None):
+    #     """
+    #     Compute the (vertical) transitions energies. For each kpoint compute the transition energies, i.e.
+    #     the (positive) energy difference (in eV) between the final and the initial states.
+    #
+    #     Args:
+    #         initial (string or list) : specifies the bands from which electrons can be extracted. It can be set to `full` or
+    #             `empty` to select the occupied or empty bands, respectively. Otherwise a list of bands can be
+    #             provided
+    #         final  (string or list) : specifies the final bands of the excited electrons. It can be set to `full` or
+    #             `empty` to select the occupied or empty bands, respectively. Otherwise a list of bands can be
+    #             provided
+    #         set_gap (float) : set the value of the gap (in eV) of the system
+    #         set_direct_gap (float) : set the value of the direct gap (in eV) of the system. If set_gap
+    #                         is provided this parameter is ignored
+    #
+    #     Return:
+    #         :py:class:`numpy.array`  : an array with the transition energies for each kpoint
+    #
+    #     """
+    #     import numpy as np
+    #     if initial == 'full':
+    #         in_list = [ind for ind in range(self.nbands_valence)]
+    #     elif initial == 'empty':
+    #         in_list = [ind for ind in range(self.nbands_valence,self.nbands)]
+    #     else:
+    #         in_list = initial
+    #     if final == 'full':
+    #         fin_list = [ind for ind in range(self.nbands_valence)]
+    #     elif final == 'empty':
+    #         fin_list = [ind for ind in range(self.nbands_valence,self.nbands)]
+    #     else:
+    #         fin_list = final
+    #
+    #     evals = self.get_evals(set_gap=set_gap,set_direct_gap=set_direct_gap)
+    #     transitions = []
+    #     for bands in evals:
+    #         transitions.append(_compute_transitions(bands,in_list,fin_list))
+    #     transitions = np.array(transitions)
+    #
+    #     return transitions
 
     def get_gap(self, verbose = True):
         """
@@ -264,34 +305,47 @@ class PwParser():
             of the VMB and CBM
 
         """
-        import numpy as np
-        homo_band = self.evals[:,self.nbands_valence-1]
-        try:
-            lumo_band = self.evals[:,self.nbands_valence]
-        except IndexError:
-            print('There are no empty states. Gap cannot be computed.')
-            return None
+        gap = F.get_gap(self.evals,self.nbands_valence,verbose=verbose)
+        return gap
 
-        VBM = homo_band.max()
-        position_vbm = homo_band.argmax()
-        CBM = lumo_band.min()
-        position_cbm = lumo_band.argmin()
-        gap = (CBM-VBM)*HaToeV
-        direct_gap = (lumo_band[position_vbm]-homo_band[position_vbm])*HaToeV
-
-        # If there are several copies of the same point on the path it can happen that
-        # the system is recognized as an indirect gap for numerical noise, so we check
-        if np.allclose(gap,direct_gap,atol=1e-5,rtol=1e-5):
-            gap = direct_gap
-            position_cbm = position_vbm
-        if verbose:
-            if position_cbm == position_vbm:
-                print('Direct gap system')
-                print('=================')
-                print('Gap :',gap,'eV')
-            else :
-                print('Indirect gap system')
-                print('===================')
-                print('Gap :',gap,'eV')
-                print('Direct gap :',direct_gap,'eV')
-        return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,'positon_vbm':position_vbm}
+    # def get_gap(self, verbose = True):
+    #     """
+    #     Compute the energy gap of the system (in eV). The method check if the gap is direct or
+    #     indirect. Implemented and tested only for semiconductors.
+    #
+    #     Return:
+    #         :py:class:`dict` : a dictionary with the values of direct and indirect gaps and the positions
+    #         of the VMB and CBM
+    #
+    #     """
+    #     import numpy as np
+    #     homo_band = self.evals[:,self.nbands_valence-1]
+    #     try:
+    #         lumo_band = self.evals[:,self.nbands_valence]
+    #     except IndexError:
+    #         print('There are no empty states. Gap cannot be computed.')
+    #         return None
+    #
+    #     VBM = homo_band.max()
+    #     position_vbm = homo_band.argmax()
+    #     CBM = lumo_band.min()
+    #     position_cbm = lumo_band.argmin()
+    #     gap = (CBM-VBM)*HaToeV
+    #     direct_gap = (lumo_band[position_vbm]-homo_band[position_vbm])*HaToeV
+    #
+    #     # If there are several copies of the same point on the path it can happen that
+    #     # the system is recognized as an indirect gap for numerical noise, so we check
+    #     if np.allclose(gap,direct_gap,atol=1e-5,rtol=1e-5):
+    #         gap = direct_gap
+    #         position_cbm = position_vbm
+    #     if verbose:
+    #         if position_cbm == position_vbm:
+    #             print('Direct gap system')
+    #             print('=================')
+    #             print('Gap :',gap,'eV')
+    #         else :
+    #             print('Indirect gap system')
+    #             print('===================')
+    #             print('Gap :',gap,'eV')
+    #             print('Direct gap :',direct_gap,'eV')
+    #     return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,'positon_vbm':position_vbm}

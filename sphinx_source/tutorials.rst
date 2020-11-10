@@ -10,6 +10,7 @@ MPPI Tutorials
    tutorials/Tutorial_QeCalculator.ipynb
    tutorials/Tutorial_YamboCalculator.ipynb
    tutorials/Tutorial_PwParser.ipynb
+   tutorials/Tutorial_NsdbsParser.ipynb
    tutorials/Tutorial_YamboParser.ipynb
    tutorials/Tutorial_Datasets.ipynb
 
