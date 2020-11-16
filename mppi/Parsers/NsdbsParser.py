@@ -76,26 +76,28 @@ class NsdbsParser():
         self.nbands_valence = int(self.num_electrons/self.spin_degen)
         self.nbands_conduction = int(self.nbands-self.nbands_valence)
 
-    def get_evals(self, set_gap = None, set_direct_gap = None):
+    def get_evals(self, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
         """
         Return the ks energies for each kpoint (in eV). The top of the valence band is used as the
         reference energy value. It is possible to shift the energies of the empty bands by setting an arbitrary
-        value for the gap (direct or indirect).
-        Implemented only for semiconductors, the energy shift of empty bands does not update their occupation levels.
+        value for the gap (direct or indirect) or by adding an explicit scissor. Implemented only for semiconductors.
 
         Args:
-            set_gap (float) : set the value of the gap (in eV) of the system
-            set_direct_gap (float) : set the value of the direct gap (in eV) of the system. If set_gap
-                            is provided this parameter is ignored
+            set_scissor (:py:class:`float`) : set the value of the scissor (in eV) that is added to the empty bands.
+                If a scissor is provided the set_gap and set_direct_gap parameters are ignored
+            set_gap (:py:class:`float`) : set the value of the gap (in eV) of the system. If set_gap is provided
+                the set_direct_gap parameter is ignored
+            set_direct_gap (:py:class:`float`) : set the value of the direct gap (in eV) of the system.
 
         Return:
             :py:class:`numpy.array`  : an array with the ks energies for each kpoint
 
         """
-        evals = F.get_evals(self.evals,self.nbands,self.nbands_valence,set_gap=set_gap,set_direct_gap=set_direct_gap)
+        evals = F.get_evals(self.evals,self.nbands,self.nbands_valence,
+                set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=verbose)
         return evals
 
-    def get_transitions(self, initial = 'full', final = 'empty',set_gap = None, set_direct_gap = None):
+    def get_transitions(self, initial = 'full', final = 'empty',set_scissor = None, set_gap = None, set_direct_gap = None):
         """
         Compute the (vertical) transitions energies. For each kpoint compute the transition energies, i.e.
         the (positive) energy difference (in eV) between the final and the initial states.
@@ -107,15 +109,18 @@ class NsdbsParser():
             final  (string or list) : specifies the final bands of the excited electrons. It can be set to `full` or
                 `empty` to select the occupied or empty bands, respectively. Otherwise a list of bands can be
                 provided
-            set_gap (float) : set the value of the gap (in eV) of the system
-            set_direct_gap (float) : set the value of the direct gap (in eV) of the system. If set_gap
-                            is provided this parameter is ignored
+            set_scissor (:py:class:`float`) : set the value of the scissor (in eV) that is added to the empty bands.
+                If a scissor is provided the set_gap and set_direct_gap parameters are ignored
+            set_gap (:py:class:`float`) : set the value of the gap (in eV) of the system. If set_gap is provided
+                the set_direct_gap parameter is ignored
+            set_direct_gap (:py:class:`float`) : set the value of the direct gap (in eV) of the system.
 
         Return:
             :py:class:`numpy.array`  : an array with the transition energies for each kpoint
 
         """
-        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_valence,initial=initial,final=final,set_gap=set_gap,set_direct_gap=set_direct_gap)
+        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_valence,initial=initial,final=final,
+                      set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap)
         return transitions
 
     def get_gap(self, verbose = True):
