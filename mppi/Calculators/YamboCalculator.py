@@ -27,7 +27,7 @@ class YamboCalculator(Runner):
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        IO_time (int) : time step (in second) used by the wait method to check that the job is completed
        kwargs : other parameters that are stored in the _global_options dictionary
-       clean_restart (:py:class:`bool`) : if True the delete the folder(s) with the output files and database before
+       clean_restart (:py:class:`bool`) : if True delete the folder(s) with the output files and database before
             running the computation
 
     Example:

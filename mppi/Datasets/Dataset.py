@@ -50,6 +50,9 @@ class Dataset(Runner):
         results (:py:class:`dict`) : set of the results of each of the runs. The set is not ordered as the
             runs may be executed asynchronously.
         ids (:py:class:`list`) : list of run ids, to be used in order to identify and fetch the results
+        # NEW
+        multiTask  (:py:class:`bool`) : if true a single run_script is built and all the computations are performed in parallel,
+             otherwise an independent script is built for each elements of inputs and the computations are performed sequentially
 
     Example:
         >>> code = QeCalculator()
@@ -61,12 +64,17 @@ class Dataset(Runner):
     """
 
     def __init__(self, label='Dataset', run_dir='runs', **kwargs):
+        # NEW , multiTask=multiTask
         """
         Set the dataset ready for appending new runs
         """
         from copy import deepcopy
         newkwargs = deepcopy(kwargs)
         Runner.__init__(self, label=label, run_dir=run_dir, **newkwargs)
+        # if multiTask: task_str = 'parallel'
+        # else: task_str = 'serial'
+        # print('Initialize a %s QuantumESPRESSO calculator with scheduler %s' %
+        #     (task_str,self._global_options['scheduler']))
 
         self.ids = []
         self.runs = []

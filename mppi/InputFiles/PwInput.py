@@ -58,6 +58,9 @@ class PwInput(dict):
     def write(self,file):
         """
         Write the QE input on file.
+
+        Args:
+            file (string) : the file name
         """
         f = open(file,'w')
         f.write(self.convert_string())

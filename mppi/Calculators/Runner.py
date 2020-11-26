@@ -107,9 +107,7 @@ class Runner():
         self._run_options(**kwargs)
         run_args = self.pre_processing()
         run_results = self.process_run(**run_args)
-        #print('run_args',run_args,'run_results',run_results)
         f.dict_merge(dest=run_args, src=run_results)
-        #print('run_updated, again',run_args)
         return self.post_processing(**run_args)
 
     def pre_processing(self):

@@ -37,21 +37,17 @@ class YamboInput(dict):
         """
         dict.__init__(self,args=args,folder=folder,filename=filename)
 
-        # if args is not empty call yambo to generate the filename input file
-        if args != '':
+        if args != '': # if args is not empty call yambo to generate the filename input file
             workdir = os.getcwd()
             os.chdir(folder)
             os.system('rm -f %s'%filename)
-            # add -F filename so yambo generates filename with the chosen args
-            args+= ' -F %s'%filename
+            args+= ' -F %s'%filename # add -F filename so yambo generates filename with the chosen args
             yambo = Popen(args, stdout=PIPE, stderr=PIPE, stdin=PIPE, shell=True)
             yambo.wait()
             os.chdir(workdir)
             self.read_file(os.path.join(folder,filename))
-        # otherwise directly read the filename input file
-        else:
-            if filename:
-                self.read_file(os.path.join(folder,filename))
+        else: # otherwise directly read the filename input file
+            self.read_file(os.path.join(folder,filename))
 
     def read_file(self,file):
         """
