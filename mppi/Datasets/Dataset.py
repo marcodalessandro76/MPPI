@@ -6,7 +6,6 @@ instances of the code.
 """
 
 from mppi.Calculators.Runner import Runner
-import threading
 
 def name_from_id(id):
     """
@@ -31,20 +30,6 @@ def name_from_id(id):
         name = None
     return name
 
-class Run_thread (threading.Thread):
-    def __init__(self, runner, inp):
-        threading.Thread.__init__(self)
-        self.runner = runner
-        self.inp = inp
-        self.name = 'thread_'+inp['name']
-
-    def run(self):
-        print("\nStarting " + self.name)
-        print('runner',self.runner)
-        print(self.inp)
-        self.runner.run(**self.inp)
-        print("Exiting " + self.name)
-
 class Dataset(Runner):
     """
     Class to perform a set of calculations and to manage the associated results.
@@ -53,10 +38,10 @@ class Dataset(Runner):
         label (:py:class:`str`): the label of the dataset, it can be useful for instance if more
             than one istance of the class is present
         run_dir (:py:class:`str`): path of the directory where the runs will be performed. This argument
-            can be overwritten by including a run_dir keyword in the :meth:`append` method of the class.
+            can be overwritten by including a run_dir keyword in the :meth:`append_run` method of the class.
             In this way the various elements of the dataset can be run in different folders
         num_tasks  (:py:class:`int`) : maximum number of computations performed in parallel by
-            the :method:`run` method of the class
+            the :meth:`run` method of the class
         verbose (:py:class:`bool`) : set the amount of information provided on terminal
         **kwargs : all the parameters passed to the dataset and stored in its _global_options.
             Can be useful, for instance, in performing a post-processing of the results
@@ -102,13 +87,7 @@ class Dataset(Runner):
         Add a run into the dataset.
 
         Append a run to the list of runs to be performed and associate to each appended
-        item the corresponding runner instance. The method updates the class member
-
-            self.runs[irun] = {**kwargs}
-            self.calc[icalc] = {'calc' : runner, iruns : [...,irun]}
-
-        where `irun` is the cardinal index of the calculator.
-
+        item the corresponding runner instance.
         If the name of the input file is not provided, the method attribute it from the
         id of the run using the function name_from_id. If, for instance, a jobname
         has to be provided it can be passed as kwargs.
@@ -119,8 +98,8 @@ class Dataset(Runner):
                 run can be classified as
                 ``id = {'energy_cutoff': 60, 'kpoints': 6}``
             runner (:class:`Runner`) : the instance of  :class:`runner` class to which the
-                remaining keyword arguments will be passed at the input
-            kwargs : these arguments the instance of the input any other variable needed for
+                keyword arguments will be passed at the input
+            kwargs : these arguments contain the instance of the input and any other variable needed for
                  appended run. All these quantities are stored as an element of the runs list
                  and are passed to the calculator, together with the global options of the Dataset,
                  when the run method is called
@@ -143,14 +122,13 @@ class Dataset(Runner):
             if calc['calc'] == runner:
                 calc['iruns'].append(irun)
                 calc_found = True
-                #icalc = ind # this not used, remove?
                 break
         if not calc_found:
-            icalc = len(self.calculators)
             self.calculators.append({'calc': runner, 'iruns': [irun]})
         #add the kwargs and the global_options to the self.runs
         inp_to_append = deepcopy(self._global_options)
         inp_to_append.update(deepcopy(kwargs))
+        #add the 'name' keyword if not provided by the user
         if not 'name' in inp_to_append:
             inp_to_append['name'] = name_from_id(id)
         self.runs.append(inp_to_append)
@@ -158,93 +136,58 @@ class Dataset(Runner):
     def process_run(self):
         """
         Run the dataset by performing explicit run of each of the item of the
-           runs list.
+           runs list. If the list selection is provided in the call of the :py:meth:'run'
+           the calculation is restricted to the elements of the list
 
         """
-        self.run_the_calculations()
+        selection = self.run_options.get('selection',None)
+        self.run_the_calculations(selection)
         return {}
 
-    def run_the_calculations(self, selection=None):
+    def run_the_calculations(self, selection):
         """
-        Method that manage the execution of the runs of the Dataset.
+        Method that manage the execution of the runs of the Dataset. The elements of the Dataset
+        in the selection list are computed in parallel according to the limitation provided by the
+        num_tasks attribute. The method uses the :py:class:`multiprocessing.Process` to manage the
+        parallel runs.
 
         Args:
-            selection (:py:class:`list`) : if not None only the iruns in the list are computed.
+            selection (:py:class:`list`) : if not None only the runs in the list are computed.
                 This parameter is used only when the method is called by the :meth:`fetch_results`
                 method.
 
         """
+        import multiprocessing, time
+        delay = 1 # in seconds
         verbose = self.global_options().get('verbose')
-        inp = self.runs
+
+        def calculator_run(runs,calculators,iruns,queue):
+            for calc in calculators: #identify the calculator associated to the present run
+                if irun in calc['iruns']:
+                    break
+            #run and append the dictionary with the result to the queue
+            result = calc['calc'].run(**runs[irun])
+            queue.put({irun : result})
+
         if selection is None:
             selection = [ind for ind in range(len(self.ids))]
         task_groups = self.build_taskgroups(selection)
         if verbose: print('Run the selection %s with the parallel task_groups %s \n'%(selection,task_groups))
-
-        ########################################################
-        # use threading
-        # for task in task_groups:
-        #     task_job = []
-        #     calc_task = []
-        #     if verbose: print('Run the task %s'%task)
-        #     for run in task:
-        #         #identify the calculators associated to the present run
-        #         for calc in self.calculators:
-        #             if run in calc['iruns']:
-        #                 break
-        #         #append the run
-        #         calc_task.append(calc['calc'])
-        #         task_job.append(Run_thread(calc['calc'],self.runs[run]))
-        #     if verbose: print('Run the task %s '%task)
-        #     for job in task_job:
-        #         job.start()
-
-        ########################################################
-        # use multiprocessing
-        import multiprocessing
-        import time
-        delay = 1 # in seconds
-        def calculator_run(calc,inp):
-            calc.run(**inp)
-        #def calculator_run(calc,runs,irun):
-        #    calc.run(**runs[])
-
-
         for task in task_groups:
+            queue = multiprocessing.Queue()
             task_job = []
             task_alive = True
             if verbose: print('Run the task %s '%task)
-            for run in task:
-                #identify the calculators associated to the present run
-                for calc in self.calculators:
-                    if run in calc['iruns']:
-                        break
-                #append the run
-                p = multiprocessing.Process(target=calculator_run, args=(calc['calc'],self.runs[run],))
+            for irun in task:
+                p = multiprocessing.Process(target=calculator_run, args=(self.runs,self.calculators,irun,queue,))
                 task_job.append(p)
                 p.start()
-            while task_alive:
+            while task_alive: #wait the end of the task
                 task_alive = any([job.is_alive() for job in task_job])
                 time.sleep(delay)
-            print('Task %s ended \n'%task)
-
-
-            #print(calc_task[0].run_options)
-            # check is_terminated for the calc in the task
-            #self.wait_end_task(calc_task)
-
-        ########################################################
-        #  pybigbdft
-        # for c in self.calculators:
-        #     calc = c['calc']
-        #     # we must here differentiate between a taskgroup run and a
-        #     # separate run
-        #     for r in c['runs']:
-        #         if selection is not None and r not in selection:
-        #             continue
-        #         inp = self.runs[r]
-        #         name = self.names[r]
-        #         self.results[r] = calc.run(name=name, **inp)
+            while queue.qsize() != 0: #add the result to self.results
+                self.results.update(queue.get())
+            if verbose: print('Task %s ended \n'%task)
 
     def build_taskgroups(self,selection):
         """
@@ -263,59 +206,6 @@ class Dataset(Runner):
         task_groups = [selection[i:i + num_tasks] for i in range(0,len(selection),num_tasks)]
         return task_groups
 
-    # def wait_end_task(self,calc_task):
-    #     """
-    #     Wait the end of the task. The method uses the : meth:`run_ended` of the calculator
-    #     to check the status of the the individual runs of the task
-    #
-    #     Args:
-    #         calc_task (:py:class:`list`) : list with the instance of the calculators used
-    #             by the task
-    #     """
-    #     verbose = self.global_options().get('verbose')
-    #     import time
-    #
-    #     #runs_ended = map(run_ended,calc_task)
-    #     runs_ended = [calc.run_ended() for calc in calc_task]
-    #     print(runs_ended)
-
-
-    # def run_the_calculations_old(self, selection=None):
-    #     """
-    #     Method that manage the execution of the runs of the Dataset.
-    #
-    #     Args:
-    #         selection (list) : if not None only the iruns in the list are computed.
-    #             This parameter is used only when the method is called by the :meth:`fetch_results`
-    #             method.
-    #
-    #     """
-    #     for c in self.calculators:
-    #         calc = c['calc']
-    #         iruns = c['iruns']
-    #         if selection is not None:
-    #             selected_iruns = [r for r in iruns if r in selection]
-    #         else:
-    #             selected_iruns = iruns
-    #         # if the selected calculator has some computation to run build the inputs,
-    #         # names,jobnames,args parameters passed to the run method of the calculator
-    #         if len(selected_iruns) > 0:
-    #             inputs = [self.runs[irun]['input'] for irun in selected_iruns]
-    #             names = [self.runs[irun]['name'] for irun in selected_iruns]
-    #             jobnames = [self.runs[irun]['jobname'] for irun in selected_iruns]
-    #             args = {}
-    #             for irun in selected_iruns:
-    #                 args.update(self.runs[irun])
-    #             args.pop('input')
-    #             args.pop('name')
-    #             args.pop('jobname')
-    #             #run the calculation and append the results to the self.results
-    #             results = calc.run(inputs=inputs,names=names,jobnames=jobnames,**args)
-    #             for irun in selected_iruns:
-    #                 self.results[irun] = {}
-    #                 for key,value in results.items():
-    #                     self.results[irun][key] = value[selected_iruns.index(irun)]
-
     def set_postprocessing_function(self, func):
         """
         Set the callback of run.
@@ -326,33 +216,33 @@ class Dataset(Runner):
                returns the value of the `run` method of the dataset.
                The function is called as ``func(self)``.
         """
-        self._post_processing_function = func
+        self.post_processing_function = func
 
     def post_processing(self, **kwargs):
         """
         Calls the Dataset function with the results of the runs as arguments
         """
-        if self._post_processing_function is not None:
-            return self._post_processing_function(self)
+        if self.post_processing_function is not None:
+            return self.post_processing_function(self)
         else:
             return self.results
 
     def fetch_results(self, id=None, attribute=None, run_if_not_present=True):
         """
-        Retrieve the results that match some conditions.
-
-        Selects out of the results the objects which have in their ``id``
-        at least the dictionary specified as input. May return an attribute
-        of each result if needed.
+        Retrieve the results that match some conditions that is specified through
+        an `id` in the form of a string or a dictionary. Selects out of the results
+        of the objects which have in their ``name`` keyword at least the `id` provided as input.
 
         Args:
-           id : string or dictionary of the retrieved id. Return a list of the runs
-               that have the ``id`` argument inside the provided ``id`` in the
-               order provided by :py:meth:`append_run`.
+           id : string or dictionary of the retrieved id.
            attribute (str): if present, provide the attribute of each of the
                results instead of the result object
            run_if_not_present (bool): If the run has not yet been performed
                in the dataset then perform it.
+
+        Return:
+            A list of the runs that match the condition in the order provided by
+            :py:meth:`append_run` method.
 
         Example:
            >>> study=Dataset()
@@ -370,12 +260,11 @@ class Dataset(Runner):
 
         """
 
-        names = [name_from_id(id) for id in self.ids]
+        #names = [name_from_id(id) for id in self.ids]
+        names = [val['name'] for val in self.runs]
         id_name = name_from_id(id)
         fetch_indices = []
         selection_to_run = []
-        # identify the elements of the dataset that match the id, if run_if_not_present
-        # is True perform the associated runs if they are not present
         for irun,name in enumerate(names):
             if id_name in name :
                 fetch_indices.append(irun)
@@ -385,7 +274,7 @@ class Dataset(Runner):
             self.run_the_calculations(selection=selection_to_run)
 
         data = []
-        if self._post_processing_function is not None:
+        if self.post_processing_function is not None:
             for irun in fetch_indices:
                 r = self.post_processing()[irun]
                 data.append(r if attribute is None else getattr(r, attribute))

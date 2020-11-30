@@ -109,10 +109,8 @@ class QeCalculator(Runner):
         """
         to_run = self.is_to_run()
         if to_run:
-            #job = self.run_job()
-            self.run_job()
-            #self.wait(job)
-            self.wait()
+            job = self.run_job()
+            self.wait(job)
         return {}
 
     def post_processing(self):
@@ -166,13 +164,12 @@ class QeCalculator(Runner):
         is written on disk.
 
         Return:
-            job: The type of the object depends on the chosen scheduler. For scheduler `direct`
-                job is an instance of Popen, while for `slurm` scheduler job is the name of the
-                slurm script.
+            The type of the object depends on the chosen scheduler. For scheduler `direct`
+            job is an instance of Popen, while for `slurm` scheduler job is the name of the
+            slurm script.
 
         """
         from subprocess import Popen
-        #import os
         scheduler = self.run_options['scheduler']
         dry_run = self.run_options.get('dry_run',False)
         verbose = self.run_options.get('verbose')
@@ -183,7 +180,6 @@ class QeCalculator(Runner):
             if not dry_run:
                 comm_str = self.run_command()
                 job = Popen(comm_str, shell = True)
-                #job = os.system(comm_str)
             else:
                 job = None
                 if verbose: print('Dry_run option active. Computation not performed')
@@ -198,11 +194,9 @@ class QeCalculator(Runner):
                 if verbose: print('Dry_run option active. Script not submitted')
         else:
             print('scheduler unknown')
-        #return job
-        self.run_options['job'] = job
+        return job
 
-    #def wait(self,job):
-    def wait(self):
+    def wait(self,job):
         """
         Wait the end of the job. If the dry_run option is enabled or wait_end_run is False
         the check is not performed.
@@ -222,8 +216,7 @@ class QeCalculator(Runner):
 
         if wait_end_run is True and dry_run is False:
             message_written = False
-            #while not self.run_ended(job):
-            while not self.run_ended():
+            while not self.run_ended(job):
                 if not message_written:
                     if verbose: print('computation %s still running...'%name)
                     message_written = True
@@ -302,8 +295,7 @@ class QeCalculator(Runner):
 
         return comm_str
 
-    #def run_ended(self,job):
-    def run_ended(self):
+    def run_ended(self,job):
         """
         Check the status of the running job.
 
@@ -317,7 +309,6 @@ class QeCalculator(Runner):
         """
         scheduler = self.run_options.get('scheduler')
         run_dir = self.run_options.get('run_dir', '.')
-        job = self.run_options.get('job')
 
         if scheduler == 'direct':
             if job.poll() is not None: is_ended = True

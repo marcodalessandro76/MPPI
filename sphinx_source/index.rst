@@ -41,7 +41,7 @@ and Yambo
 .. toctree:: pwInput
 .. toctree:: yamboInput
 
-Run (many) calculations in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
+Run calculations in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
 the programs (pw.x,ph.x,...) of the suite.
 
 The YamboCalculator object manage the yambo and ypp executables and also their time-dependent variants
@@ -49,7 +49,7 @@ The YamboCalculator object manage the yambo and ypp executables and also their t
 .. toctree:: qeCalculator
 .. toctree:: yamboCalculator
 
-Parsers to manage the results of the QuantumESPRESSO and Yambo computations
+The parsers manage the results of the QuantumESPRESSO and Yambo computations
 
 .. toctree:: pwParser
 .. toctree:: nsdbsParser
