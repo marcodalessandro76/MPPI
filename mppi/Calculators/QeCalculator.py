@@ -109,8 +109,10 @@ class QeCalculator(Runner):
         """
         to_run = self.is_to_run()
         if to_run:
-            job = self.run_job()
-            self.wait(job)
+            #job = self.run_job()
+            self.run_job()
+            #self.wait(job)
+            self.wait()
         return {}
 
     def post_processing(self):
@@ -128,7 +130,7 @@ class QeCalculator(Runner):
         prefix += '.save'
         result = os.path.join(run_dir,prefix,'data-file-schema.xml')
         if not os.path.isfile(result):
-            print('Expected file %s not Found'%result)
+            print('Expected file %s not found'%result)
             print('Check if wait_end_run is False or the dry_run option is active. Otherwise a possible error has occured during the computation')
         return result
 
@@ -170,14 +172,18 @@ class QeCalculator(Runner):
 
         """
         from subprocess import Popen
+        #import os
         scheduler = self.run_options['scheduler']
         dry_run = self.run_options.get('dry_run',False)
         verbose = self.run_options.get('verbose')
 
         if scheduler == 'direct':
+            # Set the OMP_NUM_THREADS variable in the environment
+            os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
             if not dry_run:
                 comm_str = self.run_command()
                 job = Popen(comm_str, shell = True)
+                #job = os.system(comm_str)
             else:
                 job = None
                 if verbose: print('Dry_run option active. Computation not performed')
@@ -192,9 +198,11 @@ class QeCalculator(Runner):
                 if verbose: print('Dry_run option active. Script not submitted')
         else:
             print('scheduler unknown')
-        return job
+        #return job
+        self.run_options['job'] = job
 
-    def wait(self,job):
+    #def wait(self,job):
+    def wait(self):
         """
         Wait the end of the job. If the dry_run option is enabled or wait_end_run is False
         the check is not performed.
@@ -208,17 +216,19 @@ class QeCalculator(Runner):
         import time
         dry_run = self.run_options.get('dry_run',False)
         wait_end_run = self.run_options.get('wait_end_run',True)
+        name = self.run_options.get('name','default')
         verbose = self.run_options.get('verbose')
         delay = 1 # in second
 
         if wait_end_run is True and dry_run is False:
             message_written = False
-            while not self._run_ended(job):
+            #while not self.run_ended(job):
+            while not self.run_ended():
                 if not message_written:
-                    if verbose: print('computation still running...')
+                    if verbose: print('computation %s still running...'%name)
                     message_written = True
                 time.sleep(delay)
-            if verbose: print('computation ended')
+            if verbose: print('computation %s ended'%name)
         else:
             if verbose: print('The wait_end_run is False or the dry_run option is active. The calculator proceedes to the postprocessing')
 
@@ -292,7 +302,8 @@ class QeCalculator(Runner):
 
         return comm_str
 
-    def _run_ended(self,job):
+    #def run_ended(self,job):
+    def run_ended(self):
         """
         Check the status of the running job.
 
@@ -306,6 +317,7 @@ class QeCalculator(Runner):
         """
         scheduler = self.run_options.get('scheduler')
         run_dir = self.run_options.get('run_dir', '.')
+        job = self.run_options.get('job')
 
         if scheduler == 'direct':
             if job.poll() is not None: is_ended = True
@@ -363,6 +375,8 @@ class QeCalculator(Runner):
         """
         Clean the run_dir before performing the computation. Delete the $name.log file,
         the $prefix.xml file and the folder run_dir/prefix.save.
+
+        ADD THE CLEAN OF THE JOB.OUT....
 
         """
         run_dir = self.run_options.get('run_dir', '.')
