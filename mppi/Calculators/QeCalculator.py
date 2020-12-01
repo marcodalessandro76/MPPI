@@ -189,7 +189,7 @@ class QeCalculator(Runner):
                 run_dir = self.run_options.get('run_dir', '.')
                 slurm_submit = 'cd %s ; sbatch %s.sh' %(run_dir,job)
                 if verbose: print('slurm submit: ',slurm_submit )
-                slurm_run = subprocess.Popen(slurm_submit, shell = True)
+                slurm_run = Popen(slurm_submit, shell = True)
             else:
                 if verbose: print('Dry_run option active. Script not submitted')
         else:
@@ -378,6 +378,7 @@ class QeCalculator(Runner):
         logfile = os.path.join(run_dir,name)+'.log'
         prefix = input['control']['prefix'].strip("'")
         xmlfile = os.path.join(run_dir,prefix)+'.xml'
+        job_out = os.path.join(run_dir,'job_'+name+'.out')
         outdir = os.path.join(run_dir,prefix)+'.save'
 
         if os.path.isfile(logfile):
@@ -386,6 +387,9 @@ class QeCalculator(Runner):
         if os.path.isfile(xmlfile):
             if verbose: print('delete xml file:',xmlfile)
             os.system('rm %s'%xmlfile)
+        if os.path.isfile(job_out):
+            if verbose: print('delete job_out script:',job_out) 
+            os.system('rm %s'%job_out)
         if os.path.isdir(outdir):
             if verbose: print('delete folder:',outdir)
             os.system('rm -r %s'%outdir)
