@@ -20,6 +20,10 @@ TODO
 
 - Change the names nbands_conduction -> nbands_empty and nbands_valence -> nbands_full.
 
+- Improve the skip in the YamboCalculator to manage also the skip of the ypp computation
+
+- Complete the tutorial on the YamboParser of the output files.  
+
 - Extend and/or modify the get_transitions methods of PwParser. We need to build weight array associated to the transitions
   that is needed for computing the JDOS (if non equal weights are associated to all the kpoints) and also to build the
   absorption spectrum.

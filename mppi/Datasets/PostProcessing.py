@@ -16,7 +16,7 @@ def QE_parse_data(dataset):
     from mppi import Parsers as P
     results = {}
     for run,data in dataset.results.items():
-        results[run] = P.PwParser(data['output'],verbose=False)
+        results[run] = P.PwParser(data,verbose=False)
     return results
 
 def QE_get_energy(dataset):
@@ -33,7 +33,7 @@ def QE_get_energy(dataset):
     from mppi import Parsers as P
     energy = {}
     for run,data in dataset.results.items():
-        results = P.PwParser(data['output'],verbose=False)
+        results = P.PwParser(data,verbose=False)
         energy[run] = results.get_energy(convert_eV = False)
     return energy
 
@@ -52,8 +52,10 @@ def QE_get_gap(dataset):
     from mppi import Parsers as P
     gap = {}
     for run,data in dataset.results.items():
-        results = P.PwParser(data['output'],verbose=False)
-        gap[run] = results.get_gap()['gap']
+        results = P.PwParser(data,verbose=False)
+        if results.get_gap() is not None:
+            gap[run] = results.get_gap()['gap']
+        else: gap[run] = 0
     return gap
 
 def Yambo_parse_data(dataset):

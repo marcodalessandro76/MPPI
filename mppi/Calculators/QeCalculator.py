@@ -19,7 +19,7 @@ class QeCalculator(Runner):
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
        scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
             'direct' that runs the computation using the python subprocess package and 'slurm' that creates a slurm script
-       skip (:py:class:`bool`) : if True evaluate if the computations can be skipped. This is done by checking if the file
+       skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking if the file
             $prefix.xml is present in the run_dir folder
        clean_restart (:py:class:`bool`) : if True delete the folder $prefix.save before running the computation
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
@@ -68,7 +68,7 @@ class QeCalculator(Runner):
     def pre_processing(self):
         """
         Process local run dictionary to create the run directory and input file.
-        If clean_restart = True the run_dir is erased before the run.
+        If clean_restart = True the run_dir is cleaned before the run.
         If the 'source_dir' key is passed to the run method copy the source folder
         in the run_dir with the name $prefix.
 
@@ -218,7 +218,7 @@ class QeCalculator(Runner):
             message_written = False
             while not self.run_ended(job):
                 if not message_written:
-                    if verbose: print('computation %s still running...'%name)
+                    if verbose: print('computation %s is running...'%name)
                     message_written = True
                 time.sleep(delay)
             if verbose: print('computation %s ended'%name)
@@ -365,9 +365,7 @@ class QeCalculator(Runner):
     def _clean_run_dir(self):
         """
         Clean the run_dir before performing the computation. Delete the $name.log file,
-        the $prefix.xml file and the folder run_dir/prefix.save.
-
-        ADD THE CLEAN OF THE JOB.OUT....
+        the $prefix.xml file, the job_$name.out file and the folder run_dir/prefix.save.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
@@ -388,168 +386,8 @@ class QeCalculator(Runner):
             if verbose: print('delete xml file:',xmlfile)
             os.system('rm %s'%xmlfile)
         if os.path.isfile(job_out):
-            if verbose: print('delete job_out script:',job_out) 
+            if verbose: print('delete job_out script:',job_out)
             os.system('rm %s'%job_out)
         if os.path.isdir(outdir):
             if verbose: print('delete folder:',outdir)
             os.system('rm -r %s'%outdir)
-
-
-###############################################
-
-    # def post_processing(self):
-    #     """
-    #     Return a list with the names, including the path, of the data-file-schema.xml
-    #     files for each element of inputs. If a file is absent the method returns
-    #     None in the associated element of the list, making easy to understand if a specific
-    #     computation has been correctly performed.
-    #
-    #     Return:
-    #         :py:class:`dict` : dictionary
-    #             {'output' : []}
-    #          where [] is a list with the names of the xml files (if the file exists) otherwise the associated element is set to None.
-    #
-    #     """
-    #     run_dir = self.run_options.get('run_dir', '.')
-    #     input = self.run_options['input']
-    #     results = {'output' : []}
-    #     for input in inputs:
-    #         prefix = input['control']['prefix'].strip("'")
-    #         prefix += '.save'
-    #         result = os.path.join(run_dir,prefix,'data-file-schema.xml')
-    #         if os.path.isfile(result):
-    #             results['output'].append(result)
-    #         else:
-    #             results['output'].append(None)
-    #
-    #     return results
-
-    # def select_to_run(self):
-    #     """
-    #     If the skip attribute of run_options is True the method evaluates which
-    #     computations can be skipped. This is done by  checking if the file
-    #     $prefix.xml is already present in the run_dir.
-    #
-    #     Return:
-    #         :py:class:`list` : list with numbers of the computations that have to
-    #         be performed, in the same order provided in the run method
-    #     """
-    #     skip = self.run_options.get('skip')
-    #     run_dir = self.run_options.get('run_dir', '.')
-    #     inputs = self.run_options.get('inputs')
-    #     names = self.run_options.get('names')
-    #     verbose = self.run_options.get('verbose')
-    #
-    #     if not skip:
-    #         to_run = [index for index in range(len(inputs))]
-    #         return to_run
-    #     else:
-    #         to_run = []
-    #         for index,input in enumerate(inputs):
-    #             prefix = input['control']['prefix'].strip("'")
-    #             skipfile = os.path.join(run_dir,prefix)+'.xml'
-    #             if os.path.isfile(skipfile):
-    #                 if verbose: print('Skip the run of',names[index])
-    #             else:
-    #                 to_run.append(index)
-    #         return to_run
-
-        # def build_run_script(self,to_run):
-        #     """
-        #     Create the run script(s) that are executed by the :meth:`submit_job` method.
-        #     The scripts depend on the scheduler adopted, and specific methods for
-        #     `direct` and `slurm` scheduler are implemented.
-        #
-        #     Args:
-        #         to_run (:py:class:`string`) : list with the cardinal numbers of the runs
-        #             to be performed
-        #
-        #     Return:
-        #         :py:class:`list` : list with jobs to run. The type of the object in the
-        #         list depends on the chosen scheduler
-        #
-        #     """
-        #     scheduler = self.run_options['scheduler']
-        #
-        #     jobs = None
-        #     if scheduler == 'direct':
-        #         jobs = self.direct_scheduler(to_run)
-        #     elif scheduler == 'slurm':
-        #         jobs = self.slurm_scheduler(to_run)
-        #     else:
-        #         print('scheduler unknown')
-        #     return jobs
-
-        # def submit_job(self,job):
-        #     """
-        #     Submit the job. MODIFY WITH THE SUBPROCESS MODULE
-        #
-        #     Args:
-        #         jobs : The reference to the jobs to be executed. If the scheduler is `direct`
-        #             jobs an instance of :py:class:multiprocessing. If the
-        #             scheduler is `slurm` jobs is a list with the names of the slurm scripts
-        #     """
-        #     scheduler = self.run_options['scheduler']
-        #
-        #     if scheduler == 'direct':
-        #         # Set the OMP_NUM_THREADS variable in the environment
-        #         os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
-        #         job.start()
-        #     if scheduler == 'slurm':
-        #         run_dir = self.run_options.get('run_dir', '.')
-        #         slurm_submit = 'cd %s ; sbatch %s.sh' %(run_dir,job)
-        #         print('slurm submit: ',slurm_submit )
-        #         os.system(slurm_submit)
-
-    # def direct_scheduler(self):
-    #     """
-    #     Define the list of Process (methods of multiprocessing) associated to the
-    #     runs specified in the list to_run.
-    #
-    #     Args:
-    #         to_run (:py:class:`string`) : list with the cardinal numbers of the runs
-    #             to be performed
-    #
-    #     Return:
-    #         :py:class:`list` : list of the :py:class:`multiprocessing` objects
-    #         associated to the runs of the job
-    #
-    #     """
-    #     from subprocess import Popen
-    #     comm_str = self.run_command()
-    #     job = Popen(comm_str, shell = True)
-    #     return job
-
-    # def direct_scheduler(self,to_run):
-    #     """
-    #     Define the list of Process (methods of multiprocessing) associated to the
-    #     runs specified in the list to_run.
-    #
-    #     Args:
-    #         to_run (:py:class:`string`) : list with the cardinal numbers of the runs
-    #             to be performed
-    #
-    #     Return:
-    #         :py:class:`list` : list of the :py:class:`multiprocessing` objects
-    #         associated to the runs of the job
-    #
-    #     """
-    #     import multiprocessing
-    #     def os_system_run(comm_str):
-    #         os.system(comm_str)
-    #
-    #     jobs = []
-    #     for index in to_run:
-    #         comm_str = self.run_command(index)
-    #         p = multiprocessing.Process(target=os_system_run, args=(comm_str,))
-    #         jobs.append(p)
-    #     return jobs
-
-    # while not all(self._jobs_terminated(jobs)):
-    #     if verbose:
-    #         s = ''
-    #         for index,status in zip(to_run,self._jobs_terminated(jobs)):
-    #             s+='run'+str(index)+'_is_running: '+str(not status) + ' '
-    #         print(s)
-    #     time.sleep(IO_time)
-    # if verbose : print('Job completed')

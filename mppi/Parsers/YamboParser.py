@@ -116,6 +116,9 @@ def files_from_folder(path):
     return ofiles
 
 class YamboParser(dict):
+    """
+    Class that performs the parsing of a Yambo o- file(s).
+    """
 
     def __init__(self,files,verbose=False,extendOut=True):
         """
