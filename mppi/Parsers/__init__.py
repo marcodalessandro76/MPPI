@@ -1,4 +1,6 @@
 from .PwParser import PwParser
 from .YamboParser import YamboParser
-from .NsdbsParser import NsdbsParser
+from .YamboOutputParser import YamboOutputParser
+from .YamboDftParser import YamboDftParser
+from .YamboDipolesParser import YamboDipolesParser
 from .Functions import *

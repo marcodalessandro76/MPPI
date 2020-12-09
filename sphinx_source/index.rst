@@ -52,8 +52,10 @@ The YamboCalculator object manage the yambo and ypp executables and also their t
 The parsers manage the results of the QuantumESPRESSO and Yambo computations
 
 .. toctree:: pwParser
-.. toctree:: nsdbsParser
 .. toctree:: yamboParser
+.. toctree:: yamboOutputParser
+.. toctree:: yamboDftParser
+.. toctree:: yamboDipolesParser
 
 Organize runs and analyze output in a dataset
 

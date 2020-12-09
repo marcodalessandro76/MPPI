@@ -87,8 +87,8 @@ def make_FixSymm(run_dir,polarization='linear',Efield1=[1.,0.,0.],Efield2=[0.,1.
         else:
             print('specify a correct polarization for the field')
         code = C.YamboCalculator(omp=1,mpi=1,executable='ypp')
-        code.run(inputs=[fixSymm_inp],names=['FixSymm'],run_dir=run_dir)
-        # build the realt time r_setup
+        code.run(input=fixSymm_inp,name='FixSymm',run_dir=run_dir)
+        # build the real-time r_setup
         command = 'cd %s; OMP_NUM_THREADS=1 yambo_rt'%fixsymm_dir
         os.system(command)
     else:

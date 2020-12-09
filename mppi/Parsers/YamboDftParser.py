@@ -12,13 +12,14 @@ from mppi.Utilities import HaToeV
 from mppi.Parsers import Functions as F
 
 
-class NsdbsParser():
+class YamboDftParser():
     """
     Class to read information about the lattice and electronic structure from the ``ns.db1`` database created by Yambo
 
+
     Args:
-        save(:py:class:`string`) : Yambo SAVE folder that contains the database
-        nbs(:py:class:`string`) : name of the electrons database
+        file (:py:class:`string`) : string with the name of the file to be parsed
+        verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
 
     Attributes:
         sym : the symmetries of the lattice
@@ -37,20 +38,20 @@ class NsdbsParser():
         time_rev : ?
     """
 
-    def __init__(self,save='SAVE',dbs='ns.db1',verbose=True):
-        self.filename = os.path.join(save,dbs)
+    def __init__(self,file,verbose=True):
+        self.filename = file
         if verbose: print('Parse file : %s'%self.filename)
         self.readDB()
 
     def readDB(self):
         """
-        Read the data from the NSCF database created by Yambo. Some variables are
+        Read the data from the ``ns.db1`` database created by Yambo. Some variables are
         extracted from the database and stored in the attributes of the object.
         """
         try:
             database = Dataset(self.filename)
         except:
-            raise IOError("Error opening file %s in NsdbParser"%self.filename)
+            raise IOError("Error opening file %s in YamboDftParser"%self.filename)
 
         # lattice properties
         self.sym = np.array(database.variables['SYMMETRY'][:])
@@ -75,6 +76,16 @@ class NsdbsParser():
         #number of occupied bands
         self.nbands_valence = int(self.num_electrons/self.spin_degen)
         self.nbands_conduction = int(self.nbands-self.nbands_valence)
+
+    def get_info(self):
+        """
+        Provide information on the atributes of the class
+        """
+        print('YamboDipolesParser variables structure')
+        print('number of k points',self.nkpoints)
+        print('number of bands',self.nbands)
+        print('spin degeneration',self.spin)
+
 
     def get_evals(self, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
         """
