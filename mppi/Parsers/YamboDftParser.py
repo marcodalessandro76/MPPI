@@ -28,8 +28,8 @@ class YamboDftParser():
 
         num_electrons : number of electrons
         nbands : number of bands
-        nbands_valence : number of occupied bands
-        nbands_conduction : number of empty bands
+        nbands_full : number of occupied bands
+        nbands_empty : number of empty bands
         nkpoints : numer of kpoints
         kpoints : list of the kpoints
         evals : array of the ks energies for each kpoint (in Hartree)
@@ -74,8 +74,8 @@ class YamboDftParser():
         self.spin_degen = [0,2,1][int(self.spin)]
 
         #number of occupied bands
-        self.nbands_valence = int(self.num_electrons/self.spin_degen)
-        self.nbands_conduction = int(self.nbands-self.nbands_valence)
+        self.nbands_full = int(self.num_electrons/self.spin_degen)
+        self.nbands_empty = int(self.nbands-self.nbands_valence)
 
     def get_info(self):
         """
@@ -104,7 +104,7 @@ class YamboDftParser():
             :py:class:`numpy.array`  : an array with the ks energies for each kpoint
 
         """
-        evals = F.get_evals(self.evals,self.nbands,self.nbands_valence,
+        evals = F.get_evals(self.evals,self.nbands,self.nbands_full,
                 set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=verbose)
         return evals
 
@@ -130,7 +130,7 @@ class YamboDftParser():
             :py:class:`numpy.array`  : an array with the transition energies for each kpoint
 
         """
-        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_valence,initial=initial,final=final,
+        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_full,initial=initial,final=final,
                       set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap)
         return transitions
 

@@ -25,7 +25,7 @@ def compute_transitions(bands,in_list,fin_list):
                 transitions.append(bands[c]-bands[v])
     return transitions
 
-def get_evals(evals,nbands,nbands_valence, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
+def get_evals(evals,nbands,nbands_full, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
     """
     Return the bands energies for each kpoint (in eV). The top of the valence band is used as the
     reference energy value. It is possible to shift the energies of the empty bands by setting an arbitrary
@@ -34,7 +34,7 @@ def get_evals(evals,nbands,nbands_valence, set_scissor = None, set_gap = None, s
     Args:
         evals (:py:class:`numpy.array`) : an array with the bands energy (in Hartree) for each k point
         nbands (:py:class:`int`) : number of bands
-        nbands_valence (:py:class:`int`) : number of occupied bands
+        nbands_full (:py:class:`int`) : number of occupied bands
         set_scissor (:py:class:`float`) : set the value of the scissor (in eV) that is added to the empty bands.
             If a scissor is provided the set_gap and set_direct_gap parameters are ignored
         set_gap (:py:class:`float`) : set the value of the gap (in eV) of the system. If set_gap is provided
@@ -52,11 +52,11 @@ def get_evals(evals,nbands,nbands_valence, set_scissor = None, set_gap = None, s
 
     if set_scissor == None and set_gap == None and set_direct_gap == None:
         return evals_eV
-    elif nbands_valence == nbands: # only occupied bands are present
+    elif nbands_full == nbands: # only occupied bands are present
         print('There are no empty bands. No energy shift has been applied')
         return evals_eV
     else: # shift the energy level of the empty bands if needed
-        gap = get_gap(evals,nbands_valence,verbose=False)
+        gap = get_gap(evals,nbands_full,verbose=False)
         scissor = 0.
         if set_scissor is not None:
             scissor = set_scissor
@@ -66,26 +66,26 @@ def get_evals(evals,nbands,nbands_valence, set_scissor = None, set_gap = None, s
             scissor = set_direct_gap - gap['direct_gap']
 
         if verbose: print('Apply a scissor of',scissor,'eV')
-        evals_eV[:,nbands_valence:] += scissor
+        evals_eV[:,nbands_full:] += scissor
         return evals_eV
 
-def get_gap(evals, nbands_valence, verbose = True):
+def get_gap(evals, nbands_full, verbose = True):
     """
     Compute the energy gap of the system (in eV). The method check if the gap is direct or
     indirect. Implemented and tested only for semiconductors.
 
     Args:
         evals (:py:class:`numpy.array`) : an array with the bands energy (in Hartree) for each k point
-        nbands_valence (:py:class:`int`) : number of occupied bands
+        nbands_full (:py:class:`int`) : number of occupied bands
 
     Return:
         :py:class:`dict` : a dictionary with the values of direct and indirect gaps and the positions
         of the VMB and CBM
 
     """
-    homo_band = evals[:,nbands_valence-1]*HaToeV
+    homo_band = evals[:,nbands_full-1]*HaToeV
     try:
-        lumo_band = evals[:,nbands_valence]*HaToeV
+        lumo_band = evals[:,nbands_full]*HaToeV
     except IndexError:
         print('There are no empty states. Gap cannot be computed.')
         return None
@@ -114,7 +114,7 @@ def get_gap(evals, nbands_valence, verbose = True):
             print('Direct gap :',direct_gap,'eV')
     return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,'positon_vbm':position_vbm}
 
-def get_transitions(evals, nbands, nbands_valence, initial = 'full', final = 'empty',
+def get_transitions(evals, nbands, nbands_full, initial = 'full', final = 'empty',
                     set_scissor = None, set_gap = None, set_direct_gap = None):
     """
     Compute the (vertical) transitions energies. For each kpoint compute the transition energies, i.e.
@@ -123,7 +123,7 @@ def get_transitions(evals, nbands, nbands_valence, initial = 'full', final = 'em
     Args:
         evals (:py:class:`numpy.array`) : an array with the bands energy (in Hartree) for each k point
         nbands (:py:class:`int`) : number of bands
-        nbands_valence (:py:class:`int`) : number of occupied bands
+        nbands_full (:py:class:`int`) : number of occupied bands
         initial (string or list) : specifies the bands from which electrons can be extracted. It can be set to `full` or
             `empty` to select the occupied or empty bands, respectively. Otherwise a list of bands can be
             provided
@@ -141,18 +141,18 @@ def get_transitions(evals, nbands, nbands_valence, initial = 'full', final = 'em
 
     """
     if initial == 'full':
-        in_list = [ind for ind in range(nbands_valence)]
+        in_list = [ind for ind in range(nbands_full)]
     elif initial == 'empty':
-        in_list = [ind for ind in range(nbands_valence,nbands)]
+        in_list = [ind for ind in range(nbands_full,nbands)]
     else:
         in_list = initial
     if final == 'full':
-        fin_list = [ind for ind in range(nbands_valence)]
+        fin_list = [ind for ind in range(nbands_full)]
     elif final == 'empty':
-        fin_list = [ind for ind in range(nbands_valence,nbands)]
+        fin_list = [ind for ind in range(nbands_full,nbands)]
     else:
         fin_list = final
-    evals = get_evals(evals,nbands,nbands_valence,set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=False)
+    evals = get_evals(evals,nbands,nbands_full,set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=False)
     transitions = []
     for bands in evals:
         transitions.append(compute_transitions(bands,in_list,fin_list))

@@ -24,8 +24,8 @@ class PwParser():
         num_electrons : number of electrons
         nkpoints : numer of kpoints
         nbands : number of bands
-        nbands_valence : number of occupied bands (for systems with a gap)
-        nbands_conduction : number of empty bands (for systems with a gap)
+        nbands_full : number of occupied bands (for systems with a gap)
+        nbands_empty : number of empty bands (for systems with a gap)
         occupations_kind : type of occupation (fixed or smearing)
         kpoints : list of the kpoints
         occupations : array with the bands occupation for each kpoint
@@ -101,8 +101,8 @@ class PwParser():
         self.spin_degen = 1 if self.lsda or self.noncolin else 2
 
         #number of occupied and empty bands (for systems with a gap)
-        self.nbands_valence = int(self.num_electrons/self.spin_degen)
-        self.nbands_conduction = self.nbands-self.nbands_valence
+        self.nbands_full = int(self.num_electrons/self.spin_degen)
+        self.nbands_empty = self.nbands-self.nbands_full
 
         #total energy
         self.energy = float(self.data.find('output/total_energy/etot').text)
@@ -174,7 +174,7 @@ class PwParser():
             :py:class:`numpy.array`  : an array with the ks energies for each kpoint
 
         """
-        evals = F.get_evals(self.evals,self.nbands,self.nbands_valence,
+        evals = F.get_evals(self.evals,self.nbands,self.nbands_full,
                 set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=verbose)
         return evals
 
@@ -200,7 +200,7 @@ class PwParser():
             :py:class:`numpy.array`  : an array with the transition energies for each kpoint
 
         """
-        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_valence,initial=initial,final=final,
+        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_full,initial=initial,final=final,
                       set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap)
         return transitions
 
@@ -214,5 +214,5 @@ class PwParser():
             of the VMB and CBM
 
         """
-        gap = F.get_gap(self.evals,self.nbands_valence,verbose=verbose)
+        gap = F.get_gap(self.evals,self.nbands_full,verbose=verbose)
         return gap

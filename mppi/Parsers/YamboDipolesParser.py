@@ -21,6 +21,10 @@ class YamboDipolesParser():
         dip_spin (:py:class:`np.array`): Array with the spin dipoles. The structure of the array
             is [kpoints][full_bands][empty_bands][cartesian_component][real and imaginary part]
 
+    Note:
+        If the option ``DipBandsALL`` is enabled the dipoles are computed for all the bands range,
+        not only for the valence-conduction pairs. 
+
     """
 
     def __init__(self,file,verbose=True):

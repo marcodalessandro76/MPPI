@@ -36,7 +36,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3'
     ],
-    keywords='python post-processing QuantumESPRESSO Yambo',
+    keywords='python system-interface post-processing QuantumESPRESSO Yambo',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires=REQUIRES_PYTHON,
     install_requires=REQUIRED
