@@ -49,13 +49,29 @@ The YamboCalculator object manage the yambo and ypp executables and also their t
 .. toctree:: qeCalculator
 .. toctree:: yamboCalculator
 
-The parsers manage the results of the QuantumESPRESSO and Yambo computations
+The parsers manage the results of both QuantumESPRESSO and Yambo computations.
+The parsing of the results of QuantumESPRESSO makes usage of the data-file-schema.xml and is
+managed by the PwParser:
 
 .. toctree:: pwParser
+
+The parsing of the Yambo results uses both the o-* files and various databases produced by Yambo.
+The collective results are managed by the YamboParser class:
+
 .. toctree:: yamboParser
+
+where the parsing of the various elements are performed by the more specific classes:
+
 .. toctree:: yamboOutputParser
 .. toctree:: yamboDftParser
 .. toctree:: yamboDipolesParser
+
+Finally, the module ParsersUtils collect functions for the data analysis:
+
+.. toctree:: parsersUtils
+
+The elements of the module are used by the parsers and can be accessed also by the user to perform
+various operations
 
 Organize runs and analyze output in a dataset
 

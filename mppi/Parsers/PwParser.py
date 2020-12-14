@@ -4,13 +4,11 @@ data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 """
 
 from mppi.Utilities import HaToeV
-from mppi.Parsers import Functions as F
+from mppi.Parsers import ParsersUtils as U
 
 class PwParser():
     """
-    Initialize the data member of the class. The init method is able to manage a
-    TypeError since, if the QeCalculator simulation fails the name of the output
-    file is set to None.
+    Initialize the data member of the class.
 
     Args:
         file (str): The name, including the path of the data-file-schema.xml
@@ -21,13 +19,17 @@ class PwParser():
         natypes : number of atomic species
         atomic_positions : list with the position of each atom
         atomic_species : dictionary with mass and pseudo for each species
+        alat : lattice parameter (in a.u.)
+        lattice : array with the lattice vectors. The i-th row represents the
+            i-th lattice vectors in cartesian units
+        syms : list with the symmetries of the lattice
         num_electrons : number of electrons
         nkpoints : numer of kpoints
         nbands : number of bands
         nbands_full : number of occupied bands (for systems with a gap)
         nbands_empty : number of empty bands (for systems with a gap)
         occupations_kind : type of occupation (fixed or smearing)
-        kpoints : list of the kpoints
+        kpoints : array with the kpoints
         occupations : array with the bands occupation for each kpoint
         weights : array with the weight of each kpoint, each element is a
             one-dimensional array.
@@ -84,6 +86,20 @@ class PwParser():
             atype_pseudo = atypes[i].findall('pseudo_file')[0].text
             self.atomic_species[atype_string]=[atype_mass,atype_pseudo]
 
+        #lattice properties
+        self.alat = float(self.data.find("output/atomic_structure").get('alat'))
+        lattice = []
+        for i in [1,2,3]:
+            lat_vect = self.data.findall("output/atomic_structure/cell/a%d"%i)[0]
+            lat_vect = [float(x) for x in lat_vect.text.strip().split()]
+            lattice.append(lat_vect)
+        self.lattice = np.array(lattice)
+        symmetries = self.data.findall('output/symmetries/symmetry')
+        self.syms = []
+        for sym in symmetries:
+            rotation = [float(x) for x in sym.find('rotation').text.split()]
+            self.syms.append(np.array(rotation).reshape(3,3))
+
         #number of electrons
         self.num_electrons = float(self.data.find('output/band_structure/nelec').text)
 
@@ -135,6 +151,7 @@ class PwParser():
         """
         Return the total energy the system. If convert_eV is True the energy
         is provided in eV other the Hartree units are used.
+
         """
         if convert_eV:
             return HaToeV*self.energy
@@ -156,6 +173,45 @@ class PwParser():
             print('Fermi energy attribute not found in the ouput file. Maybe `fixed` occupation type is used?')
             return None
 
+    def eval_lattice_volume(self):
+        """
+        Compute the volume of a lattice (in a.u.)
+
+        Returns:
+            :py:class:`float` : lattice volume in a.u.
+        """
+        return U.eval_lattice_volume(self.lattice)
+
+    def get_lattice(self, rescale = False):
+        """
+        Compute the lattice vectors. If rescale = True the vectors are expressed in units
+        of the lattice constant.
+
+        Args:
+            rescale (:py:class:`bool`)  : if True express the lattice vectors in units alat
+
+        Returns:
+            :py:class:`array` : array with the lattice vectors a_i as rows
+
+        """
+        return U.get_lattice(self.lattice,self.alat,rescale=rescale)
+
+    def get_reciprocal_lattice(self, rescale = False):
+        """
+        Compute the reciprocal lattice vectors. If rescale = False the vectors are normalized
+        so that np.dot(a_i,b_j) = 2*np.pi*delta_ij, where a_i is a basis vector of the direct
+        lattice. If rescale = True the reciprocal lattice vectors are expressed in units of
+        2*np.pi/alat.
+
+        Args:
+            rescale (:py:class:`bool`)  : if True express the reciprocal vectors in units of 2*np.pi/alat
+
+        Returns:
+            :py:class:`array` : array with the reciprocal lattice vectors b_i as rows
+
+        """
+        return U.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
+
     def get_evals(self, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
         """
         Return the ks energies for each kpoint (in eV). The top of the valence band is used as the
@@ -174,7 +230,7 @@ class PwParser():
             :py:class:`numpy.array`  : an array with the ks energies for each kpoint
 
         """
-        evals = F.get_evals(self.evals,self.nbands,self.nbands_full,
+        evals = U.get_evals(self.evals,self.nbands,self.nbands_full,
                 set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=verbose)
         return evals
 
@@ -200,7 +256,7 @@ class PwParser():
             :py:class:`numpy.array`  : an array with the transition energies for each kpoint
 
         """
-        transitions = F.get_transitions(self.evals,self.nbands,self.nbands_full,initial=initial,final=final,
+        transitions = U.get_transitions(self.evals,self.nbands,self.nbands_full,initial=initial,final=final,
                       set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap)
         return transitions
 
@@ -214,5 +270,5 @@ class PwParser():
             of the VMB and CBM
 
         """
-        gap = F.get_gap(self.evals,self.nbands_full,verbose=verbose)
+        gap = U.get_gap(self.evals,self.nbands_full,verbose=verbose)
         return gap

@@ -49,7 +49,7 @@ We provide some jupyter notebooks to show the functionality of the package.
 
 Requirements
 ------------
-- Quantum Espresso (tested with 6.6): http://www.quantum-espresso.org/
+- QuantumESPRESSO (tested with 6.6): http://www.quantum-espresso.org/
 - yambo (tested with 5.0 devel): http://www.yambo-code.org/
 
 Authors

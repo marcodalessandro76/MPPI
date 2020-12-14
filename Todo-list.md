@@ -18,10 +18,10 @@ TODO
 - Study the expand_kpoints method of latticedb and the expandEigenvalues method of electronsdb of YamboPy. This
   methods are useful to define a weigth of each k point in the NsdbsParser class.
 
-- Change the names nbands_conduction -> nbands_empty and nbands_valence -> nbands_full.
-
 - Improve the skip in the YamboCalculator to manage also the skip of the ypp computation. Is it convenient to use the
   presence of the folder $name as the criterion to skip the calculation?
+
+- Complete the YamboDftParser class with add the expansion of the k points and the computation of the weigths.
 
 - Extend and/or modify the get_transitions methods of PwParser. We need to build weight array associated to the transitions
   that is needed for computing the JDOS (if non equal weights are associated to all the kpoints) and also to build the

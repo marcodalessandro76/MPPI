@@ -1,8 +1,116 @@
 """
-Function used by the the PwParser and the NsdbsParser classes
+Function used by the the PwParser and the YamboDftParser classes.
+The elements of this module can be also directly accessed by the user to perform some
+useful operations like compute the volume of a lattice, or perform the conversion from
+cartesian to crystal units.
 """
+
 import numpy as np
 from mppi.Utilities import HaToeV
+
+################################################################################
+
+def expand_kpts(kpts,syms):
+    """
+    Take a list of qpoints and symmetry operations and return the full brillouin zone
+    with the corresponding index in the irreducible brillouin zone
+    """
+    full_kpts = []
+    print("nkpoints:", len(kpts))
+    for nk,k in enumerate(kpts):
+        for sym in syms:
+            full_kpts.append((nk,np.dot(sym,k)))
+
+    return full_kpts
+
+def red_car(red,lat):
+    """
+    Convert reduced coordinates to cartesian
+    """
+    return np.array([coord[0]*lat[0]+coord[1]*lat[1]+coord[2]*lat[2] for coord in red])
+
+################################################################################
+
+def convert_to_crystal(lattice,vector_cartesian):
+    """
+    Convert the cartesian coordinates of a vector into crystal ones. It can be used
+    for both direct lattice vectors (like the atomic position) and reciprocal lattice
+    related quantities (like the k-points). Obviously the correct lattice has to be
+    provided as input. 
+
+    Args:
+        lattice (:py:class:`array`) : array with the (direct or reciprocal) lattice vectors.
+            The i-th row represents the i-th lattice vectors in cartesian units
+        vector_cartesian (:py:class:`array`) : array with the cartesian coordinates
+            of the vector
+
+    Returns:
+        (:py:class:`array`) : array with the crystal coordinates of the vector
+    """
+
+    M = np.linalg.inv(lattice.transpose())
+    return np.dot(M,vector_cartesian)
+
+def eval_lattice_volume(lattice):
+    """
+    Compute the volume of a lattice
+
+    Args:
+        lattice (:py:class:`array`) : array with the lattice vectors. The i-th
+            row represents the i-th lattice vectors in cartesian units
+
+    Returns:
+        :py:class:`float` : lattice volume
+
+    """
+    a1,a2,a3 = np.array(lattice)
+    return np.dot(a1,np.cross(a2,a3))
+
+def get_lattice(lattice, alat, rescale = False):
+    """
+    Compute the lattice vectors. If rescale = True the vectors are expressed in units
+    of the lattice constant.
+
+    Args:
+        lattice (:py:class:`array`) : array with the lattice vectors. The i-th
+            row represents the i-th lattice vectors in cartesian units
+        alat (:py:class:`float`) : lattice parameter
+        rescale (:py:class:`bool`)  : if True express the lattice vectors in units alat
+
+    Returns:
+        :py:class:`array` : array with the lattice vectors a_i as rows
+
+    """
+    if not rescale:
+        return lattice
+    else:
+        return lattice/alat
+
+def get_reciprocal_lattice(lattice, alat, rescale = False):
+    """
+    Calculate the reciprocal lattice vectors. If rescale = False the vectors are normalized
+    so that np.dot(a_i,b_j) = 2*np.pi*delta_ij, where a_i is a basis vector of the direct
+    lattice. If rescale = True the reciprocal lattice vectors are expressed in units of
+    2*np.pi/alat
+
+    Args:
+        lattice (:py:class:`array`) : array with the lattice vectors. The i-th
+            row represents the i-th lattice vectors in cartesian units
+        alat (:py:class:`float`) : lattice parameter
+        rescale (:py:class:`bool`)  : if True express the reciprocal lattice vectors in units of 2*np.pi/alat
+
+    Returns:
+        :py:class:`array` : array with the reciprocal lattice vectors b_i as rows
+
+    """
+    a1,a2,a3 = lattice
+    vol = eval_lattice_volume(lattice)
+    if rescale: norm_factor = alat/vol
+    else: norm_factor = 2.*np.pi/vol
+    b1 = norm_factor*np.cross(a2,a3)
+    b2 = norm_factor*np.cross(a3,a1)
+    b3 = norm_factor*np.cross(a1,a2)
+    return np.array([b1,b2,b3])
 
 def compute_transitions(bands,in_list,fin_list):
     """
@@ -15,8 +123,9 @@ def compute_transitions(bands,in_list,fin_list):
         fin_list (list) : indexes of the bands used as final points of the transitions
 
     Returns:
-        transitions (list) : list with the transition energies for each possible couple
+        :py:class:`list` : list with the transition energies for each possible couple
         of (distinct) in and out bands
+
     """
     transitions = []
     for v in in_list:
@@ -46,7 +155,7 @@ def get_evals(evals,nbands,nbands_full, set_scissor = None, set_gap = None, set_
 
     """
     evals_eV = evals*HaToeV
-    homo_band = evals_eV[:,nbands_valence-1]
+    homo_band = evals_eV[:,nbands_full-1]
     VBM = homo_band.max()
     evals_eV -= VBM
 
