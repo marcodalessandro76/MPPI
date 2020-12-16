@@ -1,5 +1,5 @@
 # MPPI
-Multi Purpose Python Interface  
+__Multi Purpose Python Interface__  
 
 Python package for managing computations and performing post-processing in QuantumESPRESSO and Yambo
 
@@ -28,12 +28,12 @@ Finally, you can also install the package inside a virtual environment.
 ## Features
 The package is composed by several module each of which contains one ore more classes:
 
-- InputFiles : Create and manage input files for pw.x program of the QuantumEspresso package and for Yambo.
-- Calculators : prepare and run a single QuantumESPRESSO or Yambo computation.
-- Datasets : organize and run several computations for both QuantumESPRESSO and Yambo.
-- Parsers : Classes to extract data from the output files and database QuantumESPRESSO and Yambo.
+- __InputFiles__ : Create and manage input files for pw.x program of the QuantumEspresso package and for Yambo.
+- __Calculators__ : prepare and run a single QuantumESPRESSO or Yambo computation.
+- __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo.
+- __Parsers__ : Classes to extract data from the output files and database QuantumESPRESSO and Yambo.
     Other parsers, from outer packages, can be also used.
-- Utilities : Collect some useful low-level functions used by the other modules of the package.
+- __Utilities__ : Collect some useful low-level functions used by the other modules of the package.
 
 ## Tutorials and examples
 We provide many jupyter notebooks that show the functionality of each module of the package.

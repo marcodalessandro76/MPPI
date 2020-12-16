@@ -20,7 +20,7 @@ class PwParser():
         atomic_positions : list with the position of each atom
         atomic_species : dictionary with mass and pseudo for each species
         alat : lattice parameter (in a.u.)
-        lattice : array with the lattice vectors. The i-th row represents the
+        lattice : array with the lattice vector. The i-th row represents the
             i-th lattice vectors in cartesian units
         syms : list with the symmetries of the lattice
         num_electrons : number of electrons
@@ -179,6 +179,7 @@ class PwParser():
 
         Returns:
             :py:class:`float` : lattice volume in a.u.
+
         """
         return U.eval_lattice_volume(self.lattice)
 

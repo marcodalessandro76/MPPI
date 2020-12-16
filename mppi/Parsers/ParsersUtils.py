@@ -9,26 +9,70 @@ import numpy as np
 from mppi.Utilities import HaToeV
 
 ################################################################################
-
-def expand_kpts(kpts,syms):
-    """
-    Take a list of qpoints and symmetry operations and return the full brillouin zone
-    with the corresponding index in the irreducible brillouin zone
-    """
-    full_kpts = []
-    print("nkpoints:", len(kpts))
-    for nk,k in enumerate(kpts):
-        for sym in syms:
-            full_kpts.append((nk,np.dot(sym,k)))
-
-    return full_kpts
-
-def red_car(red,lat):
-    """
-    Convert reduced coordinates to cartesian
-    """
-    return np.array([coord[0]*lat[0]+coord[1]*lat[1]+coord[2]*lat[2] for coord in red])
-
+#
+# def expand_kpts(kpts,syms):
+#     """
+#     Take a list of qpoints and symmetry operations and return the full brillouin zone
+#     with the corresponding index in the irreducible brillouin zone
+#     """
+#     full_kpts = []
+#     print("nkpoints:", len(kpts))
+#     for nk,k in enumerate(kpts):
+#         for sym in syms:
+#             full_kpts.append((nk,np.dot(sym,k)))
+#
+#     return full_kpts
+#
+# def car_red(car,lat): -> it is implented here as convert_to_crystal
+#     """
+#     Convert cartesian coordinates to reduced
+#     """
+#     return np.array([np.linalg.solve(np.array(lat).T,coord) for coord in car])
+#
+# def red_car(red,lat):
+#     """
+#     Convert reduced coordinates to cartesian
+#     """
+#     return np.array([coord[0]*lat[0]+coord[1]*lat[1]+coord[2]*lat[2] for coord in red])
+#
+# from latticedb of yambopy, note that the sym in the rec_lat is realized as the
+# inverse transpose of the one in the direct lattice (check)
+#
+# def sym_rec(self):
+#     """Convert cartesian transformations to reciprocal transformations"""
+#     if not hasattr(self,"_sym_rec"):
+#         sym_rec = np.zeros([self.nsym,3,3])
+#         for n,s in enumerate(self.sym_car):
+#             sym_rec[n] = np.linalg.inv(s).T
+#         self._sym_rec = sym_rec
+#     return self._sym_rec
+#
+# def sym_rec_red(self):
+#     """Convert reduced transformations to reduced reciprocal transformations"""
+#     if not hasattr(self,"_sym_rec_red"):
+#         sym_rec_red = np.zeros([self.nsym,3,3],dtype=int)
+#         for n,s in enumerate(self.sym_red):
+#             sym_rec_red[n] = np.linalg.inv(s).T
+#         self._sym_rec_red = sym_rec_red
+#     return self._sym_rec_red
+#
+# @property
+# def sym_rec(self):
+#     """Convert cartesian transformations to reciprocal transformations"""
+#     if not hasattr(self,"_sym_rec"):
+#         sym_rec = np.zeros([self.nsym,3,3])
+#         for n,s in enumerate(self.sym_car):
+#             sym_rec[n] = np.linalg.inv(s).T
+#         self._sym_rec = sym_rec
+#     return self._sym_rec
+#
+# @property
+# def time_rev_list(self):
+#     """get a list of symmetries with time reversal"""
+#     time_rev_list = [False]*self.nsym
+#     for i in range(self.nsym):
+#         time_rev_list[i] = ( i >= self.nsym/(self.time_rev+1) )
+#     return time_rev_list
 ################################################################################
 
 def convert_to_crystal(lattice,vector_cartesian):
@@ -36,7 +80,7 @@ def convert_to_crystal(lattice,vector_cartesian):
     Convert the cartesian coordinates of a vector into crystal ones. It can be used
     for both direct lattice vectors (like the atomic position) and reciprocal lattice
     related quantities (like the k-points). Obviously the correct lattice has to be
-    provided as input. 
+    provided as input.
 
     Args:
         lattice (:py:class:`array`) : array with the (direct or reciprocal) lattice vectors.
@@ -46,9 +90,29 @@ def convert_to_crystal(lattice,vector_cartesian):
 
     Returns:
         (:py:class:`array`) : array with the crystal coordinates of the vector
-    """
 
+    """
     M = np.linalg.inv(lattice.transpose())
+    return np.dot(M,vector_cartesian)
+
+def convert_to_cartesian(lattice,vector_cartesian):
+    """
+    Convert the crystal coordinates of a vector into cartesian ones. It can be used
+    for both direct lattice vectors (like the atomic position) and reciprocal lattice
+    related quantities (like the k-points). Obviously the correct lattice has to be
+    provided as input.
+
+    Args:
+        lattice (:py:class:`array`) : array with the (direct or reciprocal) lattice vectors.
+            The i-th row represents the i-th lattice vectors in cartesian units
+        vector_cartesian (:py:class:`array`) : array with the cartesian coordinates
+            of the vector
+
+    Returns:
+        (:py:class:`array`) : array with the crystal coordinates of the vector
+
+    """
+    M = lattice.transpose()
     return np.dot(M,vector_cartesian)
 
 def eval_lattice_volume(lattice):

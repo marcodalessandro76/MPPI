@@ -15,16 +15,17 @@ class YamboDftParser():
     """
     Class to read information about the lattice and electronic structure from the ``ns.db1`` database created by Yambo
 
-
     Args:
         file (:py:class:`string`) : string with the name of the file to be parsed
         verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
 
     Attributes:
-        sym : the symmetries of the lattice
-        lat : the lattice vectors in cart. coord. in a.u.
-        alat : the lattice parameter(s) in a.u.
-
+        syms : the symmetries of the lattice
+        lattice : array with the lattice vectors. The i-th row represents the
+            i-th lattice vector in cartesian units
+        alat : the lattice parameter. Yambo stores a three dimensional array in this
+            field by here only the first elements in parsed to have to same structure
+            of the :class:`PwParser` class
         num_electrons : number of electrons
         nbands : number of bands
         nbands_full : number of occupied bands
@@ -34,7 +35,7 @@ class YamboDftParser():
         evals : array of the ks energies for each kpoint (in Hartree)
         spin : number of spin components
         spin_degen : 1 if the number of spin components is 2, 2 otherwise
-        time_rev : ?
+        
     """
 
     def __init__(self,file,verbose=True):
@@ -53,9 +54,10 @@ class YamboDftParser():
             raise IOError("Error opening file %s in YamboDftParser"%self.filename)
 
         # lattice properties
-        self.sym = np.array(database.variables['SYMMETRY'][:])
-        self.lat = np.array(database.variables['LATTICE_VECTORS'][:].T)
-        self.alat = np.array(database.variables['LATTICE_PARAMETER'][:].T)
+        self.syms = np.array(database.variables['SYMMETRY'][:])
+        self.lattice = np.array(database.variables['LATTICE_VECTORS'][:].T)
+        self.alat = database.variables['LATTICE_PARAMETER'][:][0]
+
 
         # electronic structure
         self.evals  = np.array(database.variables['EIGENVALUES'][0,:])
@@ -66,7 +68,6 @@ class YamboDftParser():
         self.num_electrons  = int(dimensions[14])
         self.nkpoints    = int(dimensions[6])
         self.spin = int(dimensions[11])
-        self.time_rev = dimensions[9]
         database.close()
 
         #spin degeneracy if 2 components degen 1 else degen 2
@@ -84,7 +85,6 @@ class YamboDftParser():
         print('number of k points',self.nkpoints)
         print('number of bands',self.nbands)
         print('spin degeneration',self.spin)
-
 
     def get_evals(self, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
         """
@@ -143,77 +143,116 @@ class YamboDftParser():
             of the VMB and CBM
 
         """
-        gap = U.get_gap(self.evals,self.nbands_valence,verbose=verbose)
+        gap = U.get_gap(self.evals,self.nbands_full,verbose=verbose)
         return gap
 
-
-
-    ##########################################
-
-    def expand_kpoints(self,atol=1e-6,verbose=0):
+    def eval_lattice_volume(self):
         """
-        Take a list of qpoints and symmetry operations and return the full brillouin zone
-        with the corresponding index in the irreducible brillouin zone
+        Compute the volume of a lattice (in a.u.)
+
+        Returns:
+            :py:class:`float` : lattice volume in a.u.
+
         """
+        return U.eval_lattice_volume(self.lattice)
 
-        #check if the kpoints were already exapnded
-        kpoints_indexes  = []
-        kpoints_full     = []
-        symmetry_indexes = []
-
-        #kpoints in the full brillouin zone organized per index
-        kpoints_full_i = {}
-
-        #expand using symmetries
-        for nk,k in enumerate(self.car_kpoints):
-            #if the index in not in the dicitonary add a list
-            if nk not in kpoints_full_i:
-                kpoints_full_i[nk] = []
-
-            for ns,sym in enumerate(self.sym_car):
-
-                new_k = np.dot(sym,k)
-
-                #check if the point is inside the bounds
-                k_red = car_red([new_k],self.rlat)[0]
-                k_bz = (k_red+atol)%1
-
-                #if the vector is not in the list of this index add it
-                if not vec_in_list(k_bz,kpoints_full_i[nk]):
-                    kpoints_full_i[nk].append(k_bz)
-                    kpoints_full.append(new_k)
-                    kpoints_indexes.append(nk)
-                    symmetry_indexes.append(ns)
-                    continue
-
-        #calculate the weights of each of the kpoints in the irreducible brillouin zone
-        nkpoints_full = len(kpoints_full)
-        weights = np.zeros([nkpoints_full])
-        for nk in kpoints_full_i:
-            weights[nk] = float(len(kpoints_full_i[nk]))/nkpoints_full
-
-        if verbose: print("%d kpoints expanded to %d"%(len(self.car_kpoints),len(kpoints_full)))
-
-        #set the variables
-        self.weights_ibz      = np.array(weights)
-        self.kpoints_indexes  = np.array(kpoints_indexes)
-        self.symmetry_indexes = np.array(symmetry_indexes)
-        self.iku_kpoints      = [k*self.alat for k in kpoints_full]
-
-    def expandEigenvalues(self):
+    def get_lattice(self, rescale = False):
         """
-        Expand eigenvalues to the full brillouin zone
+        Compute the lattice vectors. If rescale = True the vectors are expressed in units
+        of the lattice constant.
+
+        Args:
+            rescale (:py:class:`bool`)  : if True express the lattice vectors in units alat
+
+        Returns:
+            :py:class:`array` : array with the lattice vectors a_i as rows
+
         """
+        return U.get_lattice(self.lattice,self.alat,rescale=rescale)
 
-        self.eigenvalues = self.eigenvalues_ibz[self.lattice.kpoints_indexes]
+    def get_reciprocal_lattice(self, rescale = False):
+        """
+        Compute the reciprocal lattice vectors. If rescale = False the vectors are normalized
+        so that np.dot(a_i,b_j) = 2*np.pi*delta_ij, where a_i is a basis vector of the direct
+        lattice. If rescale = True the reciprocal lattice vectors are expressed in units of
+        2*np.pi/alat.
 
-        self.nkpoints_ibz = len(self.eigenvalues_ibz)
-        self.weights_ibz = np.zeros([self.nkpoints_ibz],dtype=np.float32)
-        self.nkpoints = len(self.eigenvalues)
+        Args:
+            rescale (:py:class:`bool`)  : if True express the reciprocal vectors in units of 2*np.pi/alat
 
-        #counter counts the number of occurences of element in a list
-        for nk_ibz,inv_weight in list(collections.Counter(self.lattice.kpoints_indexes).items()):
-            self.weights_ibz[nk_ibz] = float(inv_weight)/self.nkpoints
+        Returns:
+            :py:class:`array` : array with the reciprocal lattice vectors b_i as rows
 
-        #kpoints weights
-        self.weights = np.full((self.nkpoints), 1.0/self.nkpoints,dtype=np.float32)
+        """
+        return U.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
+
+
+    #####################################################################################
+    #
+    # def expand_kpoints(self,atol=1e-6,verbose=0):
+    #     """
+    #     Take a list of qpoints and symmetry operations and return the full brillouin zone
+    #     with the corresponding index in the irreducible brillouin zone
+    #     """
+    #
+    #     #check if the kpoints were already exapnded
+    #     kpoints_indexes  = []
+    #     kpoints_full     = []
+    #     symmetry_indexes = []
+    #
+    #     #kpoints in the full brillouin zone organized per index
+    #     kpoints_full_i = {}
+    #
+    #     #expand using symmetries
+    #     for nk,k in enumerate(self.car_kpoints):
+    #         #if the index in not in the dicitonary add a list
+    #         if nk not in kpoints_full_i:
+    #             kpoints_full_i[nk] = []
+    #
+    #         for ns,sym in enumerate(self.sym_car):
+    #
+    #             new_k = np.dot(sym,k)
+    #
+    #             #check if the point is inside the bounds
+    #             k_red = car_red([new_k],self.rlat)[0]
+    #             k_bz = (k_red+atol)%1
+    #
+    #             #if the vector is not in the list of this index add it
+    #             if not vec_in_list(k_bz,kpoints_full_i[nk]):
+    #                 kpoints_full_i[nk].append(k_bz)
+    #                 kpoints_full.append(new_k)
+    #                 kpoints_indexes.append(nk)
+    #                 symmetry_indexes.append(ns)
+    #                 continue
+    #
+    #     #calculate the weights of each of the kpoints in the irreducible brillouin zone
+    #     nkpoints_full = len(kpoints_full)
+    #     weights = np.zeros([nkpoints_full])
+    #     for nk in kpoints_full_i:
+    #         weights[nk] = float(len(kpoints_full_i[nk]))/nkpoints_full
+    #
+    #     if verbose: print("%d kpoints expanded to %d"%(len(self.car_kpoints),len(kpoints_full)))
+    #
+    #     #set the variables
+    #     self.weights_ibz      = np.array(weights)
+    #     self.kpoints_indexes  = np.array(kpoints_indexes)
+    #     self.symmetry_indexes = np.array(symmetry_indexes)
+    #     self.iku_kpoints      = [k*self.alat for k in kpoints_full]
+    #
+    # def expandEigenvalues(self):
+    #     """
+    #     Expand eigenvalues to the full brillouin zone
+    #     """
+    #
+    #     self.eigenvalues = self.eigenvalues_ibz[self.lattice.kpoints_indexes]
+    #
+    #     self.nkpoints_ibz = len(self.eigenvalues_ibz)
+    #     self.weights_ibz = np.zeros([self.nkpoints_ibz],dtype=np.float32)
+    #     self.nkpoints = len(self.eigenvalues)
+    #
+    #     #counter counts the number of occurences of element in a list
+    #     for nk_ibz,inv_weight in list(collections.Counter(self.lattice.kpoints_indexes).items()):
+    #         self.weights_ibz[nk_ibz] = float(inv_weight)/self.nkpoints
+    #
+    #     #kpoints weights
+    #     self.weights = np.full((self.nkpoints), 1.0/self.nkpoints,dtype=np.float32)
