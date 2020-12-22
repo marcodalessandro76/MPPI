@@ -30,6 +30,30 @@ def name_from_id(id):
         name = None
     return name
 
+def convergence_plot(**kwargs):
+    """
+    Perform the convergence plot associated to the `seek_convergence` method.
+    The plot shows a dashed vertical line in correspondence of the converged value.
+
+    """
+    import matplotlib.pyplot as plt
+    values = kwargs.get('values')
+    ids = kwargs.get('ids')
+    id_conv = kwargs.get('id_conv',None)
+    iruns = [name_from_id(id) for id in ids]
+    plt.figure(figsize=(9,7))
+    plt.title('Convergence plot for dataset '+kwargs['label'],size=14)
+    ax = plt.gca()
+    ax.grid(color='grey', linestyle='--',linewidth=0.5)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.set_xticklabels(iruns, rotation=45)
+    plt.plot(iruns,values)
+    plt.scatter(iruns,values,color='red')
+    if id_conv is not None:
+        id_conv = name_from_id(id_conv)
+        id_last = name_from_id(ids[-1])
+        ax.axvline(id_conv,linestyle='--',color='black')
+
 class Dataset(Runner):
     """
     Class to perform a set of calculations and to manage the associated results.
@@ -116,7 +140,6 @@ class Dataset(Runner):
         irun = len(self.ids) # get the cardinal number of this run and append its id
         self.ids.append(id)
         # check if the calculator has been already used, otherwise add it to self.calculators
-        # icalc identifies the position of the calculator in the self.calculators list
         calc_found = False
         for ind,calc in enumerate(self.calculators):
             if calc['calc'] == runner:
@@ -125,10 +148,10 @@ class Dataset(Runner):
                 break
         if not calc_found:
             self.calculators.append({'calc': runner, 'iruns': [irun]})
-        #add the kwargs and the global_options to the self.runs
+        # add the kwargs and the global_options to the self.runs, the 'name' keyword
+        # is added (if not already provided by the user)
         inp_to_append = deepcopy(self._global_options)
         inp_to_append.update(deepcopy(kwargs))
-        #add the 'name' keyword if not provided by the user
         if not 'name' in inp_to_append:
             inp_to_append['name'] = name_from_id(id)
         self.runs.append(inp_to_append)
@@ -165,8 +188,7 @@ class Dataset(Runner):
             for calc in calculators: #identify the calculator associated to the present run
                 if irun in calc['iruns']:
                     break
-            #run and append the dictionary with the result to the queue
-            result = calc['calc'].run(**runs[irun])
+            result = calc['calc'].run(**runs[irun]) #run and append the dictionary with the result to the queue
             queue.put({irun : result})
 
         if selection is None:
@@ -235,9 +257,9 @@ class Dataset(Runner):
 
         Args:
            id : string or dictionary of the retrieved id.
-           attribute (str): if present, provide the attribute of each of the
+           attribute (:py:class:`string`): if present, provide the attribute of each of the
                results instead of the result object
-           run_if_not_present (bool): If the run has not yet been performed
+           run_if_not_present (:py:class:`bool`): If the run has not yet been performed
                in the dataset then perform it.
 
         Return:
@@ -260,7 +282,6 @@ class Dataset(Runner):
 
         """
 
-        #names = [name_from_id(id) for id in self.ids]
         names = [val['name'] for val in self.runs]
         id_name = name_from_id(id)
         fetch_indices = []
@@ -282,52 +303,60 @@ class Dataset(Runner):
             print('Provide a post processing function able to parse the results')
         return data
 
-    def seek_convergence(self, rtol=1.e-5, atol=1.e-8,
+    def seek_convergence(self, rtol=1.e-5, atol=1.e-8, convergence_level=1,
                         selection=None, **kwargs):
         """
-        Search for the first result of the dataset which matches the provided
-        tolerance parameter. The results are in dataset order
-        (provided by the :py:meth:`append_run` method) if `selection` is not
-        specified.
-        Employs the numpy :py:meth:`allclose` method for comparison.
+        Search for the first result of the dataset that matches the provided
+        tolerance parameter. Results are checked in dataset order (provided by the
+        :py:meth:`append_run` method) if `selection` is not specified.
+        Employs the numpy :py:meth:`allclose` method for comparison. Convergence is
+        reached if all the subsequent calculations, specified by the `convergence_level`
+        parameter, match the convergence condition.
 
         Args:
-          rtol (float): relative tolerance parameter
-          atol (float): absolute tolerance parameter
-          selection (list): list of the id of the runs in which to perform the
-               convergence search. Each id should be unique in the dataset.
+          rtol (:py:class:`float`): relative tolerance parameter
+          atol (:py:class:`float`): absolute tolerance parameter
+          convergence_level (:py:class:`int`): number of subsequent results that have to satisfy the
+            convergence criterion to assess that convergence is reached
+          selection (:py:class:`list`): list of the ids of the runs used to perform the
+               convergence search
           **kwargs: arguments to be passed to the :py:meth:`fetch_results`
-               method.
+               method. If a generic post_processing_function is used the user can specify
+               the control quantity for seeking convergence, for instance attribute='energy'
 
         Returns:
-          id,result (tuple): the id of the last run which matches the
-                convergence, together with the result, if convergence is
-                reached.
+          :py:class:`dict`: if convergence is found return a dictionary with the converged
+          id and the corresponding converged value of the control quantity
 
         Raises:
-           LookupError: if the parameter for convergence were not found.
-               The dataset has to be enriched or the convergence parameters
-               loosened.
+           IndexError: if convergence is not found. The dataset has to be enriched
+                or the convergence parameters loosened.
 
         """
-        from numpy import allclose
-        to_get = self.ids if selection is None else selection
+        import numpy as np
+        ids = self.ids if selection is None else selection
+        values = [None for ind in range(len(ids))]
+        label = self.get_global_option('label')
 
-        id_ref = to_get[0]
-        print('Fetching results for id "', id_ref, '"')
-        ref = self.fetch_results(id=id_ref, **kwargs)
-        ref = ref[0]
-        for id in to_get[1:]:
-            print('Fetching results for id "', id, '"')
-            val = self.fetch_results(id=id, **kwargs)
-            val = val[0]
-            if allclose(ref, val, rtol=rtol, atol=atol):
-                res = self.fetch_results(id=id_ref, **kwargs)
-                label = self.get_global_option('label')
+        for irun in range(len(ids)):
+            if irun+convergence_level+1 > len(ids):
+                convergence_plot(ids=ids,values=values,label=label)
+                raise IndexError('Convergence criterion cannot be reached, enlarge the dataset'
+                                 ' or reduce the tolerance and/or the convergence_level')
+            id_ref = ids[irun]
+            print('Seeking convergence for id "', id_ref, '"')
+            ref = self.fetch_results(id=id_ref, **kwargs)[0]
+            values[irun] = ref
+            checks = np.zeros([convergence_level])
+            for iconv in range(convergence_level):
+                run_index = irun+iconv+1
+                check_id = ids[run_index]
+                val = self.fetch_results(id=check_id, **kwargs)[0]
+                values[run_index] = val
+                checks[iconv] = np.allclose(ref, val, rtol=rtol, atol=atol)
+            if checks.all():
                 print('Convergence reached in Dataset "' +
                       label+'" for id "', id_ref, '"')
-                return (id_ref, res[0])
-            ref = val
-            id_ref = id
-        raise LookupError('Convergence not reached, enlarge the dataset'
-                          ' or change tolerance values')
+                convergence_results = dict(id_conv=id_ref,value_conv=ref)
+                convergence_plot(**convergence_results,ids=ids,values=values,label=label)
+                return convergence_results

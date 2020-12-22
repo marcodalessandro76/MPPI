@@ -35,7 +35,7 @@ class YamboDftParser():
         evals : array of the ks energies for each kpoint (in Hartree)
         spin : number of spin components
         spin_degen : 1 if the number of spin components is 2, 2 otherwise
-        
+
     """
 
     def __init__(self,file,verbose=True):
@@ -81,7 +81,7 @@ class YamboDftParser():
         """
         Provide information on the atributes of the class
         """
-        print('YamboDipolesParser variables structure')
+        print('YamboDftParser variables structure')
         print('number of k points',self.nkpoints)
         print('number of bands',self.nbands)
         print('spin degeneration',self.spin)

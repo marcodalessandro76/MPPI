@@ -24,6 +24,13 @@ class PwInput(dict):
         Initialized the keys of self with the namelist and cards and update the
         dictionaries with the kwargs passed as input parameters. If the file is
         provided parse it and add the 'file' key.
+
+        Args:
+            file (:py:class:`string`) : name of an exsistent input file, used
+                initialize the dictionaries of the object
+            **kwargs : keyword arguments used to initialize the dictionaries of
+                object
+
         """
         dict.__init__(self)
 
@@ -43,6 +50,11 @@ class PwInput(dict):
         All the elements that belong to the possible namelist of pw are parsed.
         Instead, among the possible pw cards the actual implementation considers
         only : ATOMIC_SPECIES, ATOMIC_POSITIONS, K_POINTS, CELL_PARAMETERS
+
+        Args:
+            file (:py:class:`string`) : name of an exsistent input file, used
+                initialize the dictionaries of the object
+
         """
         f = open(file,"r")
 
@@ -60,7 +72,7 @@ class PwInput(dict):
         Write the QE input on file.
 
         Args:
-            file (string) : the file name
+            file (:py:class:`string`) : name of the file
         """
         f = open(file,'w')
         f.write(self.convert_string())
@@ -236,15 +248,23 @@ class PwInput(dict):
 
     # Set methods
 
-    def set_energy_cutoff(self,e):
+    def set_energy_cutoff(self,energy):
         """
         Set the value of the kinetic energy cutoff (Ry) for wavefunctions
+
+        Args:
+            energy (:py:class:`float`) : value of the energy cutoff in Ry
+
         """
-        self['system']['ecutwfc'] = e
+        self['system']['ecutwfc'] = energy
 
     def set_prefix(self,prefix):
         """
         Set the value of prefix
+
+        Args:
+            prefix (:py:class:`string`) : value of the prefix
+
         """
         self['control']['prefix'] = "'%s'"%prefix
 
@@ -262,9 +282,9 @@ class PwInput(dict):
         present set also the type of smearing and the value of the degauss parameter.
 
         Args:
-            occupations (string) : type of occupation of the ks states (fixed, smearing,...)
-            smearing (string) : type of smearing (gaussian, fermi-dirac,...)
-            degauss (float) : value of the gaussian spreading (meV) for brillouin-zone
+            occupations (:py:class:`string`) : type of occupation of the ks states (fixed, smearing,...)
+            smearing (:py:class:`string`) : type of smearing (gaussian, fermi-dirac,...)
+            degauss (:py:class:`float`) : value of the gaussian spreading (meV) for brillouin-zone
                 integration in metals
         """
         from mppi.Utilities import HaToeV
@@ -276,13 +296,14 @@ class PwInput(dict):
     def set_scf(self,conv_thr=1e-8,diago_full_acc=False,
                 force_symmorphic=False,verbosity='high'):
         """
-        Set the variables for a scf calculation
+        Set the variables for a scf calculation.
 
         Args:
-            conv_thr(float): the convergence threshold value
-            diago_full_acc(boolean)
-            force_symmorphic(boolean)
-            verbosity(string)
+            conv_thr (:py:class:`string`) : the convergence threshold value
+            diago_full_acc (:py:class:`bool`)
+            force_symmorphic (:py:class:`bool`)
+            verbosity (:py:class:`string`)
+
         """
         self['control']['calculation'] = "'scf'"
         self['control']['verbosity'] = "'"+verbosity+"'"
@@ -296,11 +317,12 @@ class PwInput(dict):
         Set the variables for a nscf calculation
 
         Args:
-            nbnd(int): number of bands
-            conv_thr(float): the convergence threshold value
-            diago_full_acc(boolean)
-            force_symmorphic(boolean)
-            verbosity(string)
+            nbnd (:py:class:`int`) : number of bands
+            conv_thr (:py:class:`float`) : the convergence threshold value
+            diago_full_acc (:py:class:`bool`)
+            force_symmorphic (:py:class:`bool`)
+            verbosity (:py:class:`string`)
+
         """
         self['control']['calculation'] = "'nscf'"
         self['control']['verbosity'] = "'"+verbosity+"'"
@@ -315,11 +337,12 @@ class PwInput(dict):
         Set the variables for a bands calculation
 
         Args:
-            nbnd(int): number of bands
-            conv_thr(float): the convergence threshold value
-            diago_full_acc(boolean)
-            force_symmorphic(boolean)
-            verbosity(string)
+            nbnd (:py:class:`int`) : number of bands
+            conv_thr (:py:class:`float`) : the convergence threshold value
+            diago_full_acc (:py:class:`bool`)
+            force_symmorphic (:py:class:`bool`)
+            verbosity (:py:class:`bool`)
+
         """
         self['control']['calculation'] = "'bands'"
         self['control']['verbosity'] = "'"+verbosity+"'"
@@ -333,9 +356,9 @@ class PwInput(dict):
         Update the self['atomic_species'] dictionary
 
         Args:
-            atom(str)
-            mass(str): is used only for molecular dynamics run
-            pseudo_name(str)
+            atom (:py:class:`string`)
+            mass (:py:class:`string`) : is used only for molecular dynamics run
+            pseudo_name (:py:class:`string`)
         """
         at = {atom : [mass,pseudo_name]}
         self['atomic_species'].update(at)
@@ -348,7 +371,7 @@ class PwInput(dict):
         species write an alert and set nat = ntyp.
 
         Args:
-            nat(int): number of atoms in the cell
+            nat (:py:class:`int`) : number of atoms in the cell
         """
         ntyp = len(set(self['atomic_species'].keys()))
         if nat < ntyp:
@@ -362,8 +385,8 @@ class PwInput(dict):
         Define the the positions of the atoms in the lattice.
 
         Args:
-            type(str) : units for the positions (alat,angstrom,crystal,...)
-            positions(list) : a list with the structure
+            type (:py:class:`string`) : units for the positions (alat,angstrom,crystal,...)
+            positions (:py:class:`list`) : a list with the structure
                     [['atom1',[x,y,z]],['atom2',[x,y,z]],...]}
         """
         pos = {'type' : type, 'values' : positions}
@@ -377,15 +400,15 @@ class PwInput(dict):
         Set the lattice structure using the typical QuantumESPRESSO input variables.
 
         Args:
-            ibrav (int) : Bravais-lattice index. 0 : Free, 1 : Cubic, 2 : Fcc, 3 : bcc,
+            ibrav (:py:class:`int`) : Bravais-lattice index. 0 : Free, 1 : Cubic, 2 : Fcc, 3 : bcc,
                 4 : Hexagonal
             cell_vectors (:py:class:`list`) : the list with the crystal lattice vectors in the
                 form [[v1_x,v1_y,v1_z],[v2_x,v2_y,v2_z],[v3_x,v3_y,v3_z]]
-            cell_units (string) : units used for the cell vectors (angstrom, BOHR or alat).
+            cell_units (:py:class:`string`) : units used for the cell vectors (angstrom, BOHR or alat).
                 If alat is used the lattice vectors are in units of the lattice parameter celldm(1)
-            celldms (**kwargs) : Crystallographic constants. Only needed values
-                (depending on "ibrav") must be specified. alat = celldm(1) is the lattice parameter (in BOHR).
-                If ibrav==0, only celldm(1) is used if present and cell vectors are
+            celldms (:py:class:`float`) : Crystallographic constants. Only some values depending on
+                `ibrav` have to be specified. For instance, alat = celldm(1) is the lattice parameter
+                (in BOHR). If ibrav==0, only celldm(1) is used if present and cell vectors are
                 read from card CELL_PARAMETERS
 
         """
@@ -406,14 +429,15 @@ class PwInput(dict):
         Define the sampling of the Brillouin zone.
 
         Args:
-            type(str) : type of sampling (automatic, tpiba, tpiba_b,...)
-            points(list) : number of kpoints in the x,y,z directions. Used only is
-                       type is automatic
-            shift(list) : shifts in the x,y,z directions. Used only is
-                       type is automatic
+            type (:py:class:`string`) : type of sampling (automatic, tpiba, tpiba_b,...)
+            points (:py:class:`list`) : number of kpoints in the x,y,z directions. Used only if
+                       the type variable is set to `automatic`
+            shift (:py:class:`list`) : shifts in the x,y,z directions. Used only if the
+                       type varible is set to `automatic`
             klist(list) : list with the structure:
                        [[k1x,k1y,k1z,w1],[k2x,k2y,k2z,w2],....]
-                       Used only if type is not automatic
+                       Used if type variable is not se to `automatic`
+
         """
         if type == 'automatic':
             k = {'type' : type, 'values' : (points,shift)}
@@ -424,6 +448,7 @@ class PwInput(dict):
     def set_spinorbit(self):
         """
         Set the lspinorb and noncolin to True.
+
         """
         self['system']['lspinorb'] = '.true.'
         self['system']['noncolin'] = '.true.'
@@ -432,6 +457,7 @@ class PwInput(dict):
         """
         Set the value of nspin to 2. Useful to treat collinear spin polarized
         systems.
+
         """
         self['system']['lspinorb'] = '.false.'
         self['system']['noncolin'] = '.false.'

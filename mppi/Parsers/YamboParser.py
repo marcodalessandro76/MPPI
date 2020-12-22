@@ -52,8 +52,11 @@ class YamboParser():
         """
         Provide information on the structure of the attributes of the class
         """
-        self.data.get_info()
-        print(' ')
-        self.dipoles.get_info()
-        print(' ')
-        print(self.dft.get_info())
+        if hasattr(self,'data'):
+            self.data.get_info()
+            print(' ')
+        if hasattr(self,'dipoles'):
+            self.dipoles.get_info()
+            print(' ')
+        if hasattr(self,'dft'):
+            print(self.dft.get_info())

@@ -10,6 +10,12 @@ from mppi.Utilities import HaToeV
 
 ################################################################################
 #
+# def vec_in_list(veca,vec_list,atol=1e-6):
+#     """
+#     Check if a vector exists in a list of vectors
+#     """
+#     return np.array([ np.allclose(veca,vecb,rtol=atol,atol=atol) for vecb in vec_list ]).any()
+#
 # def expand_kpts(kpts,syms):
 #     """
 #     Take a list of qpoints and symmetry operations and return the full brillouin zone
@@ -95,7 +101,7 @@ def convert_to_crystal(lattice,vector_cartesian):
     M = np.linalg.inv(lattice.transpose())
     return np.dot(M,vector_cartesian)
 
-def convert_to_cartesian(lattice,vector_cartesian):
+def convert_to_cartesian(lattice,vector_crystal):
     """
     Convert the crystal coordinates of a vector into cartesian ones. It can be used
     for both direct lattice vectors (like the atomic position) and reciprocal lattice
@@ -105,11 +111,11 @@ def convert_to_cartesian(lattice,vector_cartesian):
     Args:
         lattice (:py:class:`array`) : array with the (direct or reciprocal) lattice vectors.
             The i-th row represents the i-th lattice vectors in cartesian units
-        vector_cartesian (:py:class:`array`) : array with the cartesian coordinates
+        vector_crystal (:py:class:`array`) : array with the crystal coordinates
             of the vector
 
     Returns:
-        (:py:class:`array`) : array with the crystal coordinates of the vector
+        (:py:class:`array`) : array with the cartesian coordinates of the vector
 
     """
     M = lattice.transpose()
