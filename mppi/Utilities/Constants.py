@@ -12,6 +12,12 @@ Planck_ev_ps = 4.135667696e-3
 Planck constant in eV*ps.
 """
 
+Planck_reduced_ev_ps = 6.58211957e-4
+"""
+Reduced Planck constant (h/2pi) in eV*ps.
+"""
+
+
 Bohr_radius = 5.291772e-11
 """
 The Bohr radius in meter.

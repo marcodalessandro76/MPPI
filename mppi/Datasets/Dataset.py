@@ -307,11 +307,10 @@ class Dataset(Runner):
                         selection=None, **kwargs):
         """
         Search for the first result of the dataset that matches the provided
-        tolerance parameter. Results are checked in dataset order (provided by the
-        :py:meth:`append_run` method) if `selection` is not specified.
-        Employs the numpy :py:meth:`allclose` method for comparison. Convergence is
-        reached if all the subsequent calculations, specified by the `convergence_level`
-        parameter, match the convergence condition.
+        tolerance parameter. Convergence is reached if all the subsequent calculations,
+        specified by the `convergence_level` parameter, match the convergence condition.
+        Results are checked in dataset order (provided by the :py:meth:`append_run` method)
+        if `selection` is not specified. Employs the numpy :py:meth:`allclose` method for comparison. 
 
         Args:
           rtol (:py:class:`float`): relative tolerance parameter

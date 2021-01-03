@@ -130,11 +130,12 @@ class YamboCalculator(Runner):
 
         """
         run_dir = self.run_options.get('run_dir', '.')
+        verbose = self.run_options.get('verbose')
 
         results = {}
         # add the output files
         results['output'] = self._get_output_files()
-        if len(self._get_output_files()) == 0:
+        if verbose and len(self._get_output_files()) == 0:
             print("""
             There are no o-* files.
             Maybe you have performed a ypp computation or wait_end_run and/or
@@ -146,7 +147,7 @@ class YamboCalculator(Runner):
         if os.path.isfile(dft):
             results['dft'] = dft
         else:
-            print('ns.db1 database not found in SAVE folder')
+            if verbose: print('ns.db1 database not found in SAVE folder')
         # add the dbs found in the jobname folder
         results.update(self._get_db_files())
 

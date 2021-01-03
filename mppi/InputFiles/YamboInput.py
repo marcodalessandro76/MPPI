@@ -224,9 +224,8 @@ class YamboInput(dict):
                     direction=[1.,0.,0.],direction_circ=[0.,1.,0.],tstart=0,tstart_units='fs'):
         """
         Set the parameters of the field. The width parameter set the Yambo
-        `Field1_FWHM` input parameter that specifies the width of the Intensity
-        of the pump.
-        The index parameter is an integer thaat defines the name of the Field$index.
+        `Field%index_FWHM` input parameter that specifies the FWHM of the field.
+        The index parameter is an integer that defines the name of the Field$index.
         Useful to set more than one field
         """
         field_name = 'Field'+str(index)

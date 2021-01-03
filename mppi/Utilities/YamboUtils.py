@@ -82,11 +82,11 @@ def make_FixSymm(run_dir,polarization='linear',Efield1=[1.,0.,0.],Efield2=[0.,1.
             fixSymm_inp.removeTimeReversal()
         if polarization == 'circular':
             fixSymm_inp.set_ypp_extFields(Efield1=Efield1,Efield2=Efield2)
-        if polarization == 'linear':
+        elif polarization == 'linear':
             fixSymm_inp.set_ypp_extFields(Efield1=Efield1)
         else:
-            print('specify a correct polarization for the field')
-        code = C.YamboCalculator(omp=1,mpi=1,executable='ypp')
+            print('Specify a correct polarization for the field')
+        code = C.YamboCalculator(omp=1,mpi=1,executable='ypp',verbose=False)
         code.run(input=fixSymm_inp,name='FixSymm',run_dir=run_dir)
         # build the real-time r_setup
         command = 'cd %s; OMP_NUM_THREADS=1 yambo_rt'%fixsymm_dir

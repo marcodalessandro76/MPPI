@@ -185,7 +185,7 @@ def get_reciprocal_lattice(lattice, alat, rescale = False):
 def compute_transitions(bands,in_list,fin_list):
     """
     Compute the (positive) transition energies for the bands (on a single kpoint).
-    The ``fast'' index is associated to the bands in the fin_list list.
+    The `fast` index is associated to the bands in the fin_list list.
 
     Args:
         bands (list) : list with the energies

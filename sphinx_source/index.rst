@@ -86,6 +86,7 @@ The Utilities module collects some useful functions and classes. The module is o
 .. toctree:: yamboUtils.rst
 .. toctree:: bandStructure.rst
 .. toctree:: dos.rst
+.. toctree:: gaussianPulse.rst
 
 MPPI Tutorials page
 -------------------
