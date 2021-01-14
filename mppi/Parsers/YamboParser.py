@@ -9,16 +9,19 @@ class YamboParser():
     """
     Class that perform the parsing starting from the results :py:class:`dict` built
     by the :class:`YamboCalculator` class. In the actual implementation of the class the
-    parser is able to deal with the o- files, the dipoles database and the ``ns.db1``
-    database written in the SAVE folder.
+    parser is able to deal with the o- files, the dipoles database, the ``ndb.RT_G_PAR``
+    and the ``ns.db1`` database written in the SAVE folder.
 
     Attributes:
-        data : contains the instance of YamboOutputParser that manage the parsing
-            of the ``o-* files``
-        dipoles : contains the instance of YamboDipolesParser that manages the parsing
-            of the ``dipoles`` database
-        dft : contains the instance of YamboDftParser that manages the parsing
-            of the ``ns.db1`` database
+        data (:class:`YamboOutputParser`) : contains the instance of the :class:`YamboOutputParser`
+            class that manage the parsing of the ``o-* files``
+        dipoles (:class:`YamboDipolesParser`) : contains the instance of the :class:`YamboDipolesParser`
+            tclass hat manages the parsing of the ``dipoles`` database
+        dft (:class:`YamboDftParser`) : contains the instance of the :class:`YamboDftParser` that
+            manages the parsing of the ``ns.db1`` database
+        RTGreen (:class:`YamboRTGlesserParser`) : contains the instance of the
+            :class:`YamboRTGlesserParser` that manages the parsing of the ``ndb.RT_G_PAR`
+            database
 
     """
 
@@ -37,6 +40,7 @@ class YamboParser():
         from mppi.Parsers import YamboOutputParser
         from mppi.Parsers import YamboDftParser
         from mppi.Parsers import YamboDipolesParser
+        from mppi.Parsers import YamboRTGlesserParser
 
         if 'output' in results:
             self.data = YamboOutputParser(results['output'],verbose=verbose,extendOut=extendOut)
@@ -44,9 +48,11 @@ class YamboParser():
             print('There are no o- files in the %s dictionary. Please check...'%results)
         for key,value in results.items():
             if key == 'dipoles':
-                self.dipoles = YamboDipolesParser(value,verbose=verbose) # add the method
+                self.dipoles = YamboDipolesParser(value,verbose=verbose)
             if key == 'dft':
                 self.dft = YamboDftParser(value,verbose=verbose)
+            if key == 'RT_G_PAR':
+                self.RTGreen = YamboRTGlesserParser(value,verbose=verbose)
 
     def get_info(self):
         """
@@ -59,4 +65,7 @@ class YamboParser():
             self.dipoles.get_info()
             print(' ')
         if hasattr(self,'dft'):
-            print(self.dft.get_info())
+            self.dft.get_info()
+            print(' ')
+        if hasattr(self,'RTGreen'):
+            self.RTGreen.get_info()

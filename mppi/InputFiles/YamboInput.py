@@ -3,7 +3,7 @@
 Class to create and manipulate the yambo input files.
 The class is partially inspired from the YamboIn class of YamboPy. In this implementation
 the input object inherit from dict, so all the standard methods for python dictionary can
-be used to modified the attribute of the input.
+be used to modify the attribute of the input.
 """
 
 from subprocess import Popen, PIPE
@@ -271,7 +271,7 @@ class YamboInput(dict):
         """
         self['arguments'].append('RmTimeRev')
 
-    def set_ypp_extFields(self, Efield1 = [0.,0.,0.], Efield2 = [0.,0.,0.]):
+    def set_ypp_extFields(self, Efield1 = [1.,0.,0.], Efield2 = [0.,1.,0.]):
         """
         Set the direction of the external electric field(s)
         """

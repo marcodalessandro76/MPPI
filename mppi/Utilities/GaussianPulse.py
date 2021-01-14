@@ -58,14 +58,14 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
         energy (:py:class:`float`) : the energy of the pulse (in eV)
         amplitude (:py:class:`float`) : the amplitude of the pulse
         width (:py:class:`float`) : the width parameter of the Gaussian (in fs)
-        fwhm (:py:class:`float`) : if not None set the FWHM of the pulse. the width
+        fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
             is set to :math:`fwhm/(2\sqrt{2ln(2)})`
         t_start (:py:class:`float`) : time shift for the origin of the pulse (in fs)
         envelope_only (:py:class:`bool`) : if True the sinusodial oscillating factor
             is not considered
         THz_pulse (:py:class:`bool`) : if True expresses the energy in meV and the
-            width in ps
-        THz_pulse (:py:class:`bool`) : defines the amount of information provided
+            time variable and the width parameter in ps
+        verbose (:py:class:`bool`) : defines the amount of information provided
             on terminal
 
     Returns:
@@ -73,22 +73,33 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
         with the value of the Gaussian pulse
 
     """
-    h_red = U.Planck_reduced_ev_ps*1e3 # hbar in eV*fs
+    if not THz_pulse:
+        h_red = U.Planck_reduced_ev_ps*1e3 # in eV*fs
+        timeUnit = 'fs'
+        inverseTimeUnit = 'fs^-1'
+        if verbose: print('time unit: fs - energy unit: eV')
+    else:
+        h_red = U.Planck_reduced_ev_ps*1e3 # in meV*ps
+        timeUnit = 'ps'
+        inverseTimeUnit = 'ps^-1'
+        if verbose: print('time unit: ps - energy unit: meV')
+    omega = energy/h_red
     if fwhm is None:
         fwhm = width*(2.*np.sqrt(2.*np.log(2.)))
     else:
         width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
     if verbose :
-        print('width of the pulse',width,'fs')
-        print('fwhm of the pulse',fwhm,'fs')
-    exp_arg = (time-(3.*width+t_start))**2/(2.*width**2)
+        print('period of the oscillations',2.*np.pi/omega,timeUnit)
+        print('width of the pulse',width,timeUnit)
+        print('fwhm of the pulse',fwhm,timeUnit)
+    exp_arg = (time-2*t_start-3.*width)**2/(2.*width**2)
     pulse = amplitude*np.exp(-exp_arg)
     if not envelope_only:
-        omega = energy/h_red
-        pulse *= np.sin(omega*time)
+        pulse *= np.sin(omega*(time-t_start))
     return pulse
 
-def pulseParsFromIntensity(dipole,intensity,width,verbose=True):
+def pulseParametersFromIntensity(dipole, intensity, width = 100, fwhm = None,
+        THz_pulse = False, verbose = True):
     """
     Compute the Rabi coupling frequency and the pulse area in function of the values of the
     transition dipole and of the field intensity.
@@ -98,86 +109,131 @@ def pulseParsFromIntensity(dipole,intensity,width,verbose=True):
             as provided by the :class:YamboDipolesParser class
         intensity (:py:class:`float`) : field intensity in kW/cm^2
         width (:py:class:`float`) : width parameter of the Gaussian pulse (in fs)
+        fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
+            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+        THz_pulse (:py:class:`bool`) : if True expresses the width and the fwhm parameters in ps
         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
 
     Returns:
-        :py:class:`tuple` : a tuple (Omega_r,theta) with the Rabi coupling frequency (in fs^-1)
-            and the pulse area
+        :py:class:`tuple` : a tuple (Omega_r,amplitude_vm,theta) with the Rabi coupling
+            frequency (in fs^-1), the field amplitude (in V/m) and the pulse area
 
     """
     Z0 = U.vacuum_impedence
+    if not THz_pulse:
+        h_red = U.Planck_reduced_ev_ps*1e3 # in eV*fs
+        timeUnit = 'fs'
+        inverseTimeUnit = 'fs^-1'
+        if verbose: print('time unit: fs')
+    else:
+        h_red = U.Planck_reduced_ev_ps # in eV*ps
+        timeUnit = 'ps'
+        inverseTimeUnit = 'ps^-1'
+        if verbose: print('time unit: ps')
+    if fwhm is not None:
+        width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
+        if verbose: print('set width to',width,timeUnit)
     intensity = intensity*1e3*1e4 #W/m^2
-    amplitude = np.sqrt(Z0*intensity) #V/m
-    amplitude = amplitude*U.Bohr_radius #V/a0 in atomic units
+    amplitude_vm = np.sqrt(Z0*intensity) #V/m
+    amplitude = amplitude_vm*U.Bohr_radius #V/a0 in atomic units
     dip_mod = np.linalg.norm(dipole)
-    Omega_r = dip_mod*amplitude*2*np.pi/U.Planck_ev_ps*1e-3 #fs^-1
+    Omega_r = dip_mod*amplitude/h_red
 
     theta = np.sqrt(2*np.pi)*width*Omega_r
     if verbose:
-        print('coupling frequency (THz):',Omega_r*1e3)
+        print('coupling frequency (%s):'%inverseTimeUnit,Omega_r)
+        print('field amplitude (V/m):',amplitude_vm)
         print('pulse area :',theta)
-    return (Omega_r,theta)
+    return (Omega_r,amplitude_vm,theta)
 
-def pulseParsFromTheta(dipole,theta,width,verbose=True):
+def pulseParametersFromTheta(dipole, theta, width = 100, fwhm = None, THz_pulse = False, verbose=True):
     """
-    Compute the field intensity that produce the pulse are given as input.
+    Compute the field intensity and the Rabi coupling that correspond to the pulse area given as input.
 
     Args:
         dipole (:py:class:`array`) : array with the transition dipole (real and imaginary part),
             as provided by the :class:YamboDipolesParser class
         theta : pulse area
         width (:py:class:`float`) : width parameter of the Gaussian pulse (in fs)
+        fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
+            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+        THz_pulse (:py:class:`bool`) : if True expresses the width and the fwhm parameters in ps
         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
 
     Returns:
-        :py:class:`tuple` : a tuple (Omega_r,intensity) with the Raib coupling (in fs^-1)
-            and the field intensity (in kW/cm^2) that corresponds to the pulse area provided in input
+        :py:class:`tuple` : a tuple (Omega_r,amplitude_vm,intensity) with the Rabi coupling (in fs^-1),
+            the field amplitude (in V/m) and the field intensity (in kW/cm^2) that correspond
+            to the pulse area provided in input
 
     """
     Z0 = U.vacuum_impedence
+    if not THz_pulse:
+        h_red = U.Planck_reduced_ev_ps*1e3 # in eV*fs
+        timeUnit = 'fs'
+        inverseTimeUnit = 'fs^-1'
+        if verbose: print('time unit: fs')
+    else:
+        h_red = U.Planck_reduced_ev_ps # in eV*ps
+        timeUnit = 'ps'
+        inverseTimeUnit = 'ps^-1'
+        if verbose: print('time unit: ps')
+    if fwhm is not None:
+        width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
+        if verbose: print('set width to',width,timeUnit)
     dip_mod = np.linalg.norm(dipole)
-    Omega_r = theta/(np.sqrt(2*np.pi)*width) #fs^-1
-    amplitude = Omega_r/(dip_mod*2*np.pi/(U.Planck_ev_ps*1e3)) #V/a0 in atomic units
-    amplitude = amplitude/U.Bohr_radius #V/m
-    intensity = amplitude**2/Z0 #W/m^2
+    Omega_r = theta/(np.sqrt(2*np.pi)*width) #fs^-1 if THz_pulse is False
+    amplitude = Omega_r*h_red/dip_mod #V/a0 in atomic units
+    amplitude_vm = amplitude/U.Bohr_radius #V/m
+    intensity = amplitude_vm**2/Z0 #W/m^2
     intensity = intensity*1e-3*1e-4 #kW/cm^2
     if verbose:
-        print('coupling frequency (THz):',Omega_r*1e3)
+        print('coupling frequency (%s):'%inverseTimeUnit,Omega_r)
+        print('field amplitude (V/m):',amplitude_vm)
         print('field intensity (kW/cm^2) :',intensity)
-    return (Omega_r,intensity)
+    return (Omega_r,amplitude_vm,intensity)
 
-def evalPulseFourierTransform(time, pulse, verbose = True):
+def evalPulseFourierTransform(time, pulse, THz_pulse = False, verbose = True):
     """
     Eval the Fourier transform of the pulse.
-
-    Note:
-        To increase the resolution in the frequency space choose a long time interval
 
     Args:
         time (:py:class:`array`) : array with the values of the time variable (in fs).
         The function assumes that the dt of the array is constant
         pulse (:py:class:`array`) : array with the pulse
+        THz_pulse (:py:class:`bool`) : if True assumes that the time variable is provided in
+            ps and expresses the energy in meV
         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
 
     Returns:
-        :py:class:`tuple` : a tuple (energies,pulseFTmod) with the (positive range)time conjugate
-        variable converted in eV a and the modulus of the FT ot the pulse
+        :py:class:`tuple` : a tuple (energies,pulseFTmod) with the (positive range) time conjugate
+        variable converted in eV (or in meV, depending on the ``THz_pulse`` option) and the modulus of
+        the FT ot the pulse
+
+    Note:
+        To increase the resolution in the frequency space choose a long time interval
 
     """
-    h = U.Planck_ev_ps*1e3
+    if not THz_pulse:
+        h = U.Planck_ev_ps*1e3 # in eV*fs
+        energyUnit = 'eV'
+        if verbose: print('time unit: fs - energy unit: eV')
+    else:
+        h = U.Planck_ev_ps*1e3 # in meV*ps
+        energyUnit = 'meV'
+        if verbose: print('time unit: ps - energy unit: meV')
     dt = time[1]-time[0]
     N = len(time)
     freqs = np.fft.fftfreq(N,d=dt)
     energies = h*freqs[0:int(N/2)]
     if verbose:
         de = energies[1]-energies[0]
-        print('energy resolution',de,'eV')
-        print('maximum energy',energies[-1],'eV')
+        print('energy resolution of the FT:',de,energyUnit)
+        print('maximum energy:',energies[-1],energyUnit)
     pulseFT = np.fft.fft(pulse)[0:int(N/2)]
     pulseFTmod = np.sqrt(pulseFT.real**2+pulseFT.imag**2)
     if verbose: # compute the FWHM of the FT
         M = max(pulseFTmod)
         ind = np.where(pulseFTmod >= 0.5*M)[0]
         fwhm = energies[ind[-1]]-energies[ind[0]]
-        print('FWHM of the FT of the pulse',fwhm,'eV')
+        print('FWHM of the FT of the pulse:',fwhm,energyUnit)
     return (energies,pulseFTmod)

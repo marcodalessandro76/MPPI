@@ -11,7 +11,7 @@ class YamboDipolesParser():
 
     Args:
         file (:py:class:`string`) : string with the name of the database to be parsed
-        verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
+        verbose (:py:class:`boolean`) : define the amount of information provided on terminal
 
     Attributes:
         dip_ir (:py:class:`np.array`): Array with the variable ``DIP_iR`` that contains the position
@@ -41,7 +41,7 @@ class YamboDipolesParser():
         are extracted from the database and stored in the attributes of the object.
 
         Args:
-            verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
+            verbose (:py:class:`boolean`) : define the amount of information provided on terminal
 
         """
         try:
@@ -59,7 +59,7 @@ class YamboDipolesParser():
 
     def get_info(self):
         """
-        Provide information on the atributes of the class
+        Provide information on the attributes of the class
         """
         print('YamboDipolesParser variables structure')
         print('dip_ir shape',self.dip_ir.shape)

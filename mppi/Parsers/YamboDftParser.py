@@ -17,7 +17,7 @@ class YamboDftParser():
 
     Args:
         file (:py:class:`string`) : string with the name of the file to be parsed
-        verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
+        verbose (:py:class:`boolean`) : define the amount of information provided on terminal
 
     Attributes:
         syms : the symmetries of the lattice
@@ -79,7 +79,7 @@ class YamboDftParser():
 
     def get_info(self):
         """
-        Provide information on the atributes of the class
+        Provide information on the attributes of the class
         """
         print('YamboDftParser variables structure')
         print('number of k points',self.nkpoints)

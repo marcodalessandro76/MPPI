@@ -129,7 +129,7 @@ class YamboOutputParser(dict):
 
     """
 
-    def __init__(self,files,verbose=False,extendOut=True):
+    def __init__(self,files,verbose=True,extendOut=True):
         """
         Initialize the data member of the class.
         """

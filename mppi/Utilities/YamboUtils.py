@@ -108,5 +108,5 @@ def get_variable_from_db(ndb_file,var_name):
     """
     from netCDF4 import Dataset as Ds
     db = Ds(ndb_file)
-    var = np.array(db.variables[var_name][0])
+    var = np.array(db.variables[var_name])
     return var
