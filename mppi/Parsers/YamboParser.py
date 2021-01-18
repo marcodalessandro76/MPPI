@@ -4,6 +4,7 @@ This parser aim to deal with the output files, the ``ns.db1`` database written i
 SAVE folder, the ``dipoles`` and all the databases created by yambo in the $jobname
 folder.
 """
+from mppi import Parsers as P
 
 class YamboParser():
     """
@@ -37,22 +38,38 @@ class YamboParser():
                             names of the variables in the :class:`YamboOutputParser`
 
         """
-        from mppi.Parsers import YamboOutputParser
-        from mppi.Parsers import YamboDftParser
-        from mppi.Parsers import YamboDipolesParser
-        from mppi.Parsers import YamboRTGlesserParser
 
         if 'output' in results:
-            self.data = YamboOutputParser(results['output'],verbose=verbose,extendOut=extendOut)
+            self.data = P.YamboOutputParser(results['output'],verbose=verbose,extendOut=extendOut)
         else:
             print('There are no o- files in the %s dictionary. Please check...'%results)
         for key,value in results.items():
             if key == 'dipoles':
-                self.dipoles = YamboDipolesParser(value,verbose=verbose)
+                self.dipoles = P.YamboDipolesParser(value,verbose=verbose)
             if key == 'dft':
-                self.dft = YamboDftParser(value,verbose=verbose)
+                self.dft = P.YamboDftParser(value,verbose=verbose)
             if key == 'RT_G_PAR':
-                self.RTGreen = YamboRTGlesserParser(value,verbose=verbose)
+                self.RTGreen = P.YamboRTGlesserParser(value,verbose=verbose)
+
+    @classmethod
+    def from_path(cls, run_dir, outputPath, dbsPath = None , verbose = True, extendOut = True):
+        """
+        Init the a :class:`YamboParser` instance using the 'o-' files found inside the
+        outputPath, the ``ns.db1`` database in the SAVE folder and the databases found in the dbsPath.
+
+        Args:
+            run_dir (:py:class:`string`) : `run_dir` folder of the calculation
+            outputPath (:py:class:`string`) : folder with the 'o-' files
+            dbsPath (:py:class:`string`) : folder with the ndb databases. If it is
+                None the databases are sought in the outputPath
+            verbose (:py:class:`boolean`) : determine the amount of information provided on terminal
+            extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
+                            names of the variables in the :class:`YamboOutputParser`
+
+        """
+        from mppi.Calculators.YamboCalculator import build_results_dict
+        results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
+        return cls(results,verbose=verbose)
 
     def get_info(self):
         """

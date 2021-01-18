@@ -7,6 +7,82 @@ or by the slurm scheduler.
 from .Runner import Runner
 import os
 
+def get_output_files(outputPath):
+    """
+    Look for the names of the 'o-' file(s) produced by the execution of the code.
+
+    Args:
+        outputPath (:py:class:`string`) : folder with the 'o-*' files
+
+    Return:
+        :py:class:`list` : A list with the names, including the path, of the
+        files 'o-*' produced by the run
+
+    """
+
+    output = []
+    if os.path.isdir(outputPath):
+        for file in os.listdir(outputPath):
+            if 'o-' in file:
+                output.append(os.path.join(outputPath,file))
+    return output
+
+def get_db_files(dbsPath):
+    """
+    Look for the files of tht type ndb.* in the dbsPath
+
+    Return:
+        :py:class:`dict`: A dictionary in which the keys are the extension of the
+            databases found and the values are their names, including the path
+
+    """
+
+    dbs = {}
+    if os.path.isdir(dbsPath):
+        for file in os.listdir(dbsPath):
+            if 'ndb' in file and 'fragment' not in file:
+                key = file.split('.')[-1]
+                dbs[key] = os.path.join(dbsPath,file)
+    return dbs
+
+def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
+    """
+    Return a dictionary with the names of the o- file(s), the `ns.db1` in the
+    SAVE folder and the names of the ndb databases written by yambo in the
+    jobname folder .
+
+    Args:
+        run_dir (:py:class:`string`) : `run_dir` folder of the calculation
+        outputPath (:py:class:`string`) : folder with the 'o-' files
+        dbsPath (:py:class:`string`) : folder with the ndb databases. If it is
+            None the databases are sought in the outputPath
+        verbose (:py:class:`bool`) : set the amount of information provided on terminal
+
+    Return:
+        :py:class:`dict` : the dictionary
+            {'output' : [o-1,o-2,...],'dft':...,'dipoles':..., ....}
+
+    """
+    if dbsPath is None:
+            dbsPath = outputPath
+    results = dict(output=get_output_files(outputPath))
+    if verbose and len(results['output']) == 0:
+        print("""
+        There are no o-* files.
+        Maybe you have performed a ypp computation or wait_end_run and/or
+        the dry_run option are active?
+        Otherwise a possible error has occured during the computation
+        """)
+    # add the dft database from the SAVE folder
+    dft = os.path.join(run_dir,'SAVE','ns.db1')
+    if os.path.isfile(dft):
+        results['dft'] = dft
+    else:
+        if verbose: print('ns.db1 database not found in SAVE folder')
+    # add the dbs found in the jobname folder
+    results.update(get_db_files(dbsPath))
+    return results
+
 class YamboCalculator(Runner):
     """
     Perform a Yambo calculation. Computations are managed by a scheduler that,
@@ -121,8 +197,9 @@ class YamboCalculator(Runner):
 
     def post_processing(self):
         """
-        Return a dictionary with the names of the o- file(s) and the names of the
-        ndb databases written by yambo in the jobname folder .
+        Return a dictionary with the names of the o- file(s), the `ns.db1` in the
+        SAVE folder and the names of the ndb databases written by yambo in the
+        jobname folder .
 
         Return:
             :py:class:`dict` : the dictionary
@@ -130,28 +207,13 @@ class YamboCalculator(Runner):
 
         """
         run_dir = self.run_options.get('run_dir', '.')
+        name = self.run_options.get('name')
+        outputPath = os.path.join(run_dir,name)
+        jobname = self.run_options.get('jobname',name)
+        dbsPath = os.path.join(run_dir,jobname)
         verbose = self.run_options.get('verbose')
 
-        results = {}
-        # add the output files
-        results['output'] = self._get_output_files()
-        if verbose and len(self._get_output_files()) == 0:
-            print("""
-            There are no o-* files.
-            Maybe you have performed a ypp computation or wait_end_run and/or
-            the dry_run option are active?
-            Otherwise a possible error has occured during the computation
-            """)
-        # add the dft database from the SAVE folder
-        dft = os.path.join(run_dir,'SAVE','ns.db1')
-        if os.path.isfile(dft):
-            results['dft'] = dft
-        else:
-            if verbose: print('ns.db1 database not found in SAVE folder')
-        # add the dbs found in the jobname folder
-        results.update(self._get_db_files())
-
-        return results
+        return build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
 
     def is_to_run(self):
         """
@@ -164,12 +226,13 @@ class YamboCalculator(Runner):
         skip = self.run_options.get('skip')
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name')
+        outputPath = os.path.join(run_dir,name)
         verbose = self.run_options.get('verbose')
 
         if not skip:
             return True
         else:
-            if len(self._get_output_files()) > 0:
+            if len(get_output_files(outputPath)) > 0:
                 if verbose: print('Skip the run of',name)
                 return False
             else:
@@ -343,48 +406,6 @@ class YamboCalculator(Runner):
                     else: is_ended = False
 
         return is_ended
-
-    def _get_output_files(self):
-        """
-        Look for the names of the 'o-' file(s) produced by the execution of the code.
-
-        Return:
-            :py:class:`list`: A list with the names, including the path, of the
-            files 'o-*' produced by the run
-        """
-        run_dir = self.run_options.get('run_dir', '.')
-        name = self.run_options.get('name')
-        out_dir = os.path.join(run_dir,name)
-
-        output = []
-        if os.path.isdir(out_dir):
-            for file in os.listdir(out_dir):
-                if 'o-' in file:
-                    output.append(os.path.join(out_dir,file))
-        return output
-
-    def _get_db_files(self):
-        """
-        Look for the files of tht type ndb.* in the jobname folder
-
-        Return:
-            :py:class:`dict`: A dictionary in which the keys are the extension of the
-                databases found and the values are their names, including the path
-
-        """
-        run_dir = self.run_options.get('run_dir', '.')
-        name = self.run_options.get('name')
-        jobname = self.run_options.get('jobname',name)
-        dbs_dir = os.path.join(run_dir,jobname)
-
-        dbs = {}
-        if os.path.isdir(dbs_dir):
-            for file in os.listdir(dbs_dir):
-                if 'ndb' in file and 'fragment' not in file:
-                    key = file.split('.')[-1]
-                    dbs[key] = os.path.join(dbs_dir,file)
-        return dbs
-
 
     def _clean_run_dir(self):
         """

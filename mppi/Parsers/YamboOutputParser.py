@@ -143,7 +143,7 @@ class YamboOutputParser(dict):
     @classmethod
     def from_path(cls,path,verbose = False, extendOut = True):
         """
-        Init the a YamboParser instance using all the 'o-' files found inside the path.
+        Init the a :class:`YamboOutputParser` instance using all the 'o-' files found inside the path.
 
         Args:
             path (:py:class:`string`): name of the folder that contains the 'o-' files

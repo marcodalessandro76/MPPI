@@ -11,12 +11,13 @@
 - Complete the PwParser and YamboDftParser classes with add the expansion of the k points and the computation of the weigths.
   We can use the attribute weiights in the PwParser for a check of the results.
 
-- Complete the YamboDipolesParser class. Check the precise definition of Dip_iR variable (is i*r?)
-
 - Study the getFermi method of electronsdb of YamboPy. It can be an easy addon to the fermi method of PwParser.
 
 - Improve the skip in the YamboCalculator to manage also the skip of the ypp computation. Is it convenient to use the
   presence of the folder $name as the criterion to skip the calculation?
+
+- Add a from_path method in the YamboParser class to perform the parsing of the output files and database without
+  using the input of the YamboCalculator 
 
 ## FUTURE DEVELOPMENT
 

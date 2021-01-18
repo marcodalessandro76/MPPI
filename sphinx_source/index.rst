@@ -79,7 +79,8 @@ Organize runs and analyze output in a dataset
 .. toctree:: datasets
 .. toctree:: postProcessing
 
-The Utilities module collects some useful functions and classes. The module is organized in several files.
+The Utilities module collects some useful tools like the managment of the Dos, the study of the band structure and the generation of
+gaussian pulses. Moreover the module contains useful tools to ease the computations. The module is organized in several files.
 
 .. toctree:: constants.rst
 .. toctree:: attributeDict.rst

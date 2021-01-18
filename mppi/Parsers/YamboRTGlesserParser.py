@@ -78,7 +78,6 @@ class YamboRTGlesserParser():
                 The structure of the array is [time,kpoint,band1,band2]
 
         """
-        # define the density matrix in the conduction sector as -i*G_<
         dm = - 1j*self.Gless[slice(first_time,last_time),slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),0] + \
             self.Gless[slice(first_time,last_time),slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),1]
         return dm
