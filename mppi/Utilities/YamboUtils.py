@@ -64,7 +64,7 @@ def make_FixSymm(run_dir,polarization='linear',Efield1=[1.,0.,0.],Efield2=[0.,1.
     """
     Perform the fixSymm procedure to remove the symmetries broken by the electric field.
     The procedure creates the FixSymm folder into run_dir and run yambo_rt into the FixSymm to generate the r_setup.
-    If a FixSymm folder is already present in the run_dir no operations are performed.
+    If a SAVE folder is already present in the run_dir/FixSymm path no operations are performed.
 
     Args:
         run_dir (:py:class:`string`) : folder with the SAVE directory
@@ -75,9 +75,9 @@ def make_FixSymm(run_dir,polarization='linear',Efield1=[1.,0.,0.],Efield2=[0.,1.
     """
     from mppi import InputFiles as I, Calculators as C
     fixsymm_dir = os.path.join(run_dir,'FixSymm')
-    if not os.path.isdir(fixsymm_dir):
+    if not os.path.isdir(os.path.join(fixsymm_dir,'SAVE')):
         print('Perform the fixSymm in the folder %s'%run_dir)
-        fixSymm_inp = I.YamboInput('ypp -y',folder=run_dir)
+        fixSymm_inp = I.YamboInput('ypp -y',folder=run_dir,filename='FixSymm.in')
         if removeTimeReversal:
             fixSymm_inp.removeTimeReversal()
         if polarization == 'circular':
@@ -86,13 +86,13 @@ def make_FixSymm(run_dir,polarization='linear',Efield1=[1.,0.,0.],Efield2=[0.,1.
             fixSymm_inp.set_ypp_extFields(Efield1=Efield1)
         else:
             print('Specify a correct polarization for the field')
-        code = C.YamboCalculator(omp=1,mpi=1,executable='ypp',verbose=False)
+        code = C.YamboCalculator(omp=1,mpi=1,executable='ypp',verbose=True)
         code.run(input=fixSymm_inp,name='FixSymm',run_dir=run_dir)
         # build the real-time r_setup
         command = 'cd %s; OMP_NUM_THREADS=1 yambo_rt'%fixsymm_dir
         os.system(command)
     else:
-        print('FixSymm folder %s already found. No operations performed.'%fixsymm_dir)
+        print('SAVE folder already found in %s. No operations performed.'%fixsymm_dir)
 
 
 def get_variable_from_db(ndb_file,var_name):
