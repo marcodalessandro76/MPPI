@@ -1,8 +1,9 @@
-MPPI Tutorials
-==============
+MPPI notebook section
+=====================
 
 * Specific tutorials that explain the basic usage of the various classes of the package
- .. toctree::
+
+  .. toctree::
    :maxdepth: 1
 
    tutorials/Tutorial_PwInput.ipynb
@@ -20,3 +21,10 @@ MPPI Tutorials
 
    tutorials/Analysis_BandStructure.ipynb
    tutorials/Analysis_Dos.ipynb
+
+* Notebooks that explain the physics of the Models section
+
+  .. toctree::
+    :maxdepth: 1
+
+    tutorials/Model_TLS_optical_absorption.ipynb

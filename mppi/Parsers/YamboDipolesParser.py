@@ -70,7 +70,7 @@ class YamboDipolesParser():
         """
         Get the matrix element <band_l|r[cart]|band_r> of the position operator.
         The `i` factor in the definition of the dip_ir attribute produces a flip
-        of the components (with a change of sign).
+        of the real and imaginary components (with a change of sign).
 
         Args:
             kpoint (py:class:`int`) : kpoint
@@ -79,8 +79,9 @@ class YamboDipolesParser():
             cart (py:class:`int`)   : cartesian component of the dipole operator
 
         Returns:
-            :py:class:`array` : array with the real and imaginary part of the matrix element
+            :py:class:`float` : complex float with the real and imaginary part of the matrix element
 
         """
         ir = self.dip_ir[kpoint][band_l][band_r][cart]
-        return np.array([ir[1],-ir[0]])
+        return ir[1] -1j*ir[0]
+        #return np.array([ir[1],-ir[0]])

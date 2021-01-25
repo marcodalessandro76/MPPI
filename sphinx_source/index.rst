@@ -88,17 +88,24 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
 .. toctree:: yamboUtils.rst
 .. toctree:: bandStructure.rst
 .. toctree:: dos.rst
-.. toctree:: gaussianPulse.rst
 
-MPPI Tutorials page
--------------------
+There is also a *Model* module that collects tools to perform analysis based on some (analytical or numerical)
+modeling of the systems. Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic
+pulse and *TwoLevelSystems*.
+
+.. toctree:: gaussianPulse.rst
+.. toctree:: twoLevelSystems.rst
+
+
+MPPI notebook section
+---------------------
 
 In this page you find some tutorials and examples that explain the usage of the package.
 
 .. toctree::
    :maxdepth: 1
 
-   tutorials
+   notebooks
 
 
 Indices and tables

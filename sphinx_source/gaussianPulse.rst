@@ -1,7 +1,7 @@
 GaussianPulse
 -------------
 
-.. automodule:: mppi.Utilities.GaussianPulse
+.. automodule:: mppi.Models.GaussianPulse
     :members:
     :undoc-members:
     :show-inheritance:
