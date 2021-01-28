@@ -38,7 +38,6 @@ class YamboParser():
                             names of the variables in the :class:`YamboOutputParser`
 
         """
-
         if 'output' in results:
             self.data = P.YamboOutputParser(results['output'],verbose=verbose,extendOut=extendOut)
         else:

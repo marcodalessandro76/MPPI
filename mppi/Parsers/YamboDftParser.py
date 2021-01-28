@@ -8,7 +8,7 @@ from netCDF4 import Dataset
 import numpy as np
 import os
 
-from mppi.Utilities import HaToeV
+from mppi.Utilities.Constants import HaToeV
 from mppi.Parsers import ParsersUtils as U
 
 class YamboDftParser():

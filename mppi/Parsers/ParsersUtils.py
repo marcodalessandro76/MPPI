@@ -6,7 +6,7 @@ cartesian to crystal units.
 """
 
 import numpy as np
-from mppi.Utilities import HaToeV
+from mppi.Utilities.Constants import HaToeV
 
 ################################################################################
 #

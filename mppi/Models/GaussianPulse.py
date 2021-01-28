@@ -47,10 +47,10 @@ functionality is emplemented in the module.
 
 """
 import numpy as np
-from mppi import Utilities as U
+from mppi.Utilities import Constants as C
 
 def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_start = 0,
-        envelope_only = False, THz_pulse = False, verbose = True, **kwargs):
+        envelope_only = False, THz_pulse = False, verbose = True):
     """
     Build a Gaussian pulse.
 
@@ -77,12 +77,12 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
 
     """
     if not THz_pulse:
-        h_red = U.Planck_reduced_ev_ps*1e3 # in eV*fs
+        h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
         timeUnit = 'fs'
         inverseTimeUnit = 'fs^-1'
         if verbose: print('time unit: fs - energy unit: eV')
     else:
-        h_red = U.Planck_reduced_ev_ps*1e3 # in meV*ps
+        h_red = C.Planck_reduced_ev_ps*1e3 # in meV*ps
         timeUnit = 'ps'
         inverseTimeUnit = 'ps^-1'
         if verbose: print('time unit: ps - energy unit: meV')
@@ -103,6 +103,73 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
     if not envelope_only:
         pulse *= np.sin(omega*t)
     return pulse
+
+def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, width1 = 100, width2 = 100,
+                        fwhm1 = None, fwhm2 = None, t_start1 = 0, t_start2 = 600, envelope_only = False,
+                        THz_pulse = False, verbose = True):
+    """
+    Build a sine oscillating pulse with e double Gaussian envelope.
+
+    Args:
+        time : the value of the time variable (in fs), it can be a single :py:class:`float`
+            or an :py:class:`array`
+        energy (:py:class:`float`) : the energy of the pulse (in eV)
+        amplitude1 (:py:class:`float`) : the amplitude of the first pulse (it can be a complex number)
+        amplitude2 (:py:class:`float`) : the amplitude of the second pulse (it can be a complex number)
+        width1 (:py:class:`float`) : the width parameter of the first Gaussian (in fs)
+        fwhm1 (:py:class:`float`) : if not None set the FWHM of the first pulse (in fs). The width1
+            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+        width2 (:py:class:`float`) : the width parameter of the second Gaussian (in fs)
+        fwhm2 (:py:class:`float`) : if not None set the FWHM of the second pulse (in fs). The width2
+            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+        t_start1 (:py:class:`float`) : time shift for the origin of the first pulse (in fs)
+        t_start2 (:py:class:`float`) : time shift for the origin of the second pulse (in fs)
+        envelope_only (:py:class:`bool`) : if True the sinusodial oscillating factor
+            is not considered
+        THz_pulse (:py:class:`bool`) : if True expresses the energy in meV and the
+            time variable and the width parameter in ps
+        verbose (:py:class:`bool`) : defines the amount of information provided
+            on terminal
+
+    Returns:
+        :py:class:`float` or :py:class:`array` (depending on the time provided as input)
+        with the value of the double Gaussian pulse. The pulse can be complex (depending on the
+        amplitude provided as input)
+
+    """
+    if not THz_pulse:
+        h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
+        timeUnit = 'fs'
+        inverseTimeUnit = 'fs^-1'
+        if verbose: print('time unit: fs - energy unit: eV')
+    else:
+        h_red = C.Planck_reduced_ev_ps*1e3 # in meV*ps
+        timeUnit = 'ps'
+        inverseTimeUnit = 'ps^-1'
+        if verbose: print('time unit: ps - energy unit: meV')
+    omega = energy/h_red
+    if fwhm1 is None:
+        fwhm1 = width1*(2.*np.sqrt(2.*np.log(2.)))
+    else:
+        width1 = fwhm1/(2.*np.sqrt(2.*np.log(2.)))
+    if fwhm2 is None:
+        fwhm2 = width2*(2.*np.sqrt(2.*np.log(2.)))
+    else:
+        width2 = fwhm2/(2.*np.sqrt(2.*np.log(2.)))
+    if verbose :
+        print('period of the oscillations',2.*np.pi/omega,timeUnit)
+        print('width of the first pulse',width1,timeUnit)
+        print('fwhm of the first pulse',fwhm1,timeUnit)
+        print('width of the second pulse',width2,timeUnit)
+        print('fwhm of the second pulse',fwhm2,timeUnit)
+    pulse1 = gaussianPulse(time, energy=energy, amplitude=amplitude1,width=width1,
+            t_start= t_start1,envelope_only=True,THz_pulse=THz_pulse,verbose=False)
+    pulse2 = gaussianPulse(time, energy=energy, amplitude=amplitude2,width=width2,
+            t_start= t_start2,envelope_only=True,THz_pulse=THz_pulse,verbose=False)
+    doublePulse = pulse1 + pulse2
+    if not envelope_only:
+        doublePulse *= np.sin(omega*t)
+    return doublePulse
 
 def pulseParametersFromIntensity(dipole, intensity, width = 100, fwhm = None,
         THz_pulse = False, verbose = True):
@@ -125,14 +192,14 @@ def pulseParametersFromIntensity(dipole, intensity, width = 100, fwhm = None,
             the field amplitude (in V/m) and the pulse area
 
     """
-    Z0 = U.vacuum_impedence
+    Z0 = C.vacuum_impedence
     if not THz_pulse:
-        h_red = U.Planck_reduced_ev_ps*1e3 # in eV*fs
+        h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
         timeUnit = 'fs'
         inverseTimeUnit = 'fs^-1'
         if verbose: print('time unit: fs')
     else:
-        h_red = U.Planck_reduced_ev_ps # in eV*ps
+        h_red = C.Planck_reduced_ev_ps # in eV*ps
         timeUnit = 'ps'
         inverseTimeUnit = 'ps^-1'
         if verbose: print('time unit: ps')
@@ -141,7 +208,7 @@ def pulseParametersFromIntensity(dipole, intensity, width = 100, fwhm = None,
         if verbose: print('set width to',width,timeUnit)
     intensity = intensity*1e3*1e4 #W/m^2
     amplitude_vm = np.sqrt(Z0*intensity) #V/m
-    amplitude = amplitude_vm*U.Bohr_radius #V/a0 in atomic units
+    amplitude = amplitude_vm*C.Bohr_radius #V/a0 in atomic units
     Omega0 = dipole*amplitude/h_red
 
     theta = np.sqrt(2*np.pi)*width*abs(Omega0)
@@ -172,14 +239,14 @@ def pulseParametersFromTheta(dipole, theta, width = 100, fwhm = None, THz_pulse 
             the field amplitude (in V/m) and the field intensity (in kW/cm^2)
 
     """
-    Z0 = U.vacuum_impedence
+    Z0 = C.vacuum_impedence
     if not THz_pulse:
-        h_red = U.Planck_reduced_ev_ps*1e3 # in eV*fs
+        h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
         timeUnit = 'fs'
         inverseTimeUnit = 'fs^-1'
         if verbose: print('time unit: fs')
     else:
-        h_red = U.Planck_reduced_ev_ps # in eV*ps
+        h_red = C.Planck_reduced_ev_ps # in eV*ps
         timeUnit = 'ps'
         inverseTimeUnit = 'ps^-1'
         if verbose: print('time unit: ps')
@@ -188,7 +255,7 @@ def pulseParametersFromTheta(dipole, theta, width = 100, fwhm = None, THz_pulse 
         if verbose: print('set width to',width,timeUnit)
     Omega0_abs = theta/(np.sqrt(2*np.pi)*width) #fs^-1 if THz_pulse is False
     amplitude = Omega0_abs*h_red/abs(dipole) #V/a0 in atomic units
-    amplitude_vm = amplitude/U.Bohr_radius #V/m
+    amplitude_vm = amplitude/C.Bohr_radius #V/m
     intensity = amplitude_vm**2/Z0 #W/m^2
     intensity = intensity*1e-3*1e-4 #kW/cm^2
     Omega0 = dipole*amplitude/h_red
@@ -222,11 +289,11 @@ def evalPulseFourierTransform(time, pulse, THz_pulse = False, verbose = True):
 
     """
     if not THz_pulse:
-        h = U.Planck_ev_ps*1e3 # in eV*fs
+        h = C.Planck_ev_ps*1e3 # in eV*fs
         energyUnit = 'eV'
         if verbose: print('time unit: fs - energy unit: eV')
     else:
-        h = U.Planck_ev_ps*1e3 # in meV*ps
+        h = C.Planck_ev_ps*1e3 # in meV*ps
         energyUnit = 'meV'
         if verbose: print('time unit: ps - energy unit: meV')
     dt = time[1]-time[0]

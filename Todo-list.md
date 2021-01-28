@@ -16,8 +16,12 @@
 - Improve the skip in the YamboCalculator to manage also the skip of the ypp computation. Is it convenient to use the
   presence of the folder $name as the criterion to skip the calculation?
 
-- Add a from_path method in the YamboParser class to perform the parsing of the output files and database without
-  using the input of the YamboCalculator 
+- Add an option in the build_SAVE function (and also in make_FixSymm?) that remove the SAVE folder if found.
+
+- Update the tutorial on the parsing of the green function
+
+
+
 
 ## FUTURE DEVELOPMENT
 

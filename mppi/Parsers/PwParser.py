@@ -3,7 +3,7 @@ Class to perform the parsing of a QuantumESPRESSO XML file. Makes usage of the
 data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 """
 
-from mppi.Utilities import HaToeV
+from mppi.Utilities.Constants import HaToeV
 from mppi.Parsers import ParsersUtils as U
 
 class PwParser():

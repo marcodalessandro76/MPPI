@@ -12,6 +12,7 @@ implementation of the physics of the TLS are described in this notebook_.
 
 """
 
+import numpy as np
 from scipy.integrate import odeint
 
 def solveBlochEq_Xbasis(x0, time, Omega_abs, delta = 0):
@@ -36,10 +37,10 @@ def solveBlochEq_Xbasis(x0, time, Omega_abs, delta = 0):
     def Bloch_Eq(x, t, delta, Omega):
         dxdt = [delta*x[1],-delta*x[0]-Omega(t)*x[2],Omega(t)*x[1]]
         return dxdt
-    x = odeint(Bloch_Eq, x0, time, args=(delta, Omega))
+    x = odeint(Bloch_Eq, x0, time, args=(delta, Omega_abs))
     return x.transpose()
 
-def convertToXbasis(uprime, Omega0, invert = False):
+def convertToXbasis(uprime, mu, invert = False):
     """
     Convert the Bloch vector u'_i components to the x_i basis.
     If the ``invert`` argument is True perform the inverse change of basis (from the x_i to the u'_i).
@@ -47,7 +48,7 @@ def convertToXbasis(uprime, Omega0, invert = False):
     Args:
         uprime (:py:class:`array`) : array with the Bloch vector. The function assumes that the shape of
             the array is (3,:) where the second index runs over time
-        Omega0 (:py:class:`float`) : value of the complex Rabi coupling
+        mu (:py:class:`float`) : value of the complex dipole
         invert (:py:class:`bool`) : if True perform the inverse transformation
 
     Returns:
@@ -55,16 +56,16 @@ def convertToXbasis(uprime, Omega0, invert = False):
 
     """
     x = np.zeros([3,len(uprime[0])])
-    R_real = Omega0.real/abs(Omega0)
-    R_imag = Omega0.imag/abs(Omega0)
+    cosphi = mu.real/abs(mu)
+    sinphi = mu.imag/abs(mu)
     if invert: alpha = -1
     else: alpha = 1
-    x[0,:] = R_imag*uprime[0,:] + alpha*R_real*uprime[1,:]
-    x[1,:] = - alpha*R_real*uprime[0,:] + R_imag*uprime[1,:]
+    x[0,:] = sinphi*uprime[0,:] + alpha*cosphi*uprime[1,:]
+    x[1,:] = - alpha*cosphi*uprime[0,:] + sinphi*uprime[1,:]
     x[2,:] = uprime[2,:]
     return x
 
-def solveBlochEq(uprime0, time, Omega_abs, Omega0 = 1j, delta = 0):
+def solveBlochEq(uprime0, time, Omega_abs, mu = 1j, delta = 0.):
     """
     Solve the Bloch equations in the rotating frame.
 
@@ -74,7 +75,7 @@ def solveBlochEq(uprime0, time, Omega_abs, Omega0 = 1j, delta = 0):
         Omega_abs (`function`) : function with the module of the time dependent Rabi
             coupling expressed in the rotating frame, so only the envelope of the pulse
             has to be provided
-        Omega0 (:py:class:`float`) : value of the complex Rabi coupling. It used to perform
+        mu (:py:class:`float`) : value of the complex dipole. It used to perform
             the transformation from the u'_i to the x_i (and its inverse after the equations)
             are solved. If the default value is used the solution is identical in both the
             formulation
@@ -85,9 +86,9 @@ def solveBlochEq(uprime0, time, Omega_abs, Omega0 = 1j, delta = 0):
     """
     bloch0 = np.zeros([3,1]) # add a fake time index to use the convertToXbasis function
     bloch0[:,0] = uprime0
-    x0 = convertToXbasis(bloch0,Omega0)[:,0]
+    x0 = convertToXbasis(bloch0,mu)[:,0]
     x = solveBlochEq_Xbasis(x0,time,Omega_abs,delta=delta)
-    uprime = convertToXbasis(x,Omega0,invert=True)
+    uprime = convertToXbasis(x,mu,invert=True)
     return uprime
 
 def convertToRotatingFrame(omega, time, u, invert = False):

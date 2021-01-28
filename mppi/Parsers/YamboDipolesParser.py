@@ -17,9 +17,13 @@ class YamboDipolesParser():
         dip_ir (:py:class:`np.array`): Array with the variable ``DIP_iR`` that contains the position
             dipoles times the imaginary unit. The structure of the array is
             [kpoints][full_bands][empty_bands][cartesian_component][real and imaginary part]
-        dip_v (:py:class:`np.array`): Array with the variable ``DIP_v`` that contains the matrix
-            elements of the velocity operator. The structure of the array
+        dip_p (:py:class:`np.array`): Array with the variable ``DIP_p`` that contains the matrix
+            elements of the momentum operator. The structure of the array
             is [kpoints][full_bands][empty_bands][cartesian_component][real and imaginary part]
+        dip_v (:py:class:`np.array`): Array with the variable ``DIP_v`` that contains the matrix
+            elements of the velocity operator (commutator of x operator with the Hamiltonian).
+            The structure of the array is
+            [kpoints][full_bands][empty_bands][cartesian_component][real and imaginary part]
         dip_spin (:py:class:`np.array`): Array with the variable ``DIP_spin`` that contains the
             matrix elements of the spin operator. The structure of the array
             is [kpoints][full_bands][empty_bands][cartesian_component][real and imaginary part]
@@ -50,6 +54,7 @@ class YamboDipolesParser():
             raise IOError("Error opening file %s in YamboDipolesParser"%self.filename)
 
         self.dip_ir = np.array(database.variables['DIP_iR'][0])
+        self.dip_p = np.array(database.variables['DIP_P'][0])
         self.dip_v = np.array(database.variables['DIP_v'][0])
         try:
             self.dip_spin = np.array(database.variables['DIP_spin'][0])
@@ -63,6 +68,7 @@ class YamboDipolesParser():
         """
         print('YamboDipolesParser variables structure')
         print('dip_ir shape',self.dip_ir.shape)
+        print('dip_p shape',self.dip_v.shape)
         print('dip_v shape',self.dip_v.shape)
         print('dip_spin shape',self.dip_spin.shape)
 
