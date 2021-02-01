@@ -1,7 +1,8 @@
 
 ## TODO
 
-- Check the compilation of the ReadTheDocs documentation.
+- Check the compilation of the ReadTheDocs documentation. It seems that the are problems in the TLS doc
+  and in the associated notebook.
 
 - Add the spin to the Dos class and add a from_Yambo method in the Dos class, this requires that the weights of the
   k points are computed by the YamboDftParser
@@ -16,9 +17,12 @@
 - Improve the skip in the YamboCalculator to manage also the skip of the ypp computation. Is it convenient to use the
   presence of the folder $name as the criterion to skip the calculation?
 
-- Add an option in the build_SAVE function (and also in make_FixSymm?) that remove the SAVE folder if found.
+- Check that the cleaning procedure in the buildSAVE and in the make_FixSymm function works correctly.
+  Do I need to change directory before removing the files?
 
-- Update the tutorial on the parsing of the green function
+- Update the tutorial on the parsing of the green function.
+
+- Add a tutorial for the GaussianPulse class.
 
 
 

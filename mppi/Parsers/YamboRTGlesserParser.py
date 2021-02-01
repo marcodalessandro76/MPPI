@@ -10,9 +10,9 @@ def buildBlochVectors(dm):
     2x2 density matrix provided as input. Bloch vectors are computed according to the relation
 
     .. math::
-        u_1(t,k) = 2Re(\\rho_{b1,b1+1,k}(t)) \, , \\
-        u_2(t,k) = -2Im(\\rho_{b1,b1+1,k}(t)) \, , \\
-        u_3(t,k) = \\rho_{b1+1,b1+1,k}(t) - \\rho_{b1,b1,k}(t)
+        u_1(t,k) = 2Re(\\rho_{0,1,k}(t)) \, , \\
+        u_2(t,k) = -2Im(\\rho_{0,1,k}(t)) \, , \\
+        u_3(t,k) = \\rho_{1,1,k}(t) - \\rho_{0,0,k}(t)
 
     Note that the definition of :math:`u_3` respects the condition `excited state occupation` minus
     `ground state occupation` (the index is inverted with respect to the TLS where 1 is excited state

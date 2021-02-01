@@ -167,6 +167,7 @@ def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, widt
     pulse2 = gaussianPulse(time, energy=energy, amplitude=amplitude2,width=width2,
             t_start= t_start2,envelope_only=True,THz_pulse=THz_pulse,verbose=False)
     doublePulse = pulse1 + pulse2
+    t = time-t_start1
     if not envelope_only:
         doublePulse *= np.sin(omega*t)
     return doublePulse
