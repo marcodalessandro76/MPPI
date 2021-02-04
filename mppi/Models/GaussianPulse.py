@@ -24,27 +24,6 @@ relation
 
    FWHM = 2 w \sqrt{2ln(2)}
 
-The Gaussian pulse contributes to the interaction Hamiltonian :math:`H_I` through the
-dipole interaction. The amplitude parameter of :math:`H_I` is expressed by the
-Rabi coupling
-
-.. math::
-   :label: rabi_coupl
-
-   \Omega_0 = \\frac{Ad}{\hbar}
-
-where `d` is the value of the dipole parallel to the field. The Rabi coupling
-determines the :math:`\\theta` parameter of the field, that represents the `area`
-of the envelope of the pulse
-
-.. math::
-    \\theta = \int_{-\infty}^{\infty}\Omega_0 e^{-t^2/2w^2} = \sqrt{2\pi}w\Omega_r
-
-According to the physics of the optical obsorption in the two level systems, it is
-useful to determine the value of the Rabi coupling for which the :math:`\\theta`
-parameter has some specific values, like :math:`\pi` or :math:`\pi/2`. This
-functionality is emplemented in the module.
-
 """
 import numpy as np
 from mppi.Utilities import Constants as C
@@ -172,101 +151,101 @@ def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, widt
         doublePulse *= np.sin(omega*t)
     return doublePulse
 
-def pulseParametersFromIntensity(dipole, intensity, width = 100, fwhm = None,
-        THz_pulse = False, verbose = True):
-    """
-    Compute the Rabi coupling frequency and the pulse area in function of the values of the
-    transition dipole and of the field intensity.
+# def pulseParametersFromIntensity(dipole, intensity, width = 100, fwhm = None,
+#         THz_pulse = False, verbose = True):
+#     """
+#     Compute the Rabi coupling frequency and the pulse area in function of the values of the
+#     transition dipole and of the field intensity.
+#
+#     Args:
+#         dipole (:py:class:`array`) : array with the transition dipole (real and imaginary part),
+#             as provided by the :class:YamboDipolesParser class
+#         intensity (:py:class:`float`) : field intensity in kW/cm^2
+#         width (:py:class:`float`) : width parameter of the Gaussian pulse (in fs)
+#         fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
+#             is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+#         THz_pulse (:py:class:`bool`) : if True expresses the width and the fwhm parameters in ps
+#         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
+#
+#     Return:
+#         :py:class:`dict` : a dictionay withe the Rabi coupling (real part, imaginary part and module),
+#             the field amplitude (in V/m) and the pulse area
+#
+#     """
+#     Z0 = C.vacuum_impedence
+#     if not THz_pulse:
+#         h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
+#         timeUnit = 'fs'
+#         inverseTimeUnit = 'fs^-1'
+#         if verbose: print('time unit: fs')
+#     else:
+#         h_red = C.Planck_reduced_ev_ps # in eV*ps
+#         timeUnit = 'ps'
+#         inverseTimeUnit = 'ps^-1'
+#         if verbose: print('time unit: ps')
+#     if fwhm is not None:
+#         width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
+#         if verbose: print('set width to',width,timeUnit)
+#     intensity = intensity*1e3*1e4 #W/m^2
+#     amplitude_vm = np.sqrt(Z0*intensity) #V/m
+#     amplitude = amplitude_vm*C.Bohr_radius #V/a0 in atomic units
+#     Omega0 = dipole*amplitude/h_red
+#
+#     theta = np.sqrt(2*np.pi)*width*abs(Omega0)
+#     if verbose:
+#         print('Rabi coupling (%s):'%inverseTimeUnit,Omega0)
+#         print('Rabi coupling (module) (%s):'%inverseTimeUnit,abs(Omega0))
+#         print('field amplitude (V/m):',amplitude_vm)
+#         print('pulse area :',theta)
+#     return dict(Omega0=Omega0,Omega0_abs=abs(Omega0),field_amplitude=amplitude_vm,
+#                 theta=theta)
 
-    Args:
-        dipole (:py:class:`array`) : array with the transition dipole (real and imaginary part),
-            as provided by the :class:YamboDipolesParser class
-        intensity (:py:class:`float`) : field intensity in kW/cm^2
-        width (:py:class:`float`) : width parameter of the Gaussian pulse (in fs)
-        fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
-            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
-        THz_pulse (:py:class:`bool`) : if True expresses the width and the fwhm parameters in ps
-        verbose (:py:class:`bool`) : sets the amount of information provided on terminal
-
-    Return:
-        :py:class:`dict` : a dictionay withe the Rabi coupling (real part, imaginary part and module),
-            the field amplitude (in V/m) and the pulse area
-
-    """
-    Z0 = C.vacuum_impedence
-    if not THz_pulse:
-        h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
-        timeUnit = 'fs'
-        inverseTimeUnit = 'fs^-1'
-        if verbose: print('time unit: fs')
-    else:
-        h_red = C.Planck_reduced_ev_ps # in eV*ps
-        timeUnit = 'ps'
-        inverseTimeUnit = 'ps^-1'
-        if verbose: print('time unit: ps')
-    if fwhm is not None:
-        width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
-        if verbose: print('set width to',width,timeUnit)
-    intensity = intensity*1e3*1e4 #W/m^2
-    amplitude_vm = np.sqrt(Z0*intensity) #V/m
-    amplitude = amplitude_vm*C.Bohr_radius #V/a0 in atomic units
-    Omega0 = dipole*amplitude/h_red
-
-    theta = np.sqrt(2*np.pi)*width*abs(Omega0)
-    if verbose:
-        print('Rabi coupling (%s):'%inverseTimeUnit,Omega0)
-        print('Rabi coupling (module) (%s):'%inverseTimeUnit,abs(Omega0))
-        print('field amplitude (V/m):',amplitude_vm)
-        print('pulse area :',theta)
-    return dict(Omega0=Omega0,Omega0_abs=abs(Omega0),field_amplitude=amplitude_vm,
-                theta=theta)
-
-def pulseParametersFromTheta(dipole, theta, width = 100, fwhm = None, THz_pulse = False, verbose=True):
-    """
-    Compute the field intensity and the Rabi coupling that correspond to the pulse area given as input.
-
-    Args:
-        dipole (:py:class:`array`) : array with the transition dipole (real and imaginary part),
-            as provided by the :class:YamboDipolesParser class
-        theta : pulse area
-        width (:py:class:`float`) : width parameter of the Gaussian pulse (in fs)
-        fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
-            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
-        THz_pulse (:py:class:`bool`) : if True expresses the width and the fwhm parameters in ps
-        verbose (:py:class:`bool`) : sets the amount of information provided on terminal
-
-    Returns:
-        :py:class:`dict` : a dictionay withe the Rabi coupling (real part, imaginary part and module),
-            the field amplitude (in V/m) and the field intensity (in kW/cm^2)
-
-    """
-    Z0 = C.vacuum_impedence
-    if not THz_pulse:
-        h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
-        timeUnit = 'fs'
-        inverseTimeUnit = 'fs^-1'
-        if verbose: print('time unit: fs')
-    else:
-        h_red = C.Planck_reduced_ev_ps # in eV*ps
-        timeUnit = 'ps'
-        inverseTimeUnit = 'ps^-1'
-        if verbose: print('time unit: ps')
-    if fwhm is not None:
-        width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
-        if verbose: print('set width to',width,timeUnit)
-    Omega0_abs = theta/(np.sqrt(2*np.pi)*width) #fs^-1 if THz_pulse is False
-    amplitude = Omega0_abs*h_red/abs(dipole) #V/a0 in atomic units
-    amplitude_vm = amplitude/C.Bohr_radius #V/m
-    intensity = amplitude_vm**2/Z0 #W/m^2
-    intensity = intensity*1e-3*1e-4 #kW/cm^2
-    Omega0 = dipole*amplitude/h_red
-    if verbose:
-        print('Rabi coupling (%s):'%inverseTimeUnit,Omega0)
-        print('Rabi coupling (module) (%s):'%inverseTimeUnit,abs(Omega0))
-        print('field amplitude (V/m):',amplitude_vm)
-        print('field intensity (kW/cm^2) :',intensity)
-    return dict(Omega0=Omega0,Omega0_abs=abs(Omega0),field_amplitude=amplitude_vm,
-                intensity=intensity)
+# def pulseParametersFromTheta(dipole, theta, width = 100, fwhm = None, THz_pulse = False, verbose=True):
+#     """
+#     Compute the field intensity and the Rabi coupling that correspond to the pulse area given as input.
+#
+#     Args:
+#         dipole (:py:class:`array`) : array with the transition dipole (real and imaginary part),
+#             as provided by the :class:YamboDipolesParser class
+#         theta : pulse area
+#         width (:py:class:`float`) : width parameter of the Gaussian pulse (in fs)
+#         fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
+#             is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+#         THz_pulse (:py:class:`bool`) : if True expresses the width and the fwhm parameters in ps
+#         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
+#
+#     Returns:
+#         :py:class:`dict` : a dictionay withe the Rabi coupling (real part, imaginary part and module),
+#             the field amplitude (in V/m) and the field intensity (in kW/cm^2)
+#
+#     """
+#     Z0 = C.vacuum_impedence
+#     if not THz_pulse:
+#         h_red = C.Planck_reduced_ev_ps*1e3 # in eV*fs
+#         timeUnit = 'fs'
+#         inverseTimeUnit = 'fs^-1'
+#         if verbose: print('time unit: fs')
+#     else:
+#         h_red = C.Planck_reduced_ev_ps # in eV*ps
+#         timeUnit = 'ps'
+#         inverseTimeUnit = 'ps^-1'
+#         if verbose: print('time unit: ps')
+#     if fwhm is not None:
+#         width = fwhm/(2.*np.sqrt(2.*np.log(2.)))
+#         if verbose: print('set width to',width,timeUnit)
+#     Omega0_abs = theta/(np.sqrt(2*np.pi)*width) #fs^-1 if THz_pulse is False
+#     amplitude = Omega0_abs*h_red/abs(dipole) #V/a0 in atomic units
+#     amplitude_vm = amplitude/C.Bohr_radius #V/m
+#     intensity = amplitude_vm**2/Z0 #W/m^2
+#     intensity = intensity*1e-3*1e-4 #kW/cm^2
+#     Omega0 = dipole*amplitude/h_red
+#     if verbose:
+#         print('Rabi coupling (%s):'%inverseTimeUnit,Omega0)
+#         print('Rabi coupling (module) (%s):'%inverseTimeUnit,abs(Omega0))
+#         print('field amplitude (V/m):',amplitude_vm)
+#         print('field intensity (kW/cm^2) :',intensity)
+#     return dict(Omega0=Omega0,Omega0_abs=abs(Omega0),field_amplitude=amplitude_vm,
+#                 intensity=intensity)
 
 def evalPulseFourierTransform(time, pulse, THz_pulse = False, verbose = True):
     """

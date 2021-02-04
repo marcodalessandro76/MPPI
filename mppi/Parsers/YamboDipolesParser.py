@@ -72,22 +72,54 @@ class YamboDipolesParser():
         print('dip_v shape',self.dip_v.shape)
         print('dip_spin shape',self.dip_spin.shape)
 
-    def get_r_dipole(self,kpoint,band_l,band_r,cart):
+    def r_dipole(self,component,first_k = None, last_k = None,
+        first_band = None, last_band = None):
         """
-        Get the matrix element <band_l|r[cart]|band_r> of the position operator.
-        The `i` factor in the definition of the dip_ir attribute produces a flip
-        of the real and imaginary components (with a change of sign).
+        Compute the array with the matrix elements of the position operator. The `i` factor in the
+        definition of the dip_ir attribute produces a flip of the real and imaginary
+        components (with a change of sign).
 
         Args:
-            kpoint (py:class:`int`) : kpoint
-            band1_l (py:class:`int`)  : left band of the bracket
-            band_r (py:class:`int`)  : right band of the bracket
-            cart (py:class:`int`)   : cartesian component of the dipole operator
+            component (py:class:`int`)   : cartesian component of the dipole operator
+            first_k (:py:class:`int`) : index of the first k variable. If None the
+                first value of the dip_ir variable is used
+            last_k (:py:class:`int`) : index of the last k variable. If None the
+                last value of the dip_ir variable is used
+            first_band (:py:class:`int`) : index of the first band. If None the
+                first value of the dip_ir variable is used
+            last_band (:py:class:`int`) : index of the last band. If None the
+                last value of the dip_ir variable is used
 
         Returns:
-            :py:class:`float` : complex float with the real and imaginary part of the matrix element
+            :py:class:`array` : complex array with the dipoles matrix element
+            with shape(kpoint,band1,band2)
 
         """
-        ir = self.dip_ir[kpoint][band_l][band_r][cart]
-        return ir[1] -1j*ir[0]
-        #return np.array([ir[1],-ir[0]])
+        r_real = self.dip_ir[slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),component,1]
+        r_imag = -self.dip_ir[slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),component,0]
+        return r_real+1j*r_imag
+
+    def spin_dipole(self,component,first_k = None, last_k = None,
+        first_band = None, last_band = None):
+        """
+        Compute the array with the matrix elements of the spin operator.
+
+        Args:
+            component (py:class:`int`)   : cartesian component of the spin operator
+            first_k (:py:class:`int`) : index of the first k variable. If None the
+                first value of the dip_spin variable is used
+            last_k (:py:class:`int`) : index of the last k variable. If None the
+                last value of the dip_spin variable is used
+            first_band (:py:class:`int`) : index of the first band. If None the
+                first value of the dip_spin variable is used
+            last_band (:py:class:`int`) : index of the last band. If None the
+                last value of the dip_spin variable is used
+
+        Returns:
+            :py:class:`array` : complex array with the spin dipole matrix element
+            with shape(kpoint,band1,band2)
+
+        """
+        spin_real = self.dip_spin[slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),component,0]
+        spin_imag = self.dip_spin[slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),component,1]
+        return spin_real+1j*spin_imag

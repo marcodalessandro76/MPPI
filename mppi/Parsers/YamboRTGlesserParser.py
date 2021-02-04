@@ -12,13 +12,10 @@ def buildBlochVectors(dm):
     .. math::
         u_1(t,k) = 2Re(\\rho_{0,1,k}(t)) \, , \\
         u_2(t,k) = -2Im(\\rho_{0,1,k}(t)) \, , \\
-        u_3(t,k) = \\rho_{1,1,k}(t) - \\rho_{0,0,k}(t)
+        u_3(t,k) = \\rho_{0,0,k}(t) - \\rho_{1,1,k}(t)
 
-    Note that the definition of :math:`u_3` respects the condition `excited state occupation` minus
-    `ground state occupation` (the index is inverted with respect to the TLS where 1 is excited state
-    and 2 is the ground state). The Bloch vectors are rescaled by the value of the trace of the density
-    matrix (for each time and k point). If one trace vanishes the vector associated to the same time
-    and k is set to zero
+    The Bloch vectors are rescaled by the value of the trace of the density matrix (for each time and k point).
+    If one trace vanishes the vector associated to the same time and k is set to zero.
 
     Args:
         dm (:py:class:`array`) : time and k dependent array(s) with the 2x2 density matrix. The
@@ -33,7 +30,7 @@ def buildBlochVectors(dm):
     ntime,nk = dm.shape[0],dm.shape[1]
     u1 = 2*dm[:,:,0,1].real
     u2 = -2*dm[:,:,0,1].imag
-    u3 = dm[:,:,1,1].real-dm[:,:,0,0].real
+    u3 = dm[:,:,0,0].real-dm[:,:,1,1].real
     Bloch = np.array([u1,u2,u3])
     for t in range(ntime):
         for k in range(nk):
@@ -112,12 +109,14 @@ class YamboRTGlesserParser():
         relation
 
         .. math::
-            \\rho_{b1,b2,k}(t) = -iG^<_{b1,b2,k}(t)
+            \\rho_{b1,b2,k}(t) = -iG^<_{b2,b1,k}(t)
 
         The real and complex parts of the ``dG`` array are recasted to produce the
-        complex structure of the density matrix.
-        If the ``equilibrium_dm`` argument is not None add the equilibrium occupations
-        provided in the argument to the density matrix.
+        complex structure of the density matrix. Note that the band indices are transposed,
+        since in this way we are able to reproduce the correct expectation of on observable
+        using the relation :math:`<O> = Tr(\\rho O)`.
+        If the ``equilibrium_dm`` argument is not None add the equilibrium occupations,
+        provided in the argument, to the density matrix.
 
         Args:
             first_time (:py:class:`int`) : index of the first time variable. If None the
@@ -142,8 +141,9 @@ class YamboRTGlesserParser():
                 The structure of the array is [time,kpoint,band1,band2]
 
         """
-        dm = - 1j*self.Gless[slice(first_time,last_time),slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),0] + \
+        dmT = - 1j*self.Gless[slice(first_time,last_time),slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),0] + \
             self.Gless[slice(first_time,last_time),slice(first_k,last_k),slice(first_band,last_band),slice(first_band,last_band),1]
+        dm = np.transpose(dmT,axes=(0,1,3,2))
         if equilibrium_dm is not None:
             dm[:,:] = dm[:,:]+equilibrium_dm[slice(first_band,last_band),slice(first_band,last_band)]
         return dm
