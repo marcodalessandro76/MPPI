@@ -47,11 +47,17 @@ def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, over
     if os.path.isdir(SAVE_dir):
         if overwrite_if_found:
             print('clean the run_dir %s to build a new SAVE folder'%run_dir)
-            os.system('rm -r %s'%SAVE_dir)
+            comm_str = 'rm -r %s'%SAVE_dir
+            print('Executing command:', comm_str)
+            os.system(comm_str)
             r_setup_files = os.path.join(run_dir,'r_setup*')
-            os.system('rm %s'%r_setup_files)
+            comm_str = 'rm %s'%r_setup_files
+            print('Executing command:', comm_str)
+            os.system(comm_str)
             l_fixsyms_files = os.path.join(run_dir,'l_fixsyms*')
-            os.system('rm %s'%l_fixsyms_files)
+            comm_str = 'rm %s'%l_fixsyms_files
+            print('Executing command:', comm_str)
+            os.system(comm_str) 
         else:
             print('SAVE folder already present in %s. No operations performed.'%run_dir)
     # Actions performed if the SAVE_dir is not present (or if it has been removed)

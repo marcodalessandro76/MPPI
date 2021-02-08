@@ -134,7 +134,8 @@ def solveBlochEq_Xbasis(x0, time, Omega_abs, delta = 0):
 
     """
     def Bloch_Eq(x, t, delta, Omega):
-        dxdt = [delta*x[1],-delta*x[0]-Omega(t)*x[2],Omega(t)*x[1]]
+        #dxdt = [delta*x[1],-delta*x[0]-Omega(t)*x[2],Omega(t)*x[1]]
+        dxdt = [-delta*x[1],delta*x[0]+Omega(t)*x[2],-Omega(t)*x[1]]
         return dxdt
     x = odeint(Bloch_Eq, x0, time, args=(delta, Omega_abs))
     return x.transpose()
@@ -211,7 +212,9 @@ def convertToRotatingFrame(omega, time, u, invert = False):
     uprime = np.zeros([3,len(time)])
     if invert: alpha = -1
     else: alpha = 1
-    uprime[0,:] = np.cos(omega*time)*u[0,:] + alpha*np.sin(omega*time)*u[1,:]
-    uprime[1,:] = -alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:]
+    #uprime[0,:] = np.cos(omega*time)*u[0,:] + alpha*np.sin(omega*time)*u[1,:]
+    #uprime[1,:] = -alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:]
+    uprime[0,:] = np.cos(omega*time)*u[0,:] - alpha*np.sin(omega*time)*u[1,:]
+    uprime[1,:] = alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:]
     uprime[2,:] = u[2,:]
     return uprime

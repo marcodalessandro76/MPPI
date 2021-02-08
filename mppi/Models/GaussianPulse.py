@@ -97,10 +97,10 @@ def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, widt
         amplitude2 (:py:class:`float`) : the amplitude of the second pulse (it can be a complex number)
         width1 (:py:class:`float`) : the width parameter of the first Gaussian (in fs)
         fwhm1 (:py:class:`float`) : if not None set the FWHM of the first pulse (in fs). The width1
-            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+            is set to :math:`fwhm1/(2\sqrt{2ln(2)})`
         width2 (:py:class:`float`) : the width parameter of the second Gaussian (in fs)
         fwhm2 (:py:class:`float`) : if not None set the FWHM of the second pulse (in fs). The width2
-            is set to :math:`fwhm/(2\sqrt{2ln(2)})`
+            is set to :math:`fwhm2/(2\sqrt{2ln(2)})`
         t_start1 (:py:class:`float`) : time shift for the origin of the first pulse (in fs)
         t_start2 (:py:class:`float`) : time shift for the origin of the second pulse (in fs)
         envelope_only (:py:class:`bool`) : if True the sinusodial oscillating factor
