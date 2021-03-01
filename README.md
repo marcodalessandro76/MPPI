@@ -9,7 +9,7 @@ You can read the documentation in:
 https://mppi.readthedocs.io/en/latest/
 
 ## Installation
-To install the package you can clone this repository in a local folder, e.g. /home/username/Applications/MPPI.
+To install the package you can clone this repository in a local folder, e.g. `/home/username/Applications/MPPI`.
 Then move inside the folder and install the package using the pip or the python tools,
 
     python3 setupy install
@@ -25,12 +25,12 @@ In this way you do not need to recompile the package if you make some modificati
 
 Finally, you can also install the package inside a virtual environment.
 
-It is possible to automatically generate the documentation. To this scope runs
+It is possible to automatically generate the documentation. To this scope run
 
-  make html
+    make html
 
 from the folder where the package is installed. The root of the documentation is located in the file
-/package_dir/sphinx_build/html/index.html
+`/package_dir/sphinx_build/html/index.html`
 
 ## Features
 The package is composed by several module each of which contains one ore more classes:
