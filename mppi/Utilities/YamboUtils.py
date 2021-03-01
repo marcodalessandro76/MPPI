@@ -50,14 +50,10 @@ def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, over
             comm_str = 'rm -r %s'%SAVE_dir
             print('Executing command:', comm_str)
             os.system(comm_str)
-            r_setup_files = os.path.join(run_dir,'r_setup*')
+            r_setup_files = os.path.join(run_dir,'r_setup')
             comm_str = 'rm %s'%r_setup_files
             print('Executing command:', comm_str)
             os.system(comm_str)
-            l_fixsyms_files = os.path.join(run_dir,'l_fixsyms*')
-            comm_str = 'rm %s'%l_fixsyms_files
-            print('Executing command:', comm_str)
-            os.system(comm_str) 
         else:
             print('SAVE folder already present in %s. No operations performed.'%run_dir)
     # Actions performed if the SAVE_dir is not present (or if it has been removed)
@@ -99,18 +95,30 @@ def make_FixSymm(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 
     """
     from mppi import InputFiles as I, Calculators as C
     fixsymm_dir = os.path.join(run_dir,'FixSymm')
-    SAVE_dir = os.path.join(run_dir,'FixSymm','SAVE')
+    SAVE_dir = os.path.join(fixsymm_dir,'SAVE')
     # Evaluate if the SAVE_dir folder has to be removed if found
     if os.path.isdir(SAVE_dir):
         if overwrite_if_found:
             print('clean the FixSymm folder %s to build a new SAVE folder'%fixsymm_dir)
-            os.system('rm -r %s'%SAVE_dir)
-            r_setup_files = os.path.join(fixsymm_dir,'r_setup*')
-            os.system('rm %s'%r_setup_files)
-            l_Fixsymm_files = os.path.join(fixsymm_dir,'l-FixSymm*')
-            os.system('rm %s'%l_Fixsymm_files)
-            r_Fixsymm_files = os.path.join(fixsymm_dir,'r-FixSymm*')
-            os.system('rm %s'%r_Fixsymm_files)
+            comm_str = 'rm -r %s'%SAVE_dir
+            print('Executing command:', comm_str)
+            os.system(comm_str)
+            l_fixsyms_file = os.path.join(run_dir,'l_fixsyms')
+            comm_str = 'rm %s'%l_fixsyms_file
+            print('Executing command:', comm_str)
+            os.system(comm_str)
+            r_setup_file = os.path.join(fixsymm_dir,'r_setup')
+            comm_str = 'rm %s'%r_setup_file
+            print('Executing command:', comm_str)
+            os.system(comm_str)
+            l_Fixsymm_file = os.path.join(fixsymm_dir,'l-FixSymm_fixsyms')
+            comm_str = 'rm %s'%l_Fixsymm_file
+            print('Executing command:', comm_str)
+            os.system(comm_str)
+            r_Fixsymm_file = os.path.join(fixsymm_dir,'r-FixSymm_fixsyms')
+            comm_str = 'rm %s'%r_Fixsymm_file
+            print('Executing command:', comm_str)
+            os.system(comm_str)
         else:
             print('SAVE folder already present in %s. No operations performed.'%fixsymm_dir)
     if not os.path.isdir(SAVE_dir):

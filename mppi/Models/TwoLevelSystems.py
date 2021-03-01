@@ -10,6 +10,9 @@ implementation of the physics of the TLS are described in this notebook_.
 
 .. _notebook: tutorials/Model_TLS_optical_absorption.ipynb
 
+The equations implented in this module correspond to the case in which 1 is ground state
+and 2 is the excited one.
+
 """
 
 import numpy as np
@@ -113,7 +116,6 @@ def pulseParametersFromTheta(mu12, theta, width = 100, fwhm = None, THz_pulse = 
     return dict(Omega0=Omega0,Omega0_abs=abs(Omega0),field_amplitude=amplitude_vm,
                 intensity=intensity)
 
-
 def solveBlochEq_Xbasis(x0, time, Omega_abs, delta = 0):
     """
     Solve the Bloch equations in the rotating frame (in the basis of the x_i variables).
@@ -134,8 +136,8 @@ def solveBlochEq_Xbasis(x0, time, Omega_abs, delta = 0):
 
     """
     def Bloch_Eq(x, t, delta, Omega):
-        #dxdt = [delta*x[1],-delta*x[0]-Omega(t)*x[2],Omega(t)*x[1]]
-        dxdt = [-delta*x[1],delta*x[0]+Omega(t)*x[2],-Omega(t)*x[1]]
+        #dxdt = [delta*x[1],-delta*x[0]-Omega(t)*x[2],Omega(t)*x[1]] # use this if 2 is the ground state
+        dxdt = [-delta*x[1],delta*x[0]+Omega(t)*x[2],-Omega(t)*x[1]] # use this if 1 is the ground state
         return dxdt
     x = odeint(Bloch_Eq, x0, time, args=(delta, Omega_abs))
     return x.transpose()
@@ -156,8 +158,12 @@ def convertToXbasis(uprime, mu12, invert = False):
 
     """
     x = np.zeros([3,len(uprime[0])])
-    cosphi = mu12.real/abs(mu12)
-    sinphi = mu12.imag/abs(mu12)
+    if abs(mu12) != 0:
+        cosphi = mu12.real/abs(mu12)
+        sinphi = mu12.imag/abs(mu12)
+    else:
+        cosphi = 0.
+        sinphi = 1.
     if invert: alpha = -1
     else: alpha = 1
     x[0,:] = sinphi*uprime[0,:] + alpha*cosphi*uprime[1,:]
@@ -212,9 +218,9 @@ def convertToRotatingFrame(omega, time, u, invert = False):
     uprime = np.zeros([3,len(time)])
     if invert: alpha = -1
     else: alpha = 1
-    #uprime[0,:] = np.cos(omega*time)*u[0,:] + alpha*np.sin(omega*time)*u[1,:]
-    #uprime[1,:] = -alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:]
-    uprime[0,:] = np.cos(omega*time)*u[0,:] - alpha*np.sin(omega*time)*u[1,:]
-    uprime[1,:] = alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:]
+    #uprime[0,:] = np.cos(omega*time)*u[0,:] + alpha*np.sin(omega*time)*u[1,:]  # use this if 2 is the ground state
+    #uprime[1,:] = -alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:]  # use this if 2 is the ground state
+    uprime[0,:] = np.cos(omega*time)*u[0,:] - alpha*np.sin(omega*time)*u[1,:] # use this if 1 is the ground state
+    uprime[1,:] = alpha*np.sin(omega*time)*u[0,:] + np.cos(omega*time)*u[1,:] # use this if 1 is the ground state
     uprime[2,:] = u[2,:]
     return uprime

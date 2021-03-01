@@ -17,9 +17,6 @@
 - Improve the skip in the YamboCalculator to manage also the skip of the ypp computation. Is it convenient to use the
   presence of the folder $name as the criterion to skip the calculation?
 
-- Check that the cleaning procedure in the buildSAVE and in the make_FixSymm function works correctly.
-  Do I need to change directory before removing the files?
-
 - Update the tutorial on the parsing of the green function.
 
 - Add a tutorial for the GaussianPulse class.
