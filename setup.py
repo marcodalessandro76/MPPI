@@ -11,7 +11,7 @@ EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
 REQUIRES_PYTHON = '>=3.0'
 VERSION = '1.2'
-REQUIRED = ['numpy','matplotlib','sphinx_rtd_theme','nbsphinx','netCDF4']
+REQUIRED = ['numpy','matplotlib','scipy','nbsphinx','netCDF4']
 #-----------------------------------------------
 
 here = path.abspath(path.dirname(__file__))

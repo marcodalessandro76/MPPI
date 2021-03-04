@@ -49,23 +49,8 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
-    'sphinx_rtd_theme',
     'nbsphinx'
 ]
-
-######################################################
-
-# set guzzle_sphinx_theme (from the PyBigDFT conf.py)
-#import guzzle_sphinx_theme
-#html_theme_path = guzzle_sphinx_theme.html_theme_path()
-#html_theme = 'guzzle_sphinx_theme'
-# Register the theme as an extension to generate a sitemap.xml
-#extensions.append("guzzle_sphinx_theme")
-#Guzzle theme options (see theme.conf for more information)
-#html_theme_options = {
-#   # Set the name of the project to appear in the sidebar
-#   'project_nav_name': 'MPPI',
-#}
 
 #######################################################
 
@@ -102,8 +87,9 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
+html_theme = 'nature'
 #html_theme = 'classic'
-html_theme = 'bizstyle'
+#html_theme = 'bizstyle'
 #html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme

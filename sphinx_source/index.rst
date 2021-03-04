@@ -89,9 +89,8 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
 .. toctree:: bandStructure.rst
 .. toctree:: dos.rst
 
-There is also a *Model* module that collects tools to perform analysis based on some (analytical or numerical)
-modeling of the systems. Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic
-pulse and *TwoLevelSystems*.
+The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
+Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.
 
 .. toctree:: gaussianPulse.rst
 .. toctree:: twoLevelSystems.rst

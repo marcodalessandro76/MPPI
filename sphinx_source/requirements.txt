@@ -1,4 +1,5 @@
 numpy
 scipy
+matplotlib
+netCDF4
 nbsphinx
-#guzzle_sphinx_theme

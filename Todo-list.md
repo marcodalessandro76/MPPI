@@ -1,8 +1,8 @@
 
 ## TODO
 
-- Check the compilation of the ReadTheDocs documentation. It seems that the are problems in the TLS doc
-  and in the associated notebook.
+- Check the compilation of the ReadTheDocs documentation. The are problems for the rendering of the inline math equations
+  in the TLS notebook.
 
 - Add the spin to the Dos class and add a from_Yambo method in the Dos class, this requires that the weights of the
   k points are computed by the YamboDftParser
@@ -20,7 +20,6 @@
 - Update the tutorial on the parsing of the green function.
 
 - Add a tutorial for the GaussianPulse class.
-
 
 
 

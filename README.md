@@ -8,6 +8,17 @@ You can read the documentation in:
 
 https://mppi.readthedocs.io/en/latest/
 
+## Features
+The package is composed by several module each of which contains one ore more classes:
+
+- __InputFiles__ : create and manage input files for pw.x program of the QuantumEspresso package and for Yambo.
+- __Calculators__ : prepare and run a single QuantumESPRESSO or Yambo computation.
+- __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo.
+- __Parsers__ : classes to extract data from the output files and database QuantumESPRESSO and Yambo.
+- __Utilities__ : collect some useful low-level functions used by the other modules of the package.
+- __Models__ : implement some physical models. Actually the module contains one tool to deal with gaussian pulses and
+               and one to analyze the time dynamics of a two-level-system.
+
 ## Installation
 To install the package you can clone this repository in a local folder, e.g. `/home/username/Applications/MPPI`.
 Then move inside the folder and install the package using the pip or the python tools,
@@ -31,17 +42,6 @@ It is possible to automatically generate the documentation. To this scope run
 
 from the folder where the package is installed. The root of the documentation is located in the file
 `/package_dir/sphinx_build/html/index.html`
-
-## Features
-The package is composed by several module each of which contains one ore more classes:
-
-- __InputFiles__ : create and manage input files for pw.x program of the QuantumEspresso package and for Yambo.
-- __Calculators__ : prepare and run a single QuantumESPRESSO or Yambo computation.
-- __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo.
-- __Parsers__ : classes to extract data from the output files and database QuantumESPRESSO and Yambo.
-- __Utilities__ : collect some useful low-level functions used by the other modules of the package.
-- __Models__ : implement some physical models. Actually the module contains one tool to deal with gaussian pulses and
-               and one to analyze the time dynamics of a two-level-system.
 
 ## Tutorials and examples
 We provide many jupyter notebooks that show the functionality of each module of the package.
