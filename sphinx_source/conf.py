@@ -45,12 +45,16 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.mathjax',
+    #'sphinx.ext.mathjax',
+    'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     'nbsphinx'
 ]
+
+imgmath_image_format = 'svg'
+imgmath_font_size = 12  # for font size 14
 
 #######################################################
 
