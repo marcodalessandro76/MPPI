@@ -1,5 +1,5 @@
 """
-This file contains some useful functions and a class for dealing with bands structures.
+This module contains some useful functions and a class for dealing with bands structures.
 The module can be loaded in the notebook in one of the following way
 
 >>> from mppi import Utilities as U

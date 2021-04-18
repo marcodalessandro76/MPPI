@@ -209,7 +209,7 @@ class Dataset(Runner):
                 time.sleep(delay)
             while queue.qsize() != 0: #add the result to self.results
                 self.results.update(queue.get())
-            if verbose: print('Task %s ended \n'%task)
+            if verbose: print('Task %s ended \n '%task)
 
     def build_taskgroups(self,selection):
         """
@@ -310,7 +310,7 @@ class Dataset(Runner):
         tolerance parameter. Convergence is reached if all the subsequent calculations,
         specified by the `convergence_level` parameter, match the convergence condition.
         Results are checked in dataset order (provided by the :py:meth:`append_run` method)
-        if `selection` is not specified. Employs the numpy :py:meth:`allclose` method for comparison. 
+        if `selection` is not specified. Employs the numpy :py:meth:`allclose` method for comparison.
 
         Args:
           rtol (:py:class:`float`): relative tolerance parameter

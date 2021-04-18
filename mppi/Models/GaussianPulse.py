@@ -29,7 +29,7 @@ import numpy as np
 from mppi.Utilities import Constants as C
 
 def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_start = 0,
-        envelope_only = False, THz_pulse = False, verbose = True):
+        envelope_only = False, THz_pulse = False, change_sign = False, verbose = True):
     """
     Build a Gaussian pulse.
 
@@ -46,6 +46,7 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
             is not considered
         THz_pulse (:py:class:`bool`) : if True expresses the energy in meV and the
             time variable and the width parameter in ps
+        change_sign (:py:class:`bool`) : if True change the sign to the envelope function
         verbose (:py:class:`bool`) : defines the amount of information provided
             on terminal
 
@@ -78,14 +79,16 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
     t0 = np.pi/omega*round(omega/np.pi*3*width)
     #t0 = 3.*width
     exp_arg = (t-t0)**2/(2.*width**2)
-    pulse = amplitude*np.exp(-exp_arg)
+    if not change_sign: envelope_sign = 1
+    else: envelope_sign = -1
+    pulse = envelope_sign*amplitude*np.exp(-exp_arg)
     if not envelope_only:
         pulse *= np.sin(omega*t)
     return pulse
 
 def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, width1 = 100, width2 = 100,
                         fwhm1 = None, fwhm2 = None, t_start1 = 0, t_start2 = 600, envelope_only = False,
-                        THz_pulse = False, verbose = True):
+                        THz_pulse = False, change_sign1 = False, change_sign2 = False, verbose = True):
     """
     Build a sine oscillating pulse with e double Gaussian envelope.
 
@@ -107,6 +110,8 @@ def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, widt
             is not considered
         THz_pulse (:py:class:`bool`) : if True expresses the energy in meV and the
             time variable and the width parameter in ps
+        change_sign1 (:py:class:`bool`) : if True change the sign to the first envelope function
+        change_sign2 (:py:class:`bool`) : if True change the sign to the second envelope function
         verbose (:py:class:`bool`) : defines the amount of information provided
             on terminal
 
@@ -142,9 +147,9 @@ def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, widt
         print('width of the second pulse',width2,timeUnit)
         print('fwhm of the second pulse',fwhm2,timeUnit)
     pulse1 = gaussianPulse(time, energy=energy, amplitude=amplitude1,width=width1,
-            t_start= t_start1,envelope_only=True,THz_pulse=THz_pulse,verbose=False)
+            t_start= t_start1,envelope_only=True,THz_pulse=THz_pulse,change_sign=change_sign1,verbose=False)
     pulse2 = gaussianPulse(time, energy=energy, amplitude=amplitude2,width=width2,
-            t_start= t_start2,envelope_only=True,THz_pulse=THz_pulse,verbose=False)
+            t_start= t_start2,envelope_only=True,THz_pulse=THz_pulse,change_sign=change_sign2,verbose=False)
     doublePulse = pulse1 + pulse2
     t = time-t_start1
     if not envelope_only:
