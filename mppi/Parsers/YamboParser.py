@@ -17,7 +17,7 @@ class YamboParser():
         data (:class:`YamboOutputParser`) : contains the instance of the :class:`YamboOutputParser`
             class that manage the parsing of the ``o-* files``
         dipoles (:class:`YamboDipolesParser`) : contains the instance of the :class:`YamboDipolesParser`
-            tclass hat manages the parsing of the ``dipoles`` database
+            class that manages the parsing of the ``dipoles`` database
         dft (:class:`YamboDftParser`) : contains the instance of the :class:`YamboDftParser` that
             manages the parsing of the ``ns.db1`` database
         RTGreen (:class:`YamboRTGlesserParser`) : contains the instance of the

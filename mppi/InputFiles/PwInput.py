@@ -1,8 +1,9 @@
 
 """
-Class to create and manipulate an input file for pw.x computations of QuantumESPRESSO.
+This module manages the input file for pw.x computations of QuantumESPRESSO.
 The input can be created from scratch or can be initialized from an existing input file.
 """
+import os
 
 def fortran_bool(boolean):
     return {True:'.true.',False:'.false.'}[boolean]
@@ -26,9 +27,9 @@ class PwInput(dict):
         provided parse it and add the 'file' key.
 
         Args:
-            file (:py:class:`string`) : name of an exsistent input file, used
+            file (:py:class:`string`) : name of an exsistent input file, used to
                 initialize the dictionaries of the object
-            **kwargs : keyword arguments used to initialize the dictionaries of
+            **kwargs : keyword arguments used to initialize the dictionaries of the
                 object
 
         """
@@ -268,13 +269,29 @@ class PwInput(dict):
         """
         self['control']['prefix'] = "'%s'"%prefix
 
-    def set_pseudo_dir(self,pseudo_dir='../pseudos'):
+    def set_outdir(self,outdir):
         """
-        Set the value of the pseudo_folder. The default is '../pseudos'
-        because usually the pw input is written in the run_dir folder by
-        the QeCalculator or Dataset.
+        Set the value of outdir
+
+        Args:
+            outdir (:py:class:`string`) : value of the outdir
+
         """
-        self['control']['pseudo_dir'] = "'%s'"%pseudo_dir
+        self['control']['outdir'] = "'%s'"%outdir
+
+    def set_pseudo_dir(self,pseudo_dir='pseudos'):
+        """
+        Set the position of the folder with the pseudo-potentials. The method
+        convert the relative path provided as input, usually from the folder in
+        which the notebook is located to the absolute path, so that the pseudo
+        location can be found from an arbitrary folder.
+        
+        Args:
+            pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseduopotentials
+
+        """
+        pseudo_dir_abs = os.path.abspath(pseudo_dir)
+        self['control']['pseudo_dir'] = "'%s'"%pseudo_dir_abs
 
     def set_occupations(self,occupations='fixed',smearing='fermi-dirac',degauss=50.):
         """
@@ -462,3 +479,29 @@ class PwInput(dict):
         self['system']['lspinorb'] = '.false.'
         self['system']['noncolin'] = '.false.'
         self['system']['nspin']    = 2
+
+    # Get methods
+
+    def get_prefix(self):
+        """
+        Get the value of prefix
+
+        Returns:
+            :py:class:`string` : The value of the prefix key of the input dictionary.
+            If the key is not present return the default value 'pwscf'
+
+        """
+        pref = self['control'].get('prefix','pwscf')
+        return pref.strip("'")
+
+    def get_outdir(self):
+        """
+        Get the value of outdir
+
+        Returns:
+            :py:class:`string` : The value of the outdir key of the input dictionary.
+            If the key is not present return the default value '.'
+
+        """
+        outdir = self['control'].get('outdir','.')
+        return outdir.strip("'")

@@ -90,7 +90,12 @@ def make_FixSymm(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 
         Efield2 (:py:class:`list`) : direction of the second electric field. Useful for the circular polarization case
         removeTimeReversal (:py:class:`bool`) : if True remove the time reversal symmetry
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir/FixSymm and the
-            r_setup (if found) and build them again
+            r_setup (if found) and build them again.
+
+    Note:
+        Although the function does not remove the content of the FixSymm  folder, when 'ypp -y' is executed this folder
+        is erased. This fact must be considered if there are relevant data in the FixSymm
+
 
     """
     from mppi import InputFiles as I, Calculators as C
@@ -129,7 +134,7 @@ def make_FixSymm(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 
         if polarization == 'circular':
             fixSymm_inp.set_ypp_extFields(Efield1=Efield1,Efield2=Efield2)
         elif polarization == 'linear':
-            fixSymm_inp.set_ypp_extFields(Efield1=Efield1)
+            fixSymm_inp.set_ypp_extFields(Efield1=Efield1,Efield2=[0.,0.,0.])
         else:
             print('Specify a correct polarization for the field')
         code = C.YamboCalculator(omp=1,mpi=1,executable='ypp',skip=False,verbose=False)

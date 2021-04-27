@@ -11,6 +11,11 @@ class QeCalculator(Runner):
     """
     Perform a QuantumESPRESSO calculation. Computations are managed by a scheduler that,
     in the actual implementation of the class, can be `direct` or `slurm`.
+    Computations are performed in the folder specified by the ``run_dir`` parameter. The input and
+    the .log files are written in the run_dir. Instead, the $prefix.xml file and the $prefix.save
+    folders are written in the ``out_dir`` path. The values of the prefix and out_dir variables
+    are read from the input file. If the ``out_dir`` path is a relative path its root is located
+    in the ``run_dir`` folder.
 
     Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
@@ -22,6 +27,18 @@ class QeCalculator(Runner):
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking if the file
             $prefix.xml is present in the run_dir folder
        clean_restart (:py:class:`bool`) : if True delete the folder $prefix.save before running the computation
+       dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
+            for submitting the job, but the computations are not run
+       wait_end_run (:py:class:`bool`) : with this option disabled the run method does not wait the end of the run.
+            This option may be useful for interacting with the code in particular in _asincronous_ computation managed
+            by the slurm scheduler
+       sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
+            For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
+       activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
+            With this options enabled the ``out_dir`` of the run is set in the ``BeenOND_dir`` folder and the input wavefunction
+            of the source folder (if needed) are copied in the ``BeeOND_dir``. At the end of the run the ``out_dir`` is moved
+            in its original path. The value of the ``BeeOND_dir``is written as a data member of the class and can be modified
+            if needed
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        kwargs : other parameters that are stored in the _global_options dictionary
 
@@ -38,39 +55,32 @@ class QeCalculator(Runner):
         name (:py:class:`string`) : string with the name associated to the input file.
             Usually it is convenient to set the name equal to the prefix of the input object so
             the name of the input file and the prefix folder built by QuantumESPRESSO are the same
-        source_dir (:py:class:`string`) : location of the scf source folder for a nscf computation.
-            If present the class copies this folder in the run_dir with the name $prefix.save
+        source_dir (:py:class:`string`) : useful for the nscf computations. The source folder contains
+            the wave-functions created by a scf calculation. If present the class copies this folder in the
+            ``out_dir`` with the name $prefix.save
         kwargs : other parameters that are stored in the run_options dictionary
 
-    The calculator looks for the following variables in the run_options dictionary. These options
-    may be useful for interacting with the code in particular in _asincronous_ computation managed
-    the slurm scheduler.
-
-        `dry_run=True` with this option the calculator setup the calculations and write the script
-        for submitting the job, but the computations are not run
-
-        `wait_end_run=False` with this option the wait of the end of the run is suppressed
-
-        `sbatch_options = [option1,option2,....]` allows the user to include further options in the slurm script
-
     """
+    BeeOND_dir = '/mnt/${SLURM_JOB_USER}-jobid_${SLURM_JOB_ID}'
 
     def __init__(self,
                  omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
                  executable = 'pw.x', scheduler = 'direct', skip =  True, clean_restart = True,
-                 verbose = True, **kwargs):
+                 dry_run = False, wait_end_run = True, sbatch_options = [], activate_BeeOND = True,
+                  verbose = True, **kwargs):
         # Use the initialization from the Runner class (all options inside _global_options)
         Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
                         scheduler=scheduler,skip=skip, clean_restart=clean_restart,
-                        verbose=verbose, **kwargs)
+                        dry_run=dry_run,wait_end_run=wait_end_run,sbatch_options=sbatch_options,
+                        activate_BeeOND=activate_BeeOND,verbose=verbose, **kwargs)
         print('Initialize a QuantumESPRESSO calculator with scheduler %s'%self._global_options['scheduler'])
 
     def pre_processing(self):
         """
         Process local run dictionary to create the run directory and input file.
-        If clean_restart = True the run_dir is cleaned before the run.
+        If clean_restart is True the clean_run method is called before the run.
         If the 'source_dir' key is passed to the run method copy the source folder
-        in the run_dir with the name $prefix.
+        in the run_dir with the name $prefix.save.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
@@ -79,6 +89,7 @@ class QeCalculator(Runner):
         skip = self.run_options.get('skip')
         clean_restart= self.run_options.get('clean_restart')
         verbose = self.run_options.get('verbose')
+        source_dir = self.run_options.get('source_dir',None)
 
         # Create the run_dir and write the input file
         self._ensure_run_directory()
@@ -90,12 +101,11 @@ class QeCalculator(Runner):
         # Clean the run_dir
         if not skip:
             if clean_restart:
-                self._clean_run_dir()
+                self.clean_run()
             else:
                 if verbose: print('run performed starting from existing results')
 
-        # Copy the source folder in the run_dir
-        source_dir = self.run_options.get('source_dir')
+        # Include the source .save folder (if provided) in the out_dir
         if source_dir is not None:
             self._copy_source_dir(source_dir)
 
@@ -122,37 +132,40 @@ class QeCalculator(Runner):
             :py:class:`string` : name, including the path, of the xml data-file-schema file
 
         """
-        run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options['input']
-        prefix = input['control']['prefix'].strip("'")
-        prefix += '.save'
-        result = os.path.join(run_dir,prefix,'data-file-schema.xml')
+        prefix = input.get_prefix()
+        out_dir = self._get_outdir()
+        save_dir = os.path.join(out_dir,prefix)+'.save'
+        result = os.path.join(save_dir,'data-file-schema.xml')
         if not os.path.isfile(result):
             print('Expected file %s not found'%result)
-            print('Check if wait_end_run is False or the dry_run option is active. Otherwise a possible error has occured during the computation')
+            print("""
+                Check if wait_end_run is False or the dry_run option is active.
+                Otherwise a possible error has occured during the computation""")
         return result
 
     def is_to_run(self):
         """
         The method evaluates if the computation can be skipped. This is done by
-        checking if the file $prefix.xml is already present in the run_dir.
+        checking if the file $prefix.xml is already present in the out_dir.
 
         Return:
             :py:class:`bool` : the boolean is True if the computation needs to be run
+
         """
         skip = self.run_options.get('skip')
-        run_dir = self.run_options.get('run_dir', '.')
-        input = self.run_options.get('input')
-        name = self.run_options.get('name','default')
+        name = self.run_options.get('name','default')+'.in'
+        input = self.run_options['input']
+        prefix = input.get_prefix()
+        out_dir = self._get_outdir()
+        skipfile = os.path.join(out_dir,prefix)+'.xml'
         verbose = self.run_options.get('verbose')
 
         if not skip:
             return True
         else:
-            prefix = input['control']['prefix'].strip("'")
-            skipfile = os.path.join(run_dir,prefix)+'.xml'
             if os.path.isfile(skipfile):
-                if verbose: print('Skip the run of',name)
+                if verbose: print('Skip the run of the input file',name)
                 return False
             else:
                 return True
@@ -170,15 +183,16 @@ class QeCalculator(Runner):
 
         """
         from subprocess import Popen
+        run_dir = self.run_options.get('run_dir', '.')
         scheduler = self.run_options['scheduler']
-        dry_run = self.run_options.get('dry_run',False)
+        dry_run = self.run_options.get('dry_run')
         verbose = self.run_options.get('verbose')
 
         if scheduler == 'direct':
             # Set the OMP_NUM_THREADS variable in the environment
             os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
             if not dry_run:
-                comm_str = self.run_command()
+                comm_str = 'cd %s ; %s'%(run_dir,self.run_command())
                 job = Popen(comm_str, shell = True)
             else:
                 job = None
@@ -186,7 +200,6 @@ class QeCalculator(Runner):
         elif scheduler == 'slurm':
             job = self.build_slurm_script()
             if not dry_run:
-                run_dir = self.run_options.get('run_dir', '.')
                 slurm_submit = 'cd %s ; sbatch %s.sh' %(run_dir,job)
                 if verbose: print('slurm submit: ',slurm_submit )
                 slurm_run = Popen(slurm_submit, shell = True)
@@ -208,8 +221,8 @@ class QeCalculator(Runner):
 
         """
         import time
-        dry_run = self.run_options.get('dry_run',False)
-        wait_end_run = self.run_options.get('wait_end_run',True)
+        dry_run = self.run_options.get('dry_run')
+        wait_end_run = self.run_options.get('wait_end_run')
         name = self.run_options.get('name','default')
         verbose = self.run_options.get('verbose')
         delay = 1 # in second
@@ -238,27 +251,58 @@ class QeCalculator(Runner):
         name = self.run_options.get('name','default')
         job = 'job_'+name
         run_dir = self.run_options.get('run_dir', '.')
-        sbatch_options = self.run_options.get('sbatch_options', None)
+        out_dir = self._get_outdir()
+        sbatch_options = self.run_options.get('sbatch_options')
+        activate_BeeOND = self.run_options.get('activate_BeeOND')
         comm_str = self.run_command()
 
         lines = []
         lines.append('#!/bin/bash')
         lines.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
         lines.append('#SBATCH --cpus-per-task=%s    ### Number of threads per task (OMP threads)'%omp)
-        if sbatch_options is not None: # add other options if present in the run_options of the calculator
-            for option in sbatch_options:
-                lines.append('#SBATCH %s'%option)
+        for option in sbatch_options: # add other SBATCH options
+            lines.append('#SBATCH %s'%option)
         lines.append('#SBATCH --output=%s.out'%job)
-        lines.append('')
         lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
         lines.append('')
+
+        lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
+        lines.append('echo "Job name $SLURM_JOB_NAME "')
         lines.append('echo "Job id $SLURM_JOB_ID"')
-        lines.append('echo "Number of mpi  $SLURM_NTASKS"')
+        lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
+        lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
+        lines.append('echo "Number of mpi $SLURM_NTASKS"')
         lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
         lines.append('')
+
+        if activate_BeeOND:
+            lines.append('export OUT_DIR=%s'%out_dir)
+            lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
+            lines.append('echo "BEEOND_DIR is defined as $BEEOND_DIR"')
+            lines.append('if [ ! -d $BEEOND_DIR ]; then')
+            lines.append('echo "$BEEOND_DIR not found!"')
+            lines.append('exit')
+            lines.append('fi')
+            #lines.append("sed -i 's:%s:%s:g' %s.in"%(out_dir,self.BeeOND_dir,name))
+            lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(out_dir,self.BeeOND_dir,name))
+            # If the out_dir has been created by the pre_processing method it is copied
+            # in the BeeOND_dir
+            if os.path.isdir(out_dir) is not None:
+                lines.append('echo "rsync -avzr $OUT_DIR/ $BEEOND_DIR/"')
+                lines.append('rsync -avzr $OUT_DIR/ $BEEOND_DIR/')
+            lines.append('')
+
         lines.append('echo "execute : %s"'%comm_str)
         lines.append(comm_str)
         lines.append('')
+
+        if activate_BeeOND:
+            #lines.append("sed -i 's:%s:%s:g' %s.in"%(self.BeeOND_dir,out_dir,name))
+            lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
+            lines.append('echo "rsync -avzr $BEEOND_DIR/ $OUT_DIR/"')
+            lines.append('rsync -avzr $BEEOND_DIR/ $OUT_DIR/')
+            lines.append('')
+
         lines.append('echo "JOB_DONE"')
         f = open(os.path.join(run_dir,job+'.sh'),'w')
         f.write('\n'.join(lines))
@@ -268,14 +312,12 @@ class QeCalculator(Runner):
 
     def run_command(self):
         """
-        Define the run command used to run the computation. The value of the command
-        depends on the chosen scheduler.
+        Define the run command used to run the computation.
 
         Return:
             :py:class:`string` : command that runs the computation
 
         """
-        scheduler = self.run_options.get('scheduler')
         executable = self.run_options.get('executable')
         mpi = self.run_options.get('mpi')
         mpi_run = self.run_options.get('mpi_run')
@@ -283,11 +325,7 @@ class QeCalculator(Runner):
         name = self.run_options.get('name','default')
         verbose = self.run_options.get('verbose')
 
-        if scheduler == 'direct':
-            set_run_dir = 'cd %s; '%run_dir
-            command = set_run_dir + mpi_run + ' ' + str(mpi) + ' ' + executable
-        if scheduler == 'slurm':
-            command = mpi_run + ' ' + str(mpi) + ' ' + executable
+        command = mpi_run + ' ' + str(mpi) + ' ' + executable
         input_name = name + '.in'
         output_name = name + '.log'
         comm_str =  command + ' -inp %s > %s'%(input_name,output_name)
@@ -325,69 +363,87 @@ class QeCalculator(Runner):
 
         return is_ended
 
-    def _ensure_run_directory(self):
-        from mppi.Utilities import FutileUtils as f
-        run_dir = self.run_options.get('run_dir', '.')
-        # Restrict run_dir to a sub-directory
-        if ("/" in run_dir or run_dir == ".."):
-            raise ValueError(
-                "run_dir '%s' must be a sub-directory"% run_dir)
-        # Create the run_dir if not exist
-        if f.ensure_dir(run_dir) and self.run_options['verbose']:
-            print("Create the sub-directory '%s'" % run_dir)
-
-    def _copy_source_dir(self,source_dir):
+    def clean_run(self):
         """
-        Copy the source_dir in the run_dir and atttibute to the copied folder
-        the name $prefix, for all the inputs.
-
-        Args:
-            source_dir: the name of the source_dir including its relative path.
-            A source_dir outer respect to the actual run_dir of the instance of
-            QeCalculator can be used.
-
-        """
-        from shutil import copytree
-        verbose = self.run_options.get('verbose')
-        run_dir = self.run_options.get('run_dir', '.')
-        input = self.run_options.get('input')
-
-        prefix = input['control']['prefix'].strip("'")
-        dest_dir = os.path.join(run_dir,prefix)+'.save'
-        if not os.path.isdir(dest_dir):
-            if verbose: print('Copy source_dir %s in the %s'%(source_dir,dest_dir))
-            copytree(source_dir,dest_dir)
-        else:
-            if verbose:
-                print('The folder %s already exsists. Source folder % s not copied'
-                %(dest_dir,source_dir))
-
-    def _clean_run_dir(self):
-        """
-        Clean the run_dir before performing the computation. Delete the $name.log file,
-        the $prefix.xml file, the job_$name.out file and the folder run_dir/prefix.save.
+        Clean the run before performing the computation. Delete the $name.log and
+        the job_$name.out file, located in the run_dir, and the $prefix.xml file
+        and the $prefix.save folder located in the out_dir.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
         input = self.run_options.get('input')
         verbose = self.run_options.get('verbose')
+        prefix = input.get_prefix()
+        out_dir = self._get_outdir()
 
         logfile = os.path.join(run_dir,name)+'.log'
-        prefix = input['control']['prefix'].strip("'")
-        xmlfile = os.path.join(run_dir,prefix)+'.xml'
         job_out = os.path.join(run_dir,'job_'+name+'.out')
-        outdir = os.path.join(run_dir,prefix)+'.save'
+        xmlfile = os.path.join(out_dir,prefix)+'.xml'
+        save_dir = os.path.join(out_dir,prefix)+'.save'
 
         if os.path.isfile(logfile):
             if verbose: print('delete log file:',logfile)
             os.system('rm %s'%logfile)
-        if os.path.isfile(xmlfile):
-            if verbose: print('delete xml file:',xmlfile)
-            os.system('rm %s'%xmlfile)
         if os.path.isfile(job_out):
             if verbose: print('delete job_out script:',job_out)
             os.system('rm %s'%job_out)
-        if os.path.isdir(outdir):
-            if verbose: print('delete folder:',outdir)
-            os.system('rm -r %s'%outdir)
+        if os.path.isfile(xmlfile):
+            if verbose: print('delete xml file:',xmlfile)
+            os.system('rm %s'%xmlfile)
+        if os.path.isdir(save_dir):
+            if verbose: print('delete folder:',save_dir)
+            os.system('rm -r %s'%save_dir)
+
+    def _ensure_run_directory(self):
+        """
+        Create the run_dir, if it does not exists
+        """
+        run_dir = self.run_options.get('run_dir', '.')
+        verbose = self.run_options.get('verbose')
+
+        if not os.path.exists(run_dir):
+            os.makedirs(run_dir)
+            if verbose: print("create the run_dir folder : '%s'" %run_dir)
+
+    def _copy_source_dir(self,source_dir):
+        """
+        Copy the source_dir in the out_dir and atttibute to the copied folder
+        the name $prefix, for all the inputs.
+
+        Args:
+            source_dir: the name of the source_dir (tipically it is the .save folder of a scf calculation that
+            contains the wave-function of the ground state Kohn-Sham states) including its relative path.
+            A source_dir outer respect to the actual run_dir of the instance of
+            QeCalculator can be used.
+
+        """
+        from shutil import copytree
+        verbose = self.run_options.get('verbose')
+        input = self.run_options.get('input')
+        prefix = input.get_prefix()
+        out_dir = self._get_outdir()
+
+        dest_dir = os.path.join(out_dir,prefix)+'.save'
+        if not os.path.isdir(dest_dir):
+            if verbose: print('copy source_dir %s in the %s'%(source_dir,dest_dir))
+            copytree(source_dir,dest_dir)
+        else:
+            if verbose:
+                print('The folder %s already exists. Source folder % s not copied'
+                %(dest_dir,source_dir))
+
+    def _get_outdir(self):
+        """
+        Get the out_dir path using the ``outdir`` parameter of the input file.
+        """
+        run_dir = self.run_options.get('run_dir', '.')
+        input = self.run_options.get('input')
+        out_dir = input.get_outdir()
+        if out_dir == '.':
+            return run_dir
+        else:
+            if os.path.isabs(out_dir):
+                return out_dir
+            else:
+                return os.path.join(run_dir,out_dir)

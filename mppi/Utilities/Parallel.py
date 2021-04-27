@@ -3,7 +3,7 @@ This module contains some tools to perform parallel procedures using the python
 multiprocessing package
 
 """
-import multiprocessing as mp, time
+import multiprocessing as mp, time as tm
 import numpy as np
 from datetime import timedelta
 
@@ -22,8 +22,8 @@ def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
      """
     def func_loop(func,pars_subset,task,output,*args,**kwargs):
         """
-        Evaluate the function func for all the values inside a single tasks.
-        Add the a dictioary with the results of the task to the queue of the multiprocess
+        Evaluate the function func for all the values inside a single task.
+        Add the dictionary with the results of the task to the queue of the multiprocess
 
         """
         results = []
@@ -33,7 +33,7 @@ def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
 
     pars_split = np.array_split(pars,ntasks)
     if verbose : print('Run a parallel loop with %s tasks...'%ntasks)
-    t0 = time.time()
+    t0 = tm.time()
     output = mp.Queue()
     tasks = [mp.Process(target=func_loop, args=(func,pars_split[task],task,output,*args,), kwargs=kwargs) for task in range(ntasks)]
     for p in tasks:
@@ -43,7 +43,7 @@ def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
         results_dict.update(output.get())
     results = np.concatenate([results_dict[i] for i in range(ntasks)])
     if verbose :
-        deltaTime = int(time.time()-t0)
+        deltaTime = int(tm.time()-t0)
         dT_str = "{:0>8}".format(str(timedelta(seconds=deltaTime)))
         print('Loop executed in',dT_str)
     return results
