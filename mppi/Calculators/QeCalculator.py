@@ -280,6 +280,9 @@ class QeCalculator(Runner):
         lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
         lines.append('echo "Number of mpi $SLURM_NTASKS"')
         lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
+        lines.append('echo "BEEOND_DIR is set to $BEEOND_DIR"')
+        lines.append('echo "OUT_DIR is set to $OUT_DIR"')
+        lines.append('echo "SAVE_DIR is set to $SAVE_DIR"')
         lines.append('')
 
         if activate_BeeOND:
@@ -290,6 +293,7 @@ class QeCalculator(Runner):
             lines.append('fi')
             lines.append('')
             #lines.append("sed -i 's:%s:%s:g' %s.in"%(out_dir,self.BeeOND_dir,name))
+            lines.append('echo "change the outdir key of the input from $OUT_DIR to $BEEOND_DIR"')
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(out_dir,self.BeeOND_dir,name))
             lines.append('')
             # If there is a save_dir (created by the pre_processing method) it is copied
@@ -305,10 +309,10 @@ class QeCalculator(Runner):
         lines.append('')
 
         if activate_BeeOND:
-            #lines.append("sed -i 's:%s:%s:g' %s.in"%(self.BeeOND_dir,out_dir,name))
-            lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
-            lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR"')
-            lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR')
+            lines.append('echo "change the outdir key of the input to its original value $OUT_DIR"')
+            #lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
+            #lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR"')
+            #lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR')
             lines.append('')
 
         lines.append('echo "JOB_DONE"')
@@ -411,8 +415,9 @@ class QeCalculator(Runner):
     def _ensure_run_directory(self):
         """
         Create the run_dir, if it does not exists
+       
         """
-        run_dir = self.run_options.get('run_dir', '.')
+        run_dir = self.run_options.get('run_dir','.')
         verbose = self.run_options.get('verbose')
 
         if not os.path.exists(run_dir):
@@ -460,4 +465,4 @@ class QeCalculator(Runner):
             if os.path.isabs(out_dir):
                 return out_dir
             else:
-                return os.path.join(run_dir,out_dir)
+                return os.path.abspath(os.path.join(run_dir,out_dir))
