@@ -282,10 +282,10 @@ class PwInput(dict):
     def set_pseudo_dir(self,pseudo_dir='pseudos'):
         """
         Set the position of the folder with the pseudo-potentials. The method
-        convert the relative path provided as input, usually from the folder in
+        converts the relative path provided as input, usually from the folder in
         which the notebook is located to the absolute path, so that the pseudo
         location can be found from an arbitrary folder.
-        
+
         Args:
             pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseduopotentials
 
@@ -484,7 +484,7 @@ class PwInput(dict):
 
     def get_prefix(self):
         """
-        Get the value of prefix
+        Get the value of prefix.
 
         Returns:
             :py:class:`string` : The value of the prefix key of the input dictionary.
@@ -496,7 +496,7 @@ class PwInput(dict):
 
     def get_outdir(self):
         """
-        Get the value of outdir
+        Get the value of outdir.
 
         Returns:
             :py:class:`string` : The value of the outdir key of the input dictionary.

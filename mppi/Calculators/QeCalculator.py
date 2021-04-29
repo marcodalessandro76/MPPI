@@ -248,10 +248,11 @@ class QeCalculator(Runner):
         mpi = self.run_options.get('mpi')
         input = self.run_options.get('input')
         prefix = input.get_prefix()
+        out_dir = input.get_outdir()
         name = self.run_options.get('name','default')
         run_dir = self.run_options.get('run_dir', '.')
-        out_dir = self._get_outdir()
-        save_dir = os.path.join(out_dir,prefix)+'.save'
+        out_dir_path = self._get_outdir_path()
+        save_dir = os.path.join(out_dir_path,prefix)+'.save'
         job = 'job_'+name
 
         sbatch_options = self.run_options.get('sbatch_options')
@@ -270,6 +271,7 @@ class QeCalculator(Runner):
         lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
         lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
         lines.append('export OUT_DIR=%s'%out_dir)
+        #lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
         lines.append('export SAVE_DIR=%s'%save_dir)
         lines.append('')
 
@@ -280,13 +282,13 @@ class QeCalculator(Runner):
         lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
         lines.append('echo "Number of mpi $SLURM_NTASKS"')
         lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
-        lines.append('echo "BEEOND_DIR is set to $BEEOND_DIR"')
-        lines.append('echo "OUT_DIR is set to $OUT_DIR"')
-        lines.append('echo "SAVE_DIR is set to $SAVE_DIR"')
+        lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
+        lines.append('echo "OUT_DIR path is $OUT_DIR"')
+        lines.append('echo "SAVE_DIR path is $SAVE_DIR"')
         lines.append('')
 
         if activate_BeeOND:
-            lines.append('echo "BEEOND_DIR is defined as $BEEOND_DIR"')
+            lines.append('echo "THe BeeOND option is acivated. The I/O is performed in $BEEOND_DIR"')
             lines.append('if [ ! -d $BEEOND_DIR ]; then')
             lines.append('echo "$BEEOND_DIR not found!"')
             lines.append('exit')
@@ -415,7 +417,7 @@ class QeCalculator(Runner):
     def _ensure_run_directory(self):
         """
         Create the run_dir, if it does not exists
-       
+
         """
         run_dir = self.run_options.get('run_dir','.')
         verbose = self.run_options.get('verbose')
@@ -451,18 +453,18 @@ class QeCalculator(Runner):
                     print('The folder %s already exists. Source_dir % s not copied'
                     %(dest_dir,source_dir))
 
-    def _get_outdir(self):
+    def _get_outdir_path(self):
         """
-        Get the out_dir path using the ``outdir`` parameter of the input file.
+        Get the absolute out_dir path built from the ``outdir`` parameter of the input file
+        and the ``run_dir`` parameter of the calculator.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
         out_dir = input.get_outdir()
-        if out_dir == '.':
-            return run_dir
-        else:
-            if os.path.isabs(out_dir):
-                return out_dir
-            else:
-                return os.path.abspath(os.path.join(run_dir,out_dir))
+        if os.path.isabs(out_dir): # if out_dir provided as an abs path in the input return out_dir
+            return out_dir
+        if out_dir == '.': # if out_dir is '.' return the abs path of the run_dir
+            return os.path.abspath(run_dir)
+        else: # if out_dir is provided as a relative path return the absolute path of run_dir/out_dir
+            return os.path.abspath(os.path.join(run_dir,out_dir))
