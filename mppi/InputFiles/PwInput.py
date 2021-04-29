@@ -4,6 +4,7 @@ This module manages the input file for pw.x computations of QuantumESPRESSO.
 The input can be created from scratch or can be initialized from an existing input file.
 """
 import os
+from copy import deepcopy
 
 def fortran_bool(boolean):
     return {True:'.true.',False:'.false.'}[boolean]
@@ -21,17 +22,22 @@ class PwInput(dict):
     _cards =['atomic_species','atomic_positions','kpoints','cell_parameters']
 
     default = {'control':{
+                   'calculation':"'scf'",
                    'verbosity':"'high'",
                    'prefix':"'pwscf'",
-                   'outdir':"'./'"}
+                   'outdir':"'./'"},
+               'system':{
+                    'force_symmorphic':fortran_bool(False)},
+                'electrons':{
+                    'diago_full_acc':fortran_bool(False)}
                }
-    
+
     def __init__(self,file=None,**kwargs):
         """
         Initialize the keys of the object with the namelist and cards and update the
-        dictionaries with the kwargs passed as input parameters. Some keys have a 
-        default value specified bt the class member dictionary` default`. If an input file 
-        is provided it is parsed and add the 'file' key is added to the object dictionary.
+        dictionaries with the kwargs passed as input parameters. Some keys have a
+        default value specified bt the class member dictionary` default`. If an input file
+        is provided it is parsed and the 'file' key is added to the object dictionary.
 
         Args:
             file (:py:class:`string`) : name of an exsistent input file, used to
@@ -46,7 +52,7 @@ class PwInput(dict):
             self[key] = dict()
         for key in self._cards:
             self[key] = dict()
-        self.update(self.default)
+        self.update(deepcopy(self.default))
         self.update(kwargs)
 
         if file is not None:

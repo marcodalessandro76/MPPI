@@ -268,7 +268,7 @@ class QeCalculator(Runner):
         lines.append('#SBATCH --output=%s.out'%job)
         lines.append('')
 
-        lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK') 
+        lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
         lines.append('export OUT_DIR=%s'%out_dir)
         lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
         lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
@@ -281,11 +281,12 @@ class QeCalculator(Runner):
         lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
         lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
         lines.append('echo "Number of mpi $SLURM_NTASKS"')
-        lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"') 
+        lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
         lines.append('echo "OUT_DIR input parameter is $OUT_DIR"')
         lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
         lines.append('echo "OUT_DIR path is $OUT_DIR_PATH"')
         lines.append('echo "SAVE_DIR path is $SAVE_DIR"')
+        lines.append('echo " "')
         lines.append('')
 
         if activate_BeeOND:
@@ -294,9 +295,11 @@ class QeCalculator(Runner):
             lines.append('echo "$BEEOND_DIR not found!"')
             lines.append('exit')
             lines.append('fi')
+            lines.append('echo " "')
             lines.append('')
             lines.append('echo "Change the outdir key of the input from $OUT_DIR to $BEEOND_DIR"')
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(out_dir,self.BeeOND_dir,name))
+            lines.append('echo " "')
             lines.append('')
             # If there is a save_dir (created by the pre_processing method) it is copied
             # in the BeeOND_dir
@@ -304,10 +307,12 @@ class QeCalculator(Runner):
                 lines.append('echo "found SAVE_DIR folder $SAVE_DIR. Copy the SAVE_DIR in the $BEEOND_DIR folder"')
                 lines.append('echo "rsync -azv $SAVE_DIR $BEEOND_DIR"')
                 lines.append('rsync -azv $SAVE_DIR $BEEOND_DIR')
+                lines.append('echo " "')
                 lines.append('')
 
         lines.append('echo "execute : %s"'%comm_str)
         lines.append(comm_str)
+        lines.append('echo " "')
         lines.append('')
 
         if activate_BeeOND:
@@ -315,6 +320,7 @@ class QeCalculator(Runner):
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
             lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR_PATH"')
             lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR_PATH')
+            lines.append('echo " "')
             lines.append('')
 
         lines.append('echo "JOB_DONE"')
