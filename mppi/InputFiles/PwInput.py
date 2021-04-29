@@ -20,11 +20,18 @@ class PwInput(dict):
     _namelist = ['control','system','electrons','ions','cell']
     _cards =['atomic_species','atomic_positions','kpoints','cell_parameters']
 
+    default = {'control':{
+                   'verbosity':"'high'",
+                   'prefix':"'pwscf'",
+                   'outdir':"'./'"}
+               }
+    
     def __init__(self,file=None,**kwargs):
         """
-        Initialized the keys of self with the namelist and cards and update the
-        dictionaries with the kwargs passed as input parameters. If the file is
-        provided parse it and add the 'file' key.
+        Initialize the keys of the object with the namelist and cards and update the
+        dictionaries with the kwargs passed as input parameters. Some keys have a 
+        default value specified bt the class member dictionary` default`. If an input file 
+        is provided it is parsed and add the 'file' key is added to the object dictionary.
 
         Args:
             file (:py:class:`string`) : name of an exsistent input file, used to
@@ -39,6 +46,7 @@ class PwInput(dict):
             self[key] = dict()
         for key in self._cards:
             self[key] = dict()
+        self.update(self.default)
         self.update(kwargs)
 
         if file is not None:

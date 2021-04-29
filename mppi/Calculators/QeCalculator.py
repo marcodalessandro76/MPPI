@@ -132,7 +132,7 @@ class QeCalculator(Runner):
         """
         input = self.run_options.get('input')
         prefix = input.get_prefix()
-        out_dir = self._get_outdir()
+        out_dir = self._get_outdir_path()
         save_dir = os.path.join(out_dir,prefix)+'.save'
         result = os.path.join(save_dir,'data-file-schema.xml')
         if not os.path.isfile(result):
@@ -155,7 +155,7 @@ class QeCalculator(Runner):
         name = self.run_options.get('name','default')+'.in'
         input = self.run_options['input']
         prefix = input.get_prefix()
-        out_dir = self._get_outdir()
+        out_dir = self._get_outdir_path()
         skipfile = os.path.join(out_dir,prefix)+'.xml'
         verbose = self.run_options.get('verbose')
 
@@ -268,10 +268,10 @@ class QeCalculator(Runner):
         lines.append('#SBATCH --output=%s.out'%job)
         lines.append('')
 
-        lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
-        lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
+        lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK') 
         lines.append('export OUT_DIR=%s'%out_dir)
-        #lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
+        lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
+        lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
         lines.append('export SAVE_DIR=%s'%save_dir)
         lines.append('')
 
@@ -281,27 +281,27 @@ class QeCalculator(Runner):
         lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
         lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
         lines.append('echo "Number of mpi $SLURM_NTASKS"')
-        lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
+        lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"') 
+        lines.append('echo "OUT_DIR input parameter is $OUT_DIR"')
         lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
-        lines.append('echo "OUT_DIR path is $OUT_DIR"')
+        lines.append('echo "OUT_DIR path is $OUT_DIR_PATH"')
         lines.append('echo "SAVE_DIR path is $SAVE_DIR"')
         lines.append('')
 
         if activate_BeeOND:
-            lines.append('echo "THe BeeOND option is acivated. The I/O is performed in $BEEOND_DIR"')
+            lines.append('echo "THe BeeOND option is activated. The I/O is performed in $BEEOND_DIR"')
             lines.append('if [ ! -d $BEEOND_DIR ]; then')
             lines.append('echo "$BEEOND_DIR not found!"')
             lines.append('exit')
             lines.append('fi')
             lines.append('')
-            #lines.append("sed -i 's:%s:%s:g' %s.in"%(out_dir,self.BeeOND_dir,name))
-            lines.append('echo "change the outdir key of the input from $OUT_DIR to $BEEOND_DIR"')
+            lines.append('echo "Change the outdir key of the input from $OUT_DIR to $BEEOND_DIR"')
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(out_dir,self.BeeOND_dir,name))
             lines.append('')
             # If there is a save_dir (created by the pre_processing method) it is copied
             # in the BeeOND_dir
             if os.path.isdir(save_dir):
-                lines.append('echo "found SAVE_DIR $SAVE_DIR"')
+                lines.append('echo "found SAVE_DIR folder $SAVE_DIR. Copy the SAVE_DIR in the $BEEOND_DIR folder"')
                 lines.append('echo "rsync -azv $SAVE_DIR $BEEOND_DIR"')
                 lines.append('rsync -azv $SAVE_DIR $BEEOND_DIR')
                 lines.append('')
@@ -311,10 +311,10 @@ class QeCalculator(Runner):
         lines.append('')
 
         if activate_BeeOND:
-            lines.append('echo "change the outdir key of the input to its original value $OUT_DIR"')
-            #lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
-            #lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR"')
-            #lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR')
+            lines.append('echo "Change the outdir key of the input to its original value $OUT_DIR"')
+            lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
+            lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR_PATH"')
+            lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR_PATH')
             lines.append('')
 
         lines.append('echo "JOB_DONE"')
@@ -390,7 +390,7 @@ class QeCalculator(Runner):
         input = self.run_options.get('input')
         verbose = self.run_options.get('verbose')
         prefix = input.get_prefix()
-        out_dir = self._get_outdir()
+        out_dir = self._get_outdir_path()
 
         logfile = os.path.join(run_dir,name)+'.log'
         job_out = os.path.join(run_dir,'job_'+name+'.out')
@@ -440,7 +440,7 @@ class QeCalculator(Runner):
         source_dir = self.run_options.get('source_dir',None)
         input = self.run_options.get('input')
         prefix = input.get_prefix()
-        out_dir = self._get_outdir()
+        out_dir = self._get_outdir_path()
         verbose = self.run_options.get('verbose')
 
         if source_dir is not None:
@@ -462,9 +462,7 @@ class QeCalculator(Runner):
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
         out_dir = input.get_outdir()
-        if os.path.isabs(out_dir): # if out_dir provided as an abs path in the input return out_dir
+        if os.path.isabs(out_dir): # if out_dir is provided as an abs path in the input return out_dir
             return out_dir
-        if out_dir == '.': # if out_dir is '.' return the abs path of the run_dir
-            return os.path.abspath(run_dir)
         else: # if out_dir is provided as a relative path return the absolute path of run_dir/out_dir
             return os.path.abspath(os.path.join(run_dir,out_dir))
