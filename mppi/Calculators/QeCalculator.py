@@ -288,14 +288,17 @@ class QeCalculator(Runner):
             lines.append('echo "$BEEOND_DIR not found!"')
             lines.append('exit')
             lines.append('fi')
+            lines.append('')
             #lines.append("sed -i 's:%s:%s:g' %s.in"%(out_dir,self.BeeOND_dir,name))
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(out_dir,self.BeeOND_dir,name))
+            lines.append('')
             # If there is a save_dir (created by the pre_processing method) it is copied
             # in the BeeOND_dir
             if os.path.isdir(save_dir):
+                lines.append('echo "found SAVE_DIR $SAVE_DIR"')
                 lines.append('echo "rsync -azv $SAVE_DIR $BEEOND_DIR"')
                 lines.append('rsync -azv $SAVE_DIR $BEEOND_DIR')
-            lines.append('')
+                lines.append('')
 
         lines.append('echo "execute : %s"'%comm_str)
         lines.append(comm_str)
