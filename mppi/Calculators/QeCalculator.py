@@ -79,8 +79,8 @@ class QeCalculator(Runner):
         """
         Process local run dictionary to create the run directory and input file.
         If clean_restart is True the clean_run method is called before the run.
-        If the 'source_dir' key is passed to the run method copy the source folder
-        in the run_dir with the name $prefix.save.
+        Call the :py:method:`copy_source_dir` that manages the source folder,
+        if provided.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
@@ -89,7 +89,6 @@ class QeCalculator(Runner):
         skip = self.run_options.get('skip')
         clean_restart= self.run_options.get('clean_restart')
         verbose = self.run_options.get('verbose')
-        source_dir = self.run_options.get('source_dir',None)
 
         # Create the run_dir and write the input file
         self._ensure_run_directory()
@@ -98,7 +97,7 @@ class QeCalculator(Runner):
         else:
             print('input not provided')
 
-        # Clean the run_dir
+        # Clean the folders before the run
         if not skip:
             if clean_restart:
                 self.clean_run()
@@ -106,8 +105,7 @@ class QeCalculator(Runner):
                 if verbose: print('run performed starting from existing results')
 
         # Include the source .save folder (if provided) in the out_dir
-        if source_dir is not None:
-            self._copy_source_dir(source_dir)
+        self.copy_source_dir()
 
         return {}
 
@@ -132,7 +130,7 @@ class QeCalculator(Runner):
             :py:class:`string` : name, including the path, of the xml data-file-schema file
 
         """
-        input = self.run_options['input']
+        input = self.run_options.get('input')
         prefix = input.get_prefix()
         out_dir = self._get_outdir()
         save_dir = os.path.join(out_dir,prefix)+'.save'
@@ -248,10 +246,14 @@ class QeCalculator(Runner):
         """
         omp = self.run_options.get('omp')
         mpi = self.run_options.get('mpi')
+        input = self.run_options.get('input')
+        prefix = input.get_prefix()
         name = self.run_options.get('name','default')
-        job = 'job_'+name
         run_dir = self.run_options.get('run_dir', '.')
         out_dir = self._get_outdir()
+        save_dir = os.path.join(out_dir,prefix)+'.save'
+        job = 'job_'+name
+
         sbatch_options = self.run_options.get('sbatch_options')
         activate_BeeOND = self.run_options.get('activate_BeeOND')
         comm_str = self.run_command()
@@ -263,7 +265,12 @@ class QeCalculator(Runner):
         for option in sbatch_options: # add other SBATCH options
             lines.append('#SBATCH %s'%option)
         lines.append('#SBATCH --output=%s.out'%job)
+        lines.append('')
+
         lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
+        lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
+        lines.append('export OUT_DIR=%s'%out_dir)
+        lines.append('export SAVE_DIR=%s'%save_dir)
         lines.append('')
 
         lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
@@ -276,8 +283,6 @@ class QeCalculator(Runner):
         lines.append('')
 
         if activate_BeeOND:
-            lines.append('export OUT_DIR=%s'%out_dir)
-            lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
             lines.append('echo "BEEOND_DIR is defined as $BEEOND_DIR"')
             lines.append('if [ ! -d $BEEOND_DIR ]; then')
             lines.append('echo "$BEEOND_DIR not found!"')
@@ -285,11 +290,11 @@ class QeCalculator(Runner):
             lines.append('fi')
             #lines.append("sed -i 's:%s:%s:g' %s.in"%(out_dir,self.BeeOND_dir,name))
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(out_dir,self.BeeOND_dir,name))
-            # If the out_dir has been created by the pre_processing method it is copied
+            # If there is a save_dir (created by the pre_processing method) it is copied
             # in the BeeOND_dir
-            if os.path.isdir(out_dir) is not None:
-                lines.append('echo "rsync -avzr $OUT_DIR/ $BEEOND_DIR/"')
-                lines.append('rsync -avzr $OUT_DIR/ $BEEOND_DIR/')
+            if os.path.isdir(save_dir):
+                lines.append('echo "rsync -azv $SAVE_DIR $BEEOND_DIR"')
+                lines.append('rsync -azv $SAVE_DIR $BEEOND_DIR')
             lines.append('')
 
         lines.append('echo "execute : %s"'%comm_str)
@@ -299,8 +304,8 @@ class QeCalculator(Runner):
         if activate_BeeOND:
             #lines.append("sed -i 's:%s:%s:g' %s.in"%(self.BeeOND_dir,out_dir,name))
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
-            lines.append('echo "rsync -avzr $BEEOND_DIR/ $OUT_DIR/"')
-            lines.append('rsync -avzr $BEEOND_DIR/ $OUT_DIR/')
+            lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR"')
+            lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR')
             lines.append('')
 
         lines.append('echo "JOB_DONE"')
@@ -366,8 +371,9 @@ class QeCalculator(Runner):
     def clean_run(self):
         """
         Clean the run before performing the computation. Delete the $name.log and
-        the job_$name.out file, located in the run_dir, and the $prefix.xml file
-        and the $prefix.save folder located in the out_dir.
+        the job_$name.out file, located in the `run_dir`, and the $prefix.xml file
+        and the $prefix.save folder located in the `out_dir`. Finally, if the
+        `out_dir` is empty it is deleted.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
@@ -394,6 +400,10 @@ class QeCalculator(Runner):
         if os.path.isdir(save_dir):
             if verbose: print('delete folder:',save_dir)
             os.system('rm -r %s'%save_dir)
+        # delete the out_dir (if it is empty)
+        if os.path.isdir(out_dir) and not os.listdir(out_dir):
+            if verbose: print('delete the out_dir:',out_dir)
+            os.system('rm -r %s'%out_dir)
 
     def _ensure_run_directory(self):
         """
@@ -406,36 +416,37 @@ class QeCalculator(Runner):
             os.makedirs(run_dir)
             if verbose: print("create the run_dir folder : '%s'" %run_dir)
 
-    def _copy_source_dir(self,source_dir):
+    def copy_source_dir(self):
         """
-        Copy the source_dir in the out_dir and atttibute to the copied folder
-        the name $prefix, for all the inputs.
+        Copy the source_dir (if provided) in the out_dir and atttibute to the copied folder
+        the name $prefix.save.
 
         Args:
-            source_dir: the name of the source_dir (tipically it is the .save folder of a scf calculation that
-            contains the wave-function of the ground state Kohn-Sham states) including its relative path.
-            A source_dir outer respect to the actual run_dir of the instance of
-            QeCalculator can be used.
+            source_dir: the name of the source_dir (tipically it is the .save folder
+            of the scf calculation that contains the wave-functions of the ground state).
 
         """
         from shutil import copytree
-        verbose = self.run_options.get('verbose')
+        source_dir = self.run_options.get('source_dir',None)
         input = self.run_options.get('input')
         prefix = input.get_prefix()
         out_dir = self._get_outdir()
+        verbose = self.run_options.get('verbose')
 
-        dest_dir = os.path.join(out_dir,prefix)+'.save'
-        if not os.path.isdir(dest_dir):
-            if verbose: print('copy source_dir %s in the %s'%(source_dir,dest_dir))
-            copytree(source_dir,dest_dir)
-        else:
-            if verbose:
-                print('The folder %s already exists. Source folder % s not copied'
-                %(dest_dir,source_dir))
+        if source_dir is not None:
+            dest_dir = os.path.join(out_dir,prefix)+'.save'
+            if not os.path.isdir(dest_dir):
+                if verbose: print('copy source_dir %s in the %s'%(source_dir,dest_dir))
+                copytree(source_dir,dest_dir)
+            else:
+                if verbose:
+                    print('The folder %s already exists. Source_dir % s not copied'
+                    %(dest_dir,source_dir))
 
     def _get_outdir(self):
         """
         Get the out_dir path using the ``outdir`` parameter of the input file.
+
         """
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
