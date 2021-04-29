@@ -79,7 +79,7 @@ class QeCalculator(Runner):
         """
         Process local run dictionary to create the run directory and input file.
         If clean_restart is True the clean_run method is called before the run.
-        Call the :py:method:`copy_source_dir` that manages the source folder,
+        Call the :meth:`copy_source_dir` that manages the source folder,
         if provided.
 
         """
