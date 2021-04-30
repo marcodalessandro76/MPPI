@@ -1,11 +1,52 @@
 """
 This module manages calculations performed with Yambo.
-Actually the run of the computation can be managed by the python subprocess package (direct scheduler)
+The run of the computation is performed by the python subprocess package (direct scheduler)
 or by the slurm scheduler.
 """
 
 from .Runner import Runner
 import os
+
+def get_report(outputPath):
+    """
+    Look for the name of the 'r-*' file produced by the execution of the code.
+
+    Args:
+        outputPath (:py:class:`string`) : folder with the r-* and the 'o-*' files
+
+    Return:
+        :py:class:`string` : A string with the name, including the path, of the
+        file 'r-*' produced by the run
+
+    """
+
+    report = ''
+    if os.path.isdir(outputPath):
+        for file in os.listdir(outputPath):
+            if 'r-' in file:
+                report = os.path.join(outputPath,file)
+    return report
+
+def find_string_file(file,string):
+    """
+    Look for a string in the lines of a file.
+
+    Args:
+        file (:py:class:`string`) : name of the file, including the path
+        string (:py:class:`string`) : name of the string
+
+    Return:
+        :py:class:`string` : return the first occurence of the line that match
+        the search. If no line is found or the file does not exsists return None
+
+    """
+    line = None
+    if os.path.isfile(file):
+        for l in open(file,'r'):
+            if string in l:
+                line = l
+                break
+    return line
 
 def get_output_files(outputPath):
     """
@@ -31,6 +72,9 @@ def get_db_files(dbsPath):
     """
     Look for the files of tht type ndb.* in the dbsPath
 
+    Args:
+        dbstPath (:py:class:`string`) : folder with the databases created by yambo
+
     Return:
         :py:class:`dict`: A dictionary in which the keys are the extension of the
             databases found and the values are their names, including the path
@@ -47,9 +91,9 @@ def get_db_files(dbsPath):
 
 def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
     """
-    Return a dictionary with the names of the o- file(s), the `ns.db1` in the
-    SAVE folder and the names of the ndb databases written by yambo in the
-    jobname folder .
+    Return a dictionary with the names of the o- file(s), the report 'r-' file,
+    the `ns.db1` in the SAVE folder and the names of the ndb databases written by
+    yambo in the jobname folder.
 
     Args:
         run_dir (:py:class:`string`) : `run_dir` folder of the calculation
@@ -65,7 +109,7 @@ def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
     """
     if dbsPath is None:
             dbsPath = outputPath
-    results = dict(output=get_output_files(outputPath))
+    results = dict(output=get_output_files(outputPath),report=get_report(outputPath))
     if verbose and len(results['output']) == 0:
         print("""
         There are no o-* files.
@@ -88,6 +132,7 @@ class YamboCalculator(Runner):
     Perform a Yambo calculation. Computations are managed by a scheduler that,
     in the actual implementation of the class, can be `direct` or `slurm`.
 
+
     Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
        mpi (:py:class:`int`) : number of mpi processes
@@ -95,15 +140,32 @@ class YamboCalculator(Runner):
        executable (:py:class:`string`) : set the executable (yambo, ypp, yambo_rt, ...) of the Yambo package
        scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
             'direct' that runs the computation using the python subprocess package and 'slurm' that creates a slurm script
-       skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking that the folder
-            where yambo write the results contains at least one file 'o-*'
+       skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking that the
+            report file built by yambo exsists and contains the string `game_over` defined as a data member of this class
        clean_restart (:py:class:`bool`) : if True delete the folder with the output files and the database before running the computation
+       dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
+            for submitting the job, but the computations are not run
+       wait_end_run (:py:class:`bool`) : with this option disabled the run method does not wait the end of the run.
+            This option may be useful for interacting with the code in particular in _asincronous_ computation managed
+            by the slurm scheduler
+       sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
+            For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
+       activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
+            With this options enabled ....
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        kwargs : other parameters that are stored in the _global_options dictionary
+
+     Computations are performed in the folder specified by the ``run_dir`` parameter. The ``name`` parameter is
+     used as name of the yambo input and as the name of the folder where yambo writes the o- `output` files.
+     The ``jobname`` parameter is the name of the folder where yambo writes the .ndb databases. If this parameter
+     is not provided in the run method the assumption jobname=name is made by the calculator.
 
      Example:
      >>> code = YamboCalculator(omp=1,mpi=4,mpi_run='mpirun -np',executable='yambo',skip=True,verbose=True,scheduler='direct')
      >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ..., **kwargs)
+
+     When the run method is called the class runs the command:
+        cd run_dir ; mpi_run mpi executable_name -F name.in -J jobname -C name
 
      where the arguments of the run method are:
 
@@ -112,35 +174,27 @@ class YamboCalculator(Runner):
         input (:py:class:`string`) : instance of the :class:`YamboInput` class
             that define the input objects
         name (:py:class:`string`) : string with the names associated to the input file (without extension).
-            This string is used also as the radical of the folders in which results are written as well as a
+            This string is used also as the name of the folder in which results are written as well as a
             part of the name of the output files.
         jobname (:py:class:`string`) : string with the values of the jobname. If this variable is not specified
             the value of name is attributed to jobname by process_run.
         kwargs : other parameters that are stored in the run_options dictionary
 
-    When the run method is called the class runs the command:
-                executable_name -F name.in -J jobname -C name
-
-    The calculator looks for the following variables in the run_options dictionary. These options
-    may be useful for _asincronous_ computation managed the slurm scheduler.
-
-        `dry_run=True` with this option the calculator setup the calculations and write the scrpt
-        for submitting the jobs, but the computations are not run.
-
-        `wait_end_run=False` with this option the wait of the end of the run is suppressed.
-
-        `sbatch_options = [option1,option2,....]` allows the user to include further options in the slurm script
-
     """
+    BeeOND_dir = '/mnt/${SLURM_JOB_USER}-jobid_${SLURM_JOB_ID}'
+    game_over = 'Game Over & Game summary'
+    time_profile = 'Time-Profile'
 
     def __init__(self,
                  omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
                  executable = 'yambo', scheduler = 'direct', skip = True, clean_restart = True,
+                 dry_run = False, wait_end_run = True, sbatch_options = [], activate_BeeOND = True,
                  verbose = True, **kwargs):
         # Use the initialization from the Runner class (all options inside _global_options)
         Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
                         scheduler=scheduler, skip=skip, clean_restart=clean_restart,
-                        verbose=verbose, **kwargs)
+                        dry_run=dry_run,wait_end_run=wait_end_run,sbatch_options=sbatch_options,
+                        activate_BeeOND=activate_BeeOND,verbose=verbose, **kwargs)
         print('Initialize a Yambo calculator with scheduler %s' %self._global_options['scheduler'])
 
 
@@ -157,7 +211,7 @@ class YamboCalculator(Runner):
         """
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
-        name = self.run_options.get('name')
+        name = self.run_options.get('name','default')
         skip = self.run_options.get('skip')
         clean_restart= self.run_options.get('clean_restart')
         verbose = self.run_options.get('verbose')
@@ -177,7 +231,7 @@ class YamboCalculator(Runner):
         # Clean the run dir
         if not skip:
             if clean_restart:
-                self._clean_run_dir()
+                self.clean_run_dir()
             else:
                 if verbose: print('run performed starting from existing results')
 
@@ -189,54 +243,67 @@ class YamboCalculator(Runner):
         and wait the end of the computation before passing to the :meth:`post_processing` method.
 
         """
-        to_run = self.is_to_run()
-        if to_run:
+        self.is_to_run()
+        if self.run_options['is_to_run']:
             job = self.run_job()
             self.wait(job)
         return {}
 
     def post_processing(self):
         """
-        Return a dictionary with the names of the o- file(s), the `ns.db1` in the
-        SAVE folder and the names of the ndb databases written by yambo in the
-        jobname folder .
+        Return a dictionary with the names of the o- file(s), the report 'r-' file,
+        the `ns.db1` in the SAVE folder and the names of the ndb databases written by
+        yambo in the jobname folder. The method performs a sanity check of the computation
+        by checking that the `game_over` string is found in the report and shows the
+        time needed to perform the simulation (if the `time_profile` string is found
+        in the report).
 
         Return:
             :py:class:`dict` : the dictionary
-                {'output' : [o-1,o-2,...],'dft':...,'dipoles':..., ....}
+                {'output' : [o-1,o-2,...],'report':...,'dft':...,'dipoles':..., ....}
 
         """
         run_dir = self.run_options.get('run_dir', '.')
-        name = self.run_options.get('name')
+        name = self.run_options.get('name','default')
         outputPath = os.path.join(run_dir,name)
         jobname = self.run_options.get('jobname',name)
         dbsPath = os.path.join(run_dir,jobname)
         verbose = self.run_options.get('verbose')
 
-        return build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
+        results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
+        if verbose:
+            report = results['report']
+            if find_string_file(report,self.game_over) is None:
+                print('Game_over string not found in report. Check the computation!')
+            time_sim = find_string_file(report,self.time_profile)
+            if  self.run_options['is_to_run'] is True and time_sim is not None:
+                print('Run performed in %s'%time_sim.split()[-1])
+
+        return results
 
     def is_to_run(self):
         """
         The method evaluates if the computation can be skipped. This is done by
-        checking if the folder where yambo write the results contains at least one file 'o-*'.
+        checking if the report file exsists and contains the string `game_over`
+        defined as a member of the class.
+        The method adds the key `is_to_run` to ``the run_options`` of the class
 
-        Return:
-            :py:class:`bool` : the boolean is True if the computation needs to be run
         """
         skip = self.run_options.get('skip')
         run_dir = self.run_options.get('run_dir', '.')
-        name = self.run_options.get('name')
+        name = self.run_options.get('name','default')
         outputPath = os.path.join(run_dir,name)
+        report = get_report(outputPath)
         verbose = self.run_options.get('verbose')
 
         if not skip:
-            return True
+            self.run_options['is_to_run'] = True
         else:
-            if len(get_output_files(outputPath)) > 0:
+            if find_string_file(report,self.game_over) is not None:
                 if verbose: print('Skip the run of',name)
-                return False
+                self.run_options['is_to_run'] = False
             else:
-                return True
+                self.run_options['is_to_run'] = True
 
     def run_job(self):
         """
@@ -251,6 +318,7 @@ class YamboCalculator(Runner):
 
         """
         from subprocess import Popen
+        run_dir = self.run_options.get('run_dir', '.')
         scheduler = self.run_options['scheduler']
         dry_run = self.run_options.get('dry_run',False)
         verbose = self.run_options.get('verbose')
@@ -259,7 +327,7 @@ class YamboCalculator(Runner):
             # Set the OMP_NUM_THREADS variable in the environment
             os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
             if not dry_run:
-                comm_str = self.run_command()
+                comm_str = 'cd %s ; %s'%(run_dir,self.run_command())
                 job = Popen(comm_str, shell = True)
             else:
                 job = None
@@ -267,7 +335,6 @@ class YamboCalculator(Runner):
         elif scheduler == 'slurm':
             job = self.build_slurm_script()
             if not dry_run:
-                run_dir = self.run_options.get('run_dir', '.')
                 slurm_submit = 'cd %s ; sbatch %s.sh' %(run_dir,job)
                 if verbose: print('slurm submit: ',slurm_submit )
                 slurm_run = Popen(slurm_submit, shell = True)
@@ -316,30 +383,66 @@ class YamboCalculator(Runner):
         """
         omp = self.run_options.get('omp')
         mpi = self.run_options.get('mpi')
+        run_dir = os.path.abspath(self.run_options.get('run_dir', '.'))
         name = self.run_options.get('name','default')
+        jobname = self.run_options.get('jobname',name)
         job = 'job_'+name
-        run_dir = self.run_options.get('run_dir', '.')
-        sbatch_options = self.run_options.get('sbatch_options', None)
+
+        sbatch_options = self.run_options.get('sbatch_options')
+        activate_BeeOND = self.run_options.get('activate_BeeOND')
         comm_str = self.run_command()
 
         lines = []
         lines.append('#!/bin/bash')
         lines.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
         lines.append('#SBATCH --cpus-per-task=%s    ### Number of threads per task (OMP threads)'%omp)
-        if sbatch_options is not None: # add other options if present in the run_options of the calculator
-            for option in sbatch_options:
-                lines.append('#SBATCH %s'%option)
+        for option in sbatch_options: # add other SBATCH options
+            lines.append('#SBATCH %s'%option)
         lines.append('#SBATCH --output=%s.out'%job)
         lines.append('')
+
         lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
+        lines.append('export RUN_DIR=%s'%run_dir)
+        lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
         lines.append('')
+
+        lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
+        lines.append('echo "Job name $SLURM_JOB_NAME "')
         lines.append('echo "Job id $SLURM_JOB_ID"')
-        lines.append('echo "Number of mpi  $SLURM_NTASKS"')
+        lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
+        lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
+        lines.append('echo "Number of mpi $SLURM_NTASKS"')
         lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
+        lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
+        lines.append('echo "RUN_DIR path is $RUN_DIR"')
+        lines.append('echo " "')
         lines.append('')
+
+        if activate_BeeOND:
+            lines.append('echo "THe BeeOND option is activated. The I/O of the .ndb database is performed in $BEEOND_DIR"')
+            lines.append('if [ ! -d $BEEOND_DIR ]; then')
+            lines.append('echo "$BEEOND_DIR not found!"')
+            lines.append('exit')
+            lines.append('fi')
+            lines.append('echo " "')
+            lines.append('')
+            lines.append('echo "Add the option -O $BEEOND_DIR to the run command of the calculator"')
+            comm_str += ' -O %s'%self.BeeOND_dir
+            lines.append('echo " "')
+            lines.append('')
+
         lines.append('echo "execute : %s"'%comm_str)
         lines.append(comm_str)
+        lines.append('echo " "')
         lines.append('')
+
+        if activate_BeeOND:
+            lines.append('echo "Copy the folder with the ndb database in the $RUN_DIR"')
+            lines.append('echo "rsync -azv $BEEOND_DIR/ $RUN_DIR"')
+            lines.append('rsync -azv $BEEOND_DIR/ $RUN_DIR')
+            lines.append('echo " "')
+            lines.append('')
+
         lines.append('echo "JOB_DONE"')
         f = open(os.path.join(run_dir,job+'.sh'),'w')
         f.write('\n'.join(lines))
@@ -349,8 +452,7 @@ class YamboCalculator(Runner):
 
     def run_command(self):
         """
-        Define the run command used to run the computation. The value of the command
-        depends on the chosen scheduler.
+        Define the run command used to run the computation.
 
         Return:
             :py:class:`string` : command that runs the computation
@@ -365,12 +467,7 @@ class YamboCalculator(Runner):
         jobname = self.run_options.get('jobname',name)
         verbose = self.run_options.get('verbose')
 
-        if scheduler == 'direct':
-            set_run_dir = 'cd %s; '%run_dir
-            command = set_run_dir + mpi_run + ' ' + str(mpi) + ' ' + executable
-        if scheduler == 'slurm':
-            command = mpi_run + ' ' + str(mpi) + ' ' + executable
-
+        command = mpi_run + ' ' + str(mpi) + ' ' + executable
         input_name = name + '.in'
         comm_str =  command + ' -F %s -J %s -C %s'%(input_name,jobname,name)
         if verbose: print('run command: %s' %comm_str)
@@ -407,13 +504,13 @@ class YamboCalculator(Runner):
 
         return is_ended
 
-    def _clean_run_dir(self):
+    def clean_run_dir(self):
         """
         Clean the run_dir before performing the computation. Delete the job_$name.out
         file, the out_dir and ndb_dir folders.
 
         """
-        run_dir = self.run_options.get('run_dir', '.')
+        run_dir = self.run_options.get('run_dir','.')
         name = self.run_options.get('name')
         jobname = self.run_options.get('jobname',name)
         verbose = self.run_options.get('verbose')

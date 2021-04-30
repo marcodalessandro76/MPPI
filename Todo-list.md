@@ -14,12 +14,11 @@
 
 - Study the getFermi method of electronsdb of YamboPy. It can be an easy addon to the fermi method of PwParser.
 
-- Improve the skip in the YamboCalculator to manage also the skip of the ypp computation. Is it convenient to use the
-  presence of the folder $name as the criterion to skip the calculation?
-
 - Update the tutorial on the parsing of the green function.
 
 - Add a tutorial for the GaussianPulse class.
+
+- Update the is_to_run method in the QeCalculator to align it to the one the YamboCalculator class. 
 
 - Improve the run_the_calculations method of Dataset using the same approach introduce in the loop function of the Parallel
   module. The loop that wait the end of the processes can be removed and the extraction of data from the Queue

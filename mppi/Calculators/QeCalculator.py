@@ -1,6 +1,6 @@
 """
 This module manages calculations performed with QuantumESPRESSO.
-Actually the run of the computation can be managed by the python subprocess package (direct scheduler)
+The run of the computation is performed by the python subprocess package (direct scheduler)
 or by the slurm scheduler.
 """
 
@@ -11,11 +11,6 @@ class QeCalculator(Runner):
     """
     Perform a QuantumESPRESSO calculation. Computations are managed by a scheduler that,
     in the actual implementation of the class, can be `direct` or `slurm`.
-    Computations are performed in the folder specified by the ``run_dir`` parameter. The input and
-    the .log files are written in the run_dir. Instead, the $prefix.xml file and the $prefix.save
-    folders are written in the ``out_dir`` path. The values of the prefix and out_dir variables
-    are read from the input file. If the ``out_dir`` path is a relative path its root is located
-    in the ``run_dir`` folder.
 
     Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
@@ -42,6 +37,12 @@ class QeCalculator(Runner):
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        kwargs : other parameters that are stored in the _global_options dictionary
 
+    Computations are performed in the folder specified by the ``run_dir`` parameter. The input and
+    the .log files are written in the run_dir. Instead, the $prefix.xml file and the $prefix.save
+    folders are written in the ``out_dir`` path. The values of the prefix and out_dir variables
+    are read from the input file. If the ``out_dir`` path is a relative path its root is located
+    in the ``run_dir`` folder.
+    
     Example:
      >>> code = calculator(omp=1,mpi=4,mpi_run='mpirun -np',skip=True,clean_restart=True,verbose=True,scheduler='direct')
      >>> code.run(input = ..., run_dir = ...,name = ..., source_dir = ..., **kwargs)
@@ -461,14 +462,15 @@ class QeCalculator(Runner):
 
     def _get_outdir_path(self):
         """
-        Get the absolute out_dir path built from the ``outdir`` parameter of the input file
-        and the ``run_dir`` parameter of the calculator.
+        Get the absolute out_dir path. The path is built using the ``outdir`` parameter
+        of the input file. If ``outdir`` is provided as a relative address the path starts
+        from the ``run_dir`` of the calculator.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
         out_dir = input.get_outdir()
-        if os.path.isabs(out_dir): # if out_dir is provided as an abs path in the input return out_dir
+        if os.path.isabs(out_dir):
             return out_dir
-        else: # if out_dir is provided as a relative path return the absolute path of run_dir/out_dir
+        else:
             return os.path.abspath(os.path.join(run_dir,out_dir))
