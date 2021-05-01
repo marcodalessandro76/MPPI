@@ -59,7 +59,7 @@ then from the source folder of MPPI move to `sphinx_source/tutorials` and run th
 
 ## Requirements
 - QuantumESPRESSO (tested with 6.6): http://www.quantum-espresso.org/
-- yambo (tested with 5.0 devel): http://www.yambo-code.org/
+- yambo (tested with 5.1 devel): http://www.yambo-code.org/
 
 ## Authors
 - [Marco D'Alessandro](https://github.com/marcodalessandro76/)

@@ -257,11 +257,12 @@ class YamboInput(dict):
         self['variables']['NETime'] = [sim_time,time_units]
         self['variables']['IOtime'] = [io_time,io_units]
 
-    def set_rt_cpu(self,k):
+    def set_rt_cpu(self,k=1,b=1,q=1,qp=1):
         """
-        Set the parallelization of the run
+        Set the parallelization roles of the run
         """
-        self['variables']['RT_CPU'] = '%s.1.1.1'%k
+        self['variables']['RT_CPU'] = '%s.%s.%s.%s'%(k,b,qp,q)
+        self['variables']['RT_ROLEs'] = 'k.b.qp.q'
 
     # Set methods useful for Ypp inputs
 
