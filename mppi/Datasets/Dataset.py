@@ -9,13 +9,17 @@ from mppi.Calculators.Runner import Runner
 
 def name_from_id(id):
     """
-    Convert the id into a run name. If id is a string, set name = id, if it is a
-    dictionary build the name string of the run from the id dictionary.
+    Convert the id into a run name.
+    If id is a string, set name = id.
+    If id is a dictionary set name = key+'_'+str(id[key])+'-' for all the keys of the id.
+    If id is a tuple set name = str(element)+'-' for all the elements of the id.
 
     Args:
         id : id associated to the run
+
     Returns:
        name (:py:class:`str`): name of the run associated to the dictionary ``id``
+
     """
     if type(id) is str :
         name = id
@@ -25,9 +29,15 @@ def name_from_id(id):
         for k in keys:
             name += k+'_'+str(id[k])+'-'
         name = name.rstrip('-')
+    elif type(id) is tuple :
+        name=''
+        for element in id:
+            name += str(element)+'-'
+        name = name.rstrip('-')
     else :
         print('id type not recognized')
         name = None
+
     return name
 
 def convergence_plot(**kwargs):
