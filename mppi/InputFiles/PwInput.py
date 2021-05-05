@@ -318,7 +318,7 @@ class PwInput(dict):
             degauss (:py:class:`float`) : value of the gaussian spreading (meV) for brillouin-zone
                 integration in metals
         """
-        from mppi.Utilities import HaToeV
+        from mppi.Utilities.Constants import HaToeV
         self['system']['occupations'] = "'"+occupations+"'"
         if occupations == 'smearing':
             self['system']['smearing'] = "'"+smearing+"'"
