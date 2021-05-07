@@ -295,11 +295,11 @@ class PwInput(dict):
 
     def set_pseudo_dir(self,pseudo_dir='pseudos'):
         """
-        Set the position of the folder with the pseudo-potentials. The method
-        converts the relative path provided as input, usually from the folder in
-        which the notebook is located to the absolute path, so that the pseudo
+        Set the position of the folder with the pseudo-potentials.
+        If a relative path (expressed from the root of the folder where the notebook
+        is located) is provided, it is converted to an absolute path, so that the pseudo
         location can be found from an arbitrary folder.
-
+ 
         Args:
             pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseduopotentials
 

@@ -185,9 +185,7 @@ class Dataset(Runner):
         parallel runs.
 
         Args:
-            selection (:py:class:`list`) : if not None only the runs in the list are computed.
-                This parameter is used only when the method is called by the :meth:`fetch_results`
-                method.
+            selection (:py:class:`list`) : if not None only the runs in the list are computed
 
         """
         import multiprocessing, time

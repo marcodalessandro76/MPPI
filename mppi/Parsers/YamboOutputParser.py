@@ -17,7 +17,7 @@ rt_column_names = {
     'orb_magnetization' :
         ['time','Ml_x','Ml_y','Ml_z','Mi_x','Mi_y','Mi_z'],
     'external_field' :
-        ['time','Ex_Re','Ey_Re','Ez_Re','Ex_Im','Ey_Im','Ez_Im','Intensity','Fluence']
+        ['time','Ex_Re','Ey_Re','Ez_Re','Ex_Im','Ey_Im','Ez_Im','Profile','Intensity','Fluence']
 }
 
 reference_column_names_extendOut = {
