@@ -18,12 +18,15 @@
 
 - Add a tutorial for the GaussianPulse class.
 
-- Update the is_to_run method in the QeCalculator to align it to the one the YamboCalculator class. 
+- Update the is_to_run method in the QeCalculator to align it to the one the YamboCalculator class.
 
 - Improve the run_the_calculations method of Dataset using the same approach introduce in the loop function of the Parallel
   module. The loop that wait the end of the processes can be removed and the extraction of data from the Queue
   can be changed.
 
+- Try to use the scipy theme and options defined in https://github.com/scipy/scipy/blob/master/doc/source/conf.py
+  The html should look like https://docs.scipy.org/doc/scipy/reference/tutorial/integrate.html. This procedure requires to add
+  a css file like https://github.com/scipy/scipy/blob/master/doc/source/_static/scipy.css
 
 ## FUTURE DEVELOPMENT
 

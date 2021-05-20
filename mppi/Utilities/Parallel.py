@@ -17,7 +17,7 @@ def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
         pars (:py:class:`array`) : array with the values iterate by the loop
         ntask (:py:class:`int`) : number of parallel tasks
         verbose (:py:class:`bool`) : determine the amount of information provided on terminal
-        args, kwargs : arguements and keyword arguments passed to func
+        args, kwargs : arguments and keyword arguments passed to func
 
      """
     def func_loop(func,pars_subset,task,output,*args,**kwargs):
