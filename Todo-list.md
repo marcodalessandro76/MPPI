@@ -28,6 +28,13 @@
   The html should look like https://docs.scipy.org/doc/scipy/reference/tutorial/integrate.html. This procedure requires to add
   a css file like https://github.com/scipy/scipy/blob/master/doc/source/_static/scipy.css
 
+- Define an update_from_remote function that implement the usage of rsync to fetch the results computed in a remote folder
+  into a local one. The function should implement a command like:
+
+  rsync -rLptgoDzv --exclude={'*_fragment_*','*_fragments_*'} -e ssh ismhpc:/remote_path local_path
+
+  the options --update and --dry-run can be included 
+
 ## FUTURE DEVELOPMENT
 
   1. ...

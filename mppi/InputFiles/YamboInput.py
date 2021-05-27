@@ -219,9 +219,9 @@ class YamboInput(dict):
 
     # Set methods useful for Yambo_rt inputs
 
-    def set_rt_field(self,index=1,int=1e3,int_units='kWLm2',fwhm=100,fwhm_units='fs',
+    def set_rt_field(self,index=1,int=1e3,int_units='kWLm2',fwhm=100.,fwhm_units='fs',
                     freq=1.5,freq_units='eV',kind='QSSIN',polarization='linear',
-                    direction=[1.,0.,0.],direction_circ=[0.,1.,0.],tstart=0,tstart_units='fs'):
+                    direction=[1.,0.,0.],direction_circ=[0.,1.,0.],tstart=0.,tstart_units='fs'):
         """
         Set the parameters of the field.
         The index parameter is an integer that defines the name of the Field$index.

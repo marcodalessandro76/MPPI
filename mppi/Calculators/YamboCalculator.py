@@ -151,7 +151,7 @@ class YamboCalculator(Runner):
        sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
             For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
-            With this options enabled ....
+            The value of the ``BeeOND_dir``is written as a data member of the class and can be modified if needed
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        kwargs : other parameters that are stored in the _global_options dictionary
 
@@ -165,7 +165,7 @@ class YamboCalculator(Runner):
      >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ..., **kwargs)
 
      When the run method is called the class runs the command:
-        cd run_dir ; mpi_run mpi executable_name -F name.in -J jobname -C name
+        cd run_dir ; mpi_run mpi executable_name -F name.in -J jobname -C name - O out_dir
 
      where the arguments of the run method are:
 
@@ -178,6 +178,9 @@ class YamboCalculator(Runner):
             part of the name of the output files.
         jobname (:py:class:`string`) : string with the values of the jobname. If this variable is not specified
             the value of name is attributed to jobname by process_run.
+        out_dir (:py:class:`string`) : position of the folder in which the $jobname folder is located. This parameter
+            is automatically set by the calculator the value of ``BeeOND_dir`` if the option `activate_BeeOND` is enabled.
+            Otherwise all the folders are written in the ``run_dir``.
         kwargs : other parameters that are stored in the run_options dictionary
 
     """
