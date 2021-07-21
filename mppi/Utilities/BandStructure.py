@@ -58,25 +58,27 @@ class BandStructure():
         self.high_sym_points = high_sym_points
 
     @classmethod
-    def from_Pw(cls,results,high_sym_points,set_gap=None,set_direct_gap=None):
+    def from_Pw(cls, results, high_sym_points, set_scissor = None, set_gap = None, set_direct_gap = None):
         """
         Initialize the BandStructure class from the result of a QuantumESPRESSO computation performed
         along a path. The class makes usage of the PwParser of this package.
 
         Args:
             results (:py:class:`string`) : the data-file-schema.xml that contains the result of the
-                            QuantumESPRESSO computation
+                    QuantumESPRESSO computation
             high_sym_points(:py:class:`dict`) : dictionary with the names and the coordinates of the
-                            high_sym_points of the path
-            set_gap (float) : set the value of the gap (in eV) of the system
-            set_direct_gap (float) : set the value of the direct gap (in eV) of the system. If set_gap
-                            is provided this parameter is ignored
+                    high_sym_points of the path
+            set_scissor (:py:class:`float`) : set the value of the scissor (in eV) that is added to the empty bands.
+                    If a scissor is provided the set_gap and set_direct_gap parameters are ignored
+            set_gap (:py:class:`float`) : set the value of the gap (in eV) of the system. If set_gap is provided
+                    the set_direct_gap parameter is ignored
+            set_direct_gap (:py:class:`float`) : set the value of the direct gap (in eV) of the system.
 
         """
         from mppi import Parsers as P
         data = P.PwParser(results,verbose=False)
         kpoints = data.kpoints
-        evals = data.get_evals(set_gap,set_direct_gap)
+        evals = data.get_evals(set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap)
         bands = evals.transpose()
         return cls(bands=bands,kpoints=kpoints,high_sym_points=high_sym_points)
 
@@ -179,5 +181,5 @@ class BandStructure():
                 plt.axvline(pos,color='black',ls='--')
 
         ax = plt.gca()
-        ax.set_xticklabels(labels,size=14)
         ax.set_xticks(positions)
+        ax.set_xticklabels(labels,size=14)
