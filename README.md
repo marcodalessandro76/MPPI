@@ -16,8 +16,8 @@ The package is composed by several module each of which contains one ore more cl
 - __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo.
 - __Parsers__ : classes to extract data from the output files and database QuantumESPRESSO and Yambo.
 - __Utilities__ : collect some useful low-level functions used by the other modules of the package.
-- __Models__ : implement some physical models. Actually the module contains one tool to deal with gaussian pulses and
-               and one to analyze the time dynamics of a two-level-system.
+- __Models__ : implement some physical models. Actually the module contains one tool to deal with gaussian pulses
+               and one to analyze the time dynamics of a two-level system.
 
 ## Installation
 To install the package you can clone this repository in a local folder, e.g. `/home/username/Applications/MPPI`.
@@ -46,7 +46,7 @@ from the folder where the package is installed. The root of the documentation is
 ## Tutorials and examples
 We provide many jupyter notebooks that show the functionality of each module of the package.
 The tutorials are organized as `Tutorial_$name_of_the_class`. Furthermore we also include a detailed
-example of Band structure calculation for various systems, this topic in included in the
+example of Band structure calculation for various systems, this topic is included in the
 `Analysis_BandStructure` notebook.
 
 To run the notebooks you need to install the jupyter-notebook or jupyter-lab package, that can be installed as

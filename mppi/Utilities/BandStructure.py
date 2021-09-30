@@ -25,7 +25,7 @@ def _parse_Ypp_output(data):
     kpoints = []
     for ind in [0,1,2]:
         kpoints.append(data['col'+str(index_kx+ind)])
-     # kpoints is converted to np.array to perfrom the transpose and convert back
+     # kpoints is converted to np.array to perform the transpose and convert back
      # to list since it is needed as a list by BandStructure
     kpoints = list(map(list,list(np.array(kpoints).transpose())))
     bands = []

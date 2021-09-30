@@ -146,15 +146,29 @@ class YamboDftParser():
         gap = U.get_gap(self.evals,self.nbands_full,verbose=verbose)
         return gap
 
-    def eval_lattice_volume(self):
+    def eval_lattice_volume(self, rescale = False):
         """
-        Compute the volume of a lattice (in a.u.)
+        Compute the volume of the direct lattice. If ``rescale`` is False the results is expressed in a.u., otherwise
+            the lattice vectors are expressed in units of alat.
 
         Returns:
-            :py:class:`float` : lattice volume in a.u.
+            :py:class:`float` : lattice volume
 
         """
-        return U.eval_lattice_volume(self.lattice)
+        lattice = self.get_lattice(rescale=rescale)
+        return U.eval_lattice_volume(lattice)
+
+    def eval_reciprocal_lattice_volume(self, rescale = False):
+        """
+        Compute the volume of the reciprocal lattice. If ``rescale`` is True the reciprocal lattice vectors are expressed
+        in units of 2*np.pi/alat.
+
+        Returns:
+            :py:class:`float` : reciprocal lattice volume
+
+        """
+        lattice = self.get_reciprocal_lattice(rescale=rescale)
+        return U.eval_lattice_volume(lattice)
 
     def get_lattice(self, rescale = False):
         """
