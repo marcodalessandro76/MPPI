@@ -218,20 +218,30 @@ class Dos():
         energies, weights = convert_PwData(evals,weights)
         self.append(energies,weights=weights,label=label,minVal=minVal,maxVal=maxVal,step =step,eta=eta,broad_kind=broad_kind)
 
-    def plot(self, plt, rescale = False, include = None, legend = True):
+    def plot(self, plt, axes=None, rescale = False, include = None, legend = True, **kwargs):
         """
         Plot the elements of the Dos class
 
         Args:
+            plt(:py:class:`matplotlib.pyplot`) : the matplotlib object
+            plt(:py:class:`matplotlib.pyplot.axes`) : the matplotlib axes object. If provided the plot
+                is performed on the given axes
             rescale (:py:class:`bool`) : if True all the dos are rescaled to the same maximum value equal to 1.0 (useful for comparison)
             include (:py:class:`list`) : list with the indexes (as appended to the dos member ) of the dos that are plotted
             legend (:py:class:`bool`) : if True show the legend of the plot
+            kwargs : further parameter to edit the line style of the plot
+
 
         """
         to_plot = include if include is not None else range(len(self.dos))
+        if axes is not None:
+            ax = axes
+        else:
+            ax = plt.gca()
+
         for ind in to_plot:
             scale = 1.0
             if rescale: scale = max(self.dos[ind][1])
-            plt.plot(self.dos[ind][0],self.dos[ind][1]/scale,label=self.labels[ind])
+            ax.plot(self.dos[ind][0],self.dos[ind][1]/scale,label=self.labels[ind],**kwargs)
         if legend:
-            plt.legend()
+            ax.legend()

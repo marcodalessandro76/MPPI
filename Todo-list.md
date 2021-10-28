@@ -20,7 +20,7 @@
 
 - Update the is_to_run method in the QeCalculator to align it to the one the YamboCalculator class.
 
-- Improve the run_the_calculations method of Dataset using the same approach introduce in the loop function of the Parallel
+- Improve the run_the_calculations method of Dataset using the same approach introduced in the loop function of the Parallel
   module. The loop that wait the end of the processes can be removed and the extraction of data from the Queue
   can be changed.
 
@@ -33,7 +33,8 @@
 
   rsync -rLptgoDzv --exclude={'*_fragment_*','*_fragments_*'} -e ssh ismhpc:/remote_path local_path
 
-  the options --update and --dry-run can be included 
+  the options --update and --dry-run can be included
+
 
 ## FUTURE DEVELOPMENT
 

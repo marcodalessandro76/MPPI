@@ -23,7 +23,7 @@ You can also install the package using the pip installer, in this case from the 
 
   pip3 install -e .
 
-Note that the _editable_ -e option creates a link from the location of the package to local python repository folder.
+Note that the *editable* -e option creates a link from the location of the package to local python repository folder.
 In this way you do not need to recompile the package if you make some modifications, useful for coding.
 
 Finally, you can also install the package inside a virtual environment.
@@ -79,13 +79,12 @@ Organize runs and analyze output in a dataset
 .. toctree:: datasets
 .. toctree:: postProcessing
 
-The Utilities module collects some useful tools like the managment of the Dos, the study of the band structure and the generation of
+The Utilities* module collects some useful tools like the managment of the Dos, the study of the band structure and the generation of
 gaussian pulses. Moreover the module contains useful tools to ease the computations. The module is organized in several files.
 
 .. toctree:: constants.rst
 .. toctree:: attributeDict.rst
-.. toctree:: pwUtils.rst
-.. toctree:: yamboUtils.rst
+.. toctree:: tools.rst
 .. toctree:: bandStructure.rst
 .. toctree:: dos.rst
 

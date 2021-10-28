@@ -1,7 +1,7 @@
-PwUtils
--------
+Tools
+-----
 
-.. automodule:: mppi.Utilities.PwUtils
+.. automodule:: mppi.Utilities.Tools
     :members:
     :undoc-members:
     :show-inheritance:

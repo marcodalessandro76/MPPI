@@ -156,12 +156,15 @@ class BandStructure():
                     positions.append(path[ind])
         return labels,positions
 
-    def plot(self, plt, selection = None, show_vertical_lines = True, **kwargs):
+    def plot(self, plt, axes = None, selection = None, show_vertical_lines = True, **kwargs):
         """
         Plot the band structure.
 
         Args:
             plt(:py:class:`matplotlib.pyplot`) : the matplotlib object
+            plt(:py:class:`matplotlib.pyplot.axes`) : the matplotlib axes object. If provided the plot
+                is performed on the given axes
+
             selection (list) : the list of bands that are plotted. If None all the
                 bands computed by QuantumESPRESSO are plotted. The band index starts
                 from zero
@@ -174,12 +177,16 @@ class BandStructure():
 
         plotted_bands = list(ind for ind in range(nbands)) if selection is None else selection
 
+        if axes is not None:
+            ax = axes
+        else:
+            ax = plt.gca()
+
         for ind in plotted_bands:
-            plt.plot(path,self.bands[ind],**kwargs)
+            ax.plot(path,self.bands[ind],**kwargs)
         if show_vertical_lines :
             for pos in positions:
-                plt.axvline(pos,color='black',ls='--')
+                ax.axvline(pos,color='black',ls='--')
 
-        ax = plt.gca()
         ax.set_xticks(positions)
         ax.set_xticklabels(labels,size=14)
