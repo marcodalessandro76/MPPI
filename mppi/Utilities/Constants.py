@@ -17,10 +17,14 @@ Planck_reduced_ev_ps = 6.58211957e-4
 Reduced Planck constant (h/2pi) in eV*ps.
 """
 
-
 Bohr_radius = 5.291772e-11
 """
 The Bohr radius in meter.
+"""
+
+Bohr_to_Angstrom = 0.529177249
+"""
+Conversion factor from Bohr (the length units in a.u.) to Angstrom.
 """
 
 electron_charge = 1.60217662e-19

@@ -293,19 +293,24 @@ class PwInput(dict):
         """
         self['control']['outdir'] = "'%s'"%outdir
 
-    def set_pseudo_dir(self,pseudo_dir='pseudos'):
+    def set_pseudo_dir(self, pseudo_dir='pseudos', abs_path=False):
         """
         Set the position of the folder with the pseudo-potentials.
-        If a relative path (expressed from the root of the folder where the notebook
-        is located) is provided, it is converted to an absolute path, so that the pseudo
-        location can be found from an arbitrary folder.
- 
+        If `abs_path` is True the path is converted in a absolute path. In this way it
+        is possible to provide a relative path (expressed from the root of the folder where the notebook
+        is located) and the pseudo location can be found from an arbitrary folder.
+
         Args:
             pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseduopotentials
 
+        Note:
+            If the folder tree contains blank spaces, QuantumESPRESSO cannot be able to find the pseudo, in this
+            cas it is safer to provide a relative path (expressed from the folder where the input file is
+            written)
+
         """
-        pseudo_dir_abs = os.path.abspath(pseudo_dir)
-        self['control']['pseudo_dir'] = "'%s'"%pseudo_dir_abs
+        if abs_path: pseudo_dir = os.path.abspath(pseudo_dir)
+        self['control']['pseudo_dir'] = "'%s'"%pseudo_dir
 
     def set_occupations(self,occupations='fixed',smearing='fermi-dirac',degauss=50.):
         """
