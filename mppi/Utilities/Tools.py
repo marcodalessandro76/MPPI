@@ -113,7 +113,7 @@ def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, over
         raise ValueError('The source directory', source_dir,
                          ' does not exists.')
     if not os.path.isdir(run_dir):
-        os.mkdirs(run_dir)
+        os.makedirs(run_dir)
         print('Create folder %s'%run_dir)
     # Evaluate if the SAVE_dir folder has to be removed if found
     if os.path.isdir(SAVE_dir):
