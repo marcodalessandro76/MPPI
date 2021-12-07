@@ -99,7 +99,9 @@ def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, over
 
     Args:
         source_dir (:py:class:`string`) : name of the folder with the source nscf QuantumESPRESSO computation
-        run_dir (:py:class:`string`) : folder where the SAVE folder is linked or copied
+        run_dir (:py:class:`string`) : folder where the SAVE folder is linked or copied. The run_dir can be
+            a nested directory path and if the path is not found is created by the function using the
+            :py:meth:`os.makedirs`
         command (:py:class:`string`) : command for generation of the SAVE Folder. Default is 'p2y -a 2'
         make_link (:py:class:`bool`) : if True create a symbolic link
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the
@@ -111,7 +113,7 @@ def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, over
         raise ValueError('The source directory', source_dir,
                          ' does not exists.')
     if not os.path.isdir(run_dir):
-        os.mkdir(run_dir)
+        os.mkdirs(run_dir)
         print('Create folder %s'%run_dir)
     # Evaluate if the SAVE_dir folder has to be removed if found
     if os.path.isdir(SAVE_dir):
