@@ -55,14 +55,16 @@ def convergence_plot(**kwargs):
     plt.title('Convergence plot for dataset '+kwargs['label'],size=14)
     ax = plt.gca()
     ax.grid(color='grey', linestyle='--',linewidth=0.5)
-    ax.tick_params(axis='both', which='major', labelsize=14)
     ax.set_xticklabels(iruns, rotation=45)
+    ax.tick_params(axis='both', which='major', labelsize=14)
     plt.plot(iruns,values)
     plt.scatter(iruns,values,color='red')
     if id_conv is not None:
         id_conv = name_from_id(id_conv)
         id_last = name_from_id(ids[-1])
         ax.axvline(id_conv,linestyle='--',color='black')
+
+
 
 class Dataset(Runner):
     """

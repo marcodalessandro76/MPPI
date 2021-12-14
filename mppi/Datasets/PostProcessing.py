@@ -76,3 +76,27 @@ def yambo_parse_data(dataset):
     for run,data in dataset.results.items():
         results[run] = P.YamboParser(data,verbose=False)
     return results
+
+def yambo_get_gap(dataset):
+    """
+    Extract the value of the gap from the results dictionary of the dataset.
+    The function requires that the parameters k_full and band_full are defined as
+    kwargs in the dataset, and the optional paremeters k_empty and band_empty can
+    be provided in the same way.
+
+    Args:
+        dataset(:class:`Dataset`) : the instance of Dataset
+
+    Returns:
+        :py:class:`dict` : dictionary with the gap (in eV) for all the (computed) runs
+            of the dataset. Information on the gap are written on terminal if the
+            verbose option of the Dataset is True
+    """
+    from mppi import Parsers as P
+    pars = dataset.global_options()
+    
+    gap = {}
+    for run,data in dataset.results.items():
+        results = P.YamboParser(data,verbose=False)
+        gap[run] = results.data.get_gap(**pars)
+    return gap

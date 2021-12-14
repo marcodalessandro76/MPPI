@@ -5,9 +5,8 @@ Module that manages the parsing of a Yambo o- file(s).
 import numpy as np
 
 # Specifies the name of the columns of the o- files for various type of runs. There are
-# two distint dictionaries depending if the ExtendOut option has been activated or not.
+# two distint dictionaries because the qp labels dependes on the extendOut option.
 
-# The rt outputs are not modified by the extendOut option
 rt_column_names = {
     'carriers' : ['time','dnhmne','dnh','dne'],
     'currents' : ['time','j_x','j_y','j_z'],
@@ -19,18 +18,17 @@ rt_column_names = {
     'external_field' :
         ['time','Ex_Re','Ey_Re','Ez_Re','Ex_Im','Ey_Im','Ez_Im','Profile','Intensity','Fluence']
 }
-
-reference_column_names_extendOut = {
-    'hf' : ['kpoint','band','e0','ehf','dft','hf'],
-    'qp' : ['kpoint','band','e0','e','eme0','dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs'],
+hf_column_names = {
+    'hf' : ['kpoint','band','E0','Ehf','Vxc','Vnlxc']
 }
-reference_column_names_extendOut.update(rt_column_names)
-
-reference_column_names = {
-    'hf' : ['kpoint','band','e0','ehf','dft','hf'],
-    'qp' : ['kpoint','band','e0','eme0','sce0'],
+qp_column_names = {
+    'qp' : ['kpoint','band','E0','EmE0','sce0']
 }
-reference_column_names.update(rt_column_names)
+qp_column_names_extendOut = {
+    'qp' : ['kpoint','band','E0','E','EmE0','Dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs']
+}
+reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names}
+reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut}
 
 def file_to_list(filename,skip='#'):
     """
@@ -99,6 +97,17 @@ def make_dict(columns,suffix,extendOut):
         data[key] = col
     return data
 
+def parseYamboOutput(file,suffix,extendOut):
+    """
+    Read the data from the o- file. Data of the file are stored as key : values
+    in the self[suffix] dictionary. The names of the keys are taken from the
+    reference_column_names or from the reference_column_names_extendOut (depending on
+    the value of the boolean extendOut), if the suffix is recognized.
+    """
+    lines = file_to_list(file)
+    columns = build_columns(lines)
+    return make_dict(columns,suffix,extendOut)
+
 def files_from_folder(path):
     """
     Scan the files in the folder and build a list with the names of all the files
@@ -137,8 +146,7 @@ class YamboOutputParser(dict):
         for file in files:
             suffix = file.rsplit('.')[-1]
             if verbose: print('Parse file',file)
-            self.parseYamboOutput(file,suffix,extendOut)
-            self[suffix] = self.parseYamboOutput(file,suffix,extendOut)
+            self[suffix] = parseYamboOutput(file,suffix,extendOut)
 
     @classmethod
     def from_path(cls,path,verbose = False, extendOut = True):
@@ -154,17 +162,6 @@ class YamboOutputParser(dict):
         files = files_from_folder(path)
         return cls(files,verbose=verbose,extendOut=extendOut)
 
-    def parseYamboOutput(self,file,suffix,extendOut):
-        """
-        Read the data from the o- file. Data of the file are stored as key : values
-        in the self[suffix] dictionary. The names of the keys are taken from the
-        reference_column_names or from the reference_column_names_extendOut (depending on
-        the value of the boolean extendOut), if the suffix is recognized.
-        """
-        lines = file_to_list(file)
-        columns = build_columns(lines)
-        return make_dict(columns,suffix,extendOut)
-
     def get_info(self):
         """
         Provide information on the keys structure of the instance of the class
@@ -172,3 +169,65 @@ class YamboOutputParser(dict):
         print('YamboOutputParser variables structure')
         for key,value in self.items():
             print('suffix',key,'with',value.keys())
+
+    def get_energy(self,k,bnd,verbose=False):
+        """
+        Compute the energy (in eV) of the selected state with k and bnd indexes.
+        The method is implemented for the 'hf' and 'qp' runleves. In the first case
+        it seeks for the 'Ehf' variable while in the former it looks for the 'E' variable
+        (written only with the extendOut option enabled!).
+        In the other cases a warning is created.
+
+        Args:
+            k (:py:class:`int`): k-point index
+            bnd (:py:class:`int`) : band index
+
+        Return:
+            (:py:class:`float`) : the value of the energy in eV
+
+        """
+        energy_value = {'hf':'Ehf','qp':'E'}
+        runlevel = list(self.keys())[0]
+        if runlevel not in energy_value:
+            print('Actual runlevel %s not implemented for energy computation!'%runlevel)
+            return None
+        if verbose : print('Compute energy of the state k=%s,b=%s for the %s runlevel.'%(k,bnd,runlevel))
+        kpoint = self[runlevel]['kpoint']
+        band = self[runlevel]['band']
+        index = -1
+        for ind, t  in enumerate(zip(kpoint,band)):
+            if t == (k,bnd) : index = ind
+        if index == -1:
+            print('k-points and/or band indexes not found!')
+            return None
+        energy = self[runlevel][energy_value[runlevel]][index]
+        return energy
+
+    def get_gap(self,k_full,band_full,verbose=False,**kwargs):
+        """
+        Compute the energy gap of the selected (k_full,band_full) and
+        (k_empty,band_empty) couples (in eV).
+
+        Args:
+            k_full (:py:class:`int`): k-point index of the full state
+            band_full (:py:class:`int`) : band index of the full state
+            **kwargs : these parameters allows the user to set the k_empty and
+                band_empty parameters. If not provided the valus k_empty=k_full
+                and band_empty=band_full+1 are used.
+
+        Return:
+            (:py:class:`float`) : the value of the band gap in eV
+
+        """
+        if 'k_empty' in kwargs : k_empty = kwargs['k_empty']
+        else: k_empty = k_full
+        if 'band_empty' in kwargs : band_empty = kwargs['band_empty']
+        else: band_empty = band_full+1
+        E_full = self.get_energy(k_full,band_full,verbose=verbose)
+        E_empty = self.get_energy(k_empty,band_empty,verbose=verbose)
+        energy_gap = E_empty-E_full
+        if verbose :
+            print('(kpoint,band) indexes of the full state:',(k_full,band_full))
+            print('(kpoint,band) indexes of the empty state:',(k_empty,band_empty))
+            print('Energy gap = %s eV'%energy_gap)
+        return energy_gap
