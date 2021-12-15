@@ -64,8 +64,6 @@ def convergence_plot(**kwargs):
         id_last = name_from_id(ids[-1])
         ax.axvline(id_conv,linestyle='--',color='black')
 
-
-
 class Dataset(Runner):
     """
     Class to perform a set of calculations and to manage the associated results.

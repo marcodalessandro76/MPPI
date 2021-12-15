@@ -5,6 +5,7 @@ or by the slurm scheduler.
 """
 
 from .Runner import Runner
+from mppi.Utilities import Tools
 import os
 
 class QeCalculator(Runner):
@@ -19,8 +20,8 @@ class QeCalculator(Runner):
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
        scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
             'direct' that runs the computation using the python subprocess package and 'slurm' that creates a slurm script
-       skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking if the file
-            $prefix.xml is present in the run_dir folder
+       skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking if the log
+            file of the run contains the string `job_done`, defined as a data member of this class
        clean_restart (:py:class:`bool`) : if True delete the folder $prefix.save before running the computation
        dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
             for submitting the job, but the computations are not run
@@ -32,17 +33,17 @@ class QeCalculator(Runner):
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
             With this options enabled the ``out_dir`` of the run is set in the ``BeenOND_dir`` folder and the input wavefunction
             of the source folder (if needed) are copied in the ``BeeOND_dir``. At the end of the run the ``out_dir`` is moved
-            in its original path. The value of the ``BeeOND_dir``is written as a data member of the class and can be modified
+            in its original path. The value of the ``BeeOND_dir`` is written as a data member of the class and can be modified
             if needed
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        kwargs : other parameters that are stored in the _global_options dictionary
 
     Computations are performed in the folder specified by the ``run_dir`` parameter. The input and
-    the .log files are written in the run_dir. Instead, the $prefix.xml file and the $prefix.save
+    the log files are written in the run_dir. Instead, the $prefix.xml file and the $prefix.save
     folders are written in the ``out_dir`` path. The values of the prefix and out_dir variables
     are read from the input file. If the ``out_dir`` path is a relative path its root is located
     in the ``run_dir`` folder.
-    
+
     Example:
      >>> code = calculator(omp=1,mpi=4,mpi_run='mpirun -np',skip=True,clean_restart=True,verbose=True,scheduler='direct')
      >>> code.run(input = ..., run_dir = ...,name = ..., source_dir = ..., **kwargs)
@@ -63,6 +64,7 @@ class QeCalculator(Runner):
 
     """
     BeeOND_dir = '/mnt/${SLURM_JOB_USER}-jobid_${SLURM_JOB_ID}'
+    job_done = 'JOB DONE.'
 
     def __init__(self,
                  omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
@@ -87,9 +89,10 @@ class QeCalculator(Runner):
         run_dir = self.run_options.get('run_dir', '.')
         input= self.run_options.get('input')
         name = self.run_options.get('name','default')
-        skip = self.run_options.get('skip')
         clean_restart= self.run_options.get('clean_restart')
         verbose = self.run_options.get('verbose')
+        self.is_to_run()
+        is_to_run = self.run_options.get('is_to_run')
 
         # Create the run_dir and write the input file
         self._ensure_run_directory()
@@ -99,7 +102,7 @@ class QeCalculator(Runner):
             print('input not provided')
 
         # Clean the folders before the run
-        if not skip:
+        if is_to_run:
             if clean_restart:
                 self.clean_run()
             else:
@@ -116,8 +119,9 @@ class QeCalculator(Runner):
         and wait the end of the computation before passing to the :meth:`post_processing` method.
 
         """
-        to_run = self.is_to_run()
-        if to_run:
+        is_to_run = self.run_options.get('is_to_run')
+
+        if is_to_run:
             job = self.run_job()
             self.wait(job)
         return {}
@@ -145,29 +149,27 @@ class QeCalculator(Runner):
 
     def is_to_run(self):
         """
-        The method evaluates if the computation can be skipped. This is done by
-        checking if the file $prefix.xml is already present in the out_dir.
-
-        Return:
-            :py:class:`bool` : the boolean is True if the computation needs to be run
+        The method evaluates if the computation has to be performed.  If ``skip`` is
+        False the run is always performed, instead if ``skip`` is True the method
+        checks if the log file exsists and contains the string `job_done`
+        defined as a member of the class.
+        The method adds the key `is_to_run` to ``the run_options`` of the class.
 
         """
         skip = self.run_options.get('skip')
-        name = self.run_options.get('name','default')+'.in'
-        input = self.run_options['input']
-        prefix = input.get_prefix()
-        out_dir = self._get_outdir_path()
-        skipfile = os.path.join(out_dir,prefix)+'.xml'
+        run_dir = self.run_options.get('run_dir', '.')
+        name = self.run_options.get('name','default')
+        logfile = os.path.join(run_dir,name)+'.log'
         verbose = self.run_options.get('verbose')
 
         if not skip:
-            return True
+            self.run_options['is_to_run'] = True
         else:
-            if os.path.isfile(skipfile):
-                if verbose: print('Skip the run of the input file',name)
-                return False
+            if Tools.find_string_file(logfile,self.job_done) is not None:
+                if verbose: print('Skip the run of',name)
+                self.run_options['is_to_run'] = False
             else:
-                return True
+                self.run_options['is_to_run'] = True
 
     def run_job(self):
         """
@@ -436,7 +438,8 @@ class QeCalculator(Runner):
     def copy_source_dir(self):
         """
         Copy the source_dir (if provided) in the out_dir and atttibute to the copied folder
-        the name $prefix.save.
+        the name $prefix.save. The operation is performed only if a folder with the target name
+        of the source_dir is not found in the out_dir
 
         Args:
             source_dir: the name of the source_dir (tipically it is the .save folder

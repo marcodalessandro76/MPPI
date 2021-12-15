@@ -21,7 +21,7 @@ class YamboParser():
         dft (:class:`YamboDftParser`) : contains the instance of the :class:`YamboDftParser` that
             manages the parsing of the ``ns.db1`` database
         RTGreen (:class:`YamboRTGlesserParser`) : contains the instance of the
-            :class:`YamboRTGlesserParser` that manages the parsing of the ``ndb.RT_G_PAR`
+            :class:`YamboRTGlesserParser` that manages the parsing of the `ndb.RT_G_PAR`
             database
 
     """

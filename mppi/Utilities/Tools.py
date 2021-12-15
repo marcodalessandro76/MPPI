@@ -23,6 +23,27 @@ or to load directly some elements
 import numpy as np
 import os
 
+def find_string_file(file,string):
+    """
+    Look for a string in the lines of a file.
+
+    Args:
+        file (:py:class:`string`) : name of the file, including the path
+        string (:py:class:`string`) : name of the string
+
+    Return:
+        :py:class:`string` : return the first occurence of the line that match
+        the search. If no line is found or the file does not exsists return None
+
+    """
+    line = None
+    if os.path.isfile(file):
+        for l in open(file,'r'):
+            if string in l:
+                line = l
+                break
+    return line
+
 def eval_FT(time,values,time_units = 'fs', verbose = True):
     """
     Compute the FT of the (real-valued) values array using the time array as x-values.
@@ -86,15 +107,15 @@ def build_kpath(*kpoints,numstep=40):
     klist.append(kpoints[-1]+[0])
     return klist
 
-def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, overwrite_if_found = False):
+def build_SAVE(source_dir, run_dir, command = 'p2y', make_link = True, overwrite_if_found = False):
     """
     Build the SAVE folder for a yambo computation.
 
-    The function creates the SAVE folder in the source_dir using the command provided
-    as the command parameter (the option -a 2 ensures that labelling of the
-    high-symmetry kpoints is consistent in both QE and Yambo) and create a symbolic
-    link (or a copy) of the SAVE folder in the run_dir. This procedure is performed only if the SAVE
-    folder is not already found in the run_dir, unless the ``overwrite_if_found`` parameter is True.
+    The function creates the SAVE folder in the source_dir using the command provided as the command
+    parameter (in some cases the option -a 2 is needed to ensure that labelling of the high-symmetry
+    kpoints is consistent in both QE and Yambo) and create a symbolic link (or a copy) of the SAVE folder
+    in the run_dir. This procedure is performed only if the SAVE folder is not already found in the run_dir,
+    unless the ``overwrite_if_found`` parameter is True.
     If the source_dir is not found an exception is raised.
 
     Args:
@@ -102,7 +123,7 @@ def build_SAVE(source_dir, run_dir, command = 'p2y -a 2', make_link = True, over
         run_dir (:py:class:`string`) : folder where the SAVE folder is linked or copied. The run_dir can be
             a nested directory path and if the path is not found is created by the function using the
             :py:meth:`os.makedirs`
-        command (:py:class:`string`) : command for generation of the SAVE Folder. Default is 'p2y -a 2'
+        command (:py:class:`string`) : command for generation of the SAVE Folder. Default is 'p2y'.
         make_link (:py:class:`bool`) : if True create a symbolic link
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the
             r_setup (if found) and build them again

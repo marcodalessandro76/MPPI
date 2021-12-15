@@ -5,21 +5,21 @@ or by the slurm scheduler.
 """
 
 from .Runner import Runner
+from mppi.Utilities import Tools
 import os
 
 def get_report(outputPath):
     """
-    Look for the name of the 'r-*' file produced by the execution of the code.
+    Look for the name of the r-* file produced by the execution of the code.
 
     Args:
-        outputPath (:py:class:`string`) : folder with the r-* and the 'o-*' files
+        outputPath (:py:class:`string`) : folder with the r-* and the o-* files
 
     Return:
         :py:class:`string` : A string with the name, including the path, of the
-        file 'r-*' produced by the run
+        file r-* produced by the run
 
     """
-
     report = ''
     if os.path.isdir(outputPath):
         for file in os.listdir(outputPath):
@@ -27,38 +27,16 @@ def get_report(outputPath):
                 report = os.path.join(outputPath,file)
     return report
 
-def find_string_file(file,string):
-    """
-    Look for a string in the lines of a file.
-
-    Args:
-        file (:py:class:`string`) : name of the file, including the path
-        string (:py:class:`string`) : name of the string
-
-    Return:
-        :py:class:`string` : return the first occurence of the line that match
-        the search. If no line is found or the file does not exsists return None
-
-    """
-    line = None
-    if os.path.isfile(file):
-        for l in open(file,'r'):
-            if string in l:
-                line = l
-                break
-    return line
-
 def get_output_files(outputPath):
     """
-    Look for the names of the 'o-' file(s) produced by the execution of the code.
+    Look for the names of the o- file(s) produced by the execution of the code.
 
     Args:
-        outputPath (:py:class:`string`) : folder with the 'o-*' files
+        outputPath (:py:class:`string`) : folder with the o-* files
 
     Return:
         :py:class:`list` : A list with the names, including the path, of the
-        files 'o-*' produced by the run
-
+        files o-* produced by the run
     """
 
     output = []
@@ -78,7 +56,6 @@ def get_db_files(dbsPath):
     Return:
         :py:class:`dict`: A dictionary in which the keys are the extension of the
             databases found and the values are their names, including the path
-
     """
 
     dbs = {}
@@ -132,16 +109,15 @@ class YamboCalculator(Runner):
     Perform a Yambo calculation. Computations are managed by a scheduler that,
     in the actual implementation of the class, can be `direct` or `slurm`.
 
-
     Parameters:
        omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
        mpi (:py:class:`int`) : number of mpi processes
-       mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. 'mpirun -np' or 'mpiexec -np'
+       mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. `mpirun -np` or `mpiexec -np`
        executable (:py:class:`string`) : set the executable (yambo, ypp, yambo_rt, ...) of the Yambo package
        scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
             'direct' that runs the computation using the python subprocess package and 'slurm' that creates a slurm script
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking that the
-            report file built by yambo exsists and contains the string `game_over` defined as a data member of this class
+            report file built by yambo exsists and contains the string `game_over`, defined as a data member of this class
        clean_restart (:py:class:`bool`) : if True delete the folder with the output files and the database before running the computation
        dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
             for submitting the job, but the computations are not run
@@ -151,7 +127,7 @@ class YamboCalculator(Runner):
        sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
             For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
-            The value of the ``BeeOND_dir``is written as a data member of the class and can be modified if needed
+            The value of the ``BeeOND_dir`` is written as a data member of the class and can be modified if needed
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
        kwargs : other parameters that are stored in the _global_options dictionary
 
@@ -161,11 +137,11 @@ class YamboCalculator(Runner):
      is not provided in the run method the assumption jobname=name is made by the calculator.
 
      Example:
-     >>> code = YamboCalculator(omp=1,mpi=4,mpi_run='mpirun -np',executable='yambo',skip=True,verbose=True,scheduler='direct')
-     >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ..., **kwargs)
+        >>> code = YamboCalculator(omp=1,mpi=4,mpi_run='mpirun -np',executable='yambo',skip=True,verbose=True,scheduler='direct')
+        >>> code.run(input = ..., run_dir = ...,name = ...,jobname = ..., **kwargs)
 
-     When the run method is called the class runs the command:
-        cd run_dir ; mpi_run mpi executable_name -F name.in -J jobname -C name - O out_dir
+        When the run method is called the class runs the command:
+            cd run_dir ; mpi_run mpi executable_name -F name.in -J jobname -C name - O out_dir
 
      where the arguments of the run method are:
 
@@ -215,10 +191,11 @@ class YamboCalculator(Runner):
         run_dir = self.run_options.get('run_dir', '.')
         input = self.run_options.get('input')
         name = self.run_options.get('name','default')
-        skip = self.run_options.get('skip')
         clean_restart= self.run_options.get('clean_restart')
         verbose = self.run_options.get('verbose')
         SAVE = os.path.join(run_dir,'SAVE')
+        self.is_to_run()
+        is_to_run = self.run_options.get('is_to_run')
 
         # check if the run_dir and SAVE folder exist and write the input
         if not os.path.isdir(run_dir):
@@ -231,8 +208,8 @@ class YamboCalculator(Runner):
             else:
                 print('input not provided')
 
-        # Clean the run dir
-        if not skip:
+        # clean the run dir
+        if is_to_run:
             if clean_restart:
                 self.clean_run_dir()
             else:
@@ -246,8 +223,9 @@ class YamboCalculator(Runner):
         and wait the end of the computation before passing to the :meth:`post_processing` method.
 
         """
-        self.is_to_run()
-        if self.run_options['is_to_run']:
+        is_to_run = self.run_options.get('is_to_run')
+
+        if is_to_run:
             job = self.run_job()
             self.wait(job)
         return {}
@@ -276,9 +254,9 @@ class YamboCalculator(Runner):
         results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
         if verbose:
             report = results['report']
-            if find_string_file(report,self.game_over) is None:
-                print('Game_over string not found in report. Check the computation!')
-            time_sim = find_string_file(report,self.time_profile)
+            if Tools.find_string_file(report,self.game_over) is None:
+                print('game_over string not found in report. Check the computation!')
+            time_sim = Tools.find_string_file(report,self.time_profile)
             if  self.run_options['is_to_run'] is True and time_sim is not None:
                 print('Run performed in %s'%time_sim.split()[-1])
 
@@ -286,10 +264,11 @@ class YamboCalculator(Runner):
 
     def is_to_run(self):
         """
-        The method evaluates if the computation can be skipped. This is done by
-        checking if the report file exsists and contains the string `game_over`
+        The method evaluates if the computation has to be performed. If ``skip`` is
+        False the run is always performed, instead if ``skip`` is True the method
+        checks if the report file exsists and contains the string `game_over`
         defined as a member of the class.
-        The method adds the key `is_to_run` to ``the run_options`` of the class
+        The method adds the key `is_to_run` to ``the run_options`` of the class.
 
         """
         skip = self.run_options.get('skip')
@@ -302,7 +281,7 @@ class YamboCalculator(Runner):
         if not skip:
             self.run_options['is_to_run'] = True
         else:
-            if find_string_file(report,self.game_over) is not None:
+            if Tools.find_string_file(report,self.game_over) is not None:
                 if verbose: print('Skip the run of',name)
                 self.run_options['is_to_run'] = False
             else:

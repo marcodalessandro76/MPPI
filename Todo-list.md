@@ -18,11 +18,6 @@
 
 - Add a tutorial for the GaussianPulse class.
 
-- Update the is_to_run method in the QeCalculator to align it to the one the YamboCalculator class.
-
-- The clean_run_dir method of the YamboCalculator has to be called if is_to_run is True, and not only if
-  skip is False. For this reason the call of the method can be moved in the process_run method of the class.
-
 - Improve the run_the_calculations method of Dataset using the same approach introduced in the loop function of the Parallel
   module. The loop that wait the end of the processes can be removed and the extraction of data from the Queue
   can be changed.
@@ -31,7 +26,7 @@
   The html should look like https://docs.scipy.org/doc/scipy/reference/tutorial/integrate.html. This procedure requires to add
   a css file like https://github.com/scipy/scipy/blob/master/doc/source/_static/scipy.css
 
-- Update the tutorials because the build_SAVE function has been moved to Tools.
+- Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 
 - Define an update_from_remote function that implement the usage of rsync to fetch the results computed in a remote folder
   into a local one. The function should implement a command like:
