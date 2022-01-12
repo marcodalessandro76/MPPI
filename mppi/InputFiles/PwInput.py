@@ -387,6 +387,17 @@ class PwInput(dict):
         self['electrons']['diago_full_acc'] = fortran_bool(diago_full_acc)
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
+    def set_num_bnds(self,nbnd):
+        """
+        Set the value of the variable nbnd. This method is useful if we need to
+        set the number of bands in a scf calculation to include some empty bands.
+
+        Args:
+            nbnd (:py:class:`int`) : number of bands
+
+        """
+        self['system']['nbnd'] = nbnd
+
     def add_atom(self,atom,pseudo_name,mass = '1.0'):
         """
         Update the self['atomic_species'] dictionary
