@@ -28,7 +28,7 @@ def build_slurm_header(pars):
     lines.append('#SBATCH --cpus-per-task=%s      ### Number of HT per task'%pars['cpus_per_task'])
     lines.append('#SBATCH --mem %s             ### Memory per node'%pars['memory'])
     if pars['partition'] is not None:
-        lines.append('SBATCH --partition %s'%pars['partition'])
+        lines.append('#SBATCH --partition %s'%pars['partition'])
     if pars['time'] is not None:
         lines.append('#SBATCH --time %s         ### Walltime, format: HH:MM:SS'%pars['time'])
     lines.append('#SBATCH --job-name=%s'%job)
