@@ -306,6 +306,9 @@ class QeCalculator(Runner):
         # lines.append('echo " "')
         # lines.append('')
 
+        #lines.append('#SBATCH --job-name=%s'%job)
+        #lines.append('#SBATCH --output=%s.out'%job)
+
         lines.append('export OUT_DIR=%s'%out_dir)
         lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
         lines.append('export SAVE_DIR=%s'%save_dir)

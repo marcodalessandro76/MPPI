@@ -5,7 +5,8 @@ import os
 
 def build_slurm_header(pars):
     """
-    Define the header of the slurm script.
+    Define the header of the slurm script. Note that the name variable is not present in the
+    RunRules parameter but it is added by the Calculator in the run_options dictionary.
 
     Args:
         pars (:py:class:`dict`) : dictionary with the structure of an instance of
@@ -15,6 +16,9 @@ def build_slurm_header(pars):
         :py:class:`list` : a list with the lines of the header of the script
 
     """
+    name = pars.get('name','default')
+    job = 'job_'+name
+
     lines = []
     lines.append('#!/bin/bash')
     if pars['account'] is not None:
@@ -27,8 +31,8 @@ def build_slurm_header(pars):
         lines.append('SBATCH --partition %s'%pars['partition'])
     if pars['time'] is not None:
         lines.append('#SBATCH --time %s         ### Walltime, format: HH:MM:SS'%pars['time'])
-    lines.append('#SBATCH --job-name=%s'%pars['jobname'])
-    lines.append('#SBATCH --output=%s.out'%pars['jobname'])
+    lines.append('#SBATCH --job-name=%s'%job)
+    lines.append('#SBATCH --output=%s.out'%job)
     lines.append('')
     lines.append('export OMP_NUM_THREADS=%s'%pars['omp_num_threads'])
     lines.append('')
@@ -87,19 +91,18 @@ class RunRules(dict):
         cpus_per_task (:py:class:`int`) : slurm cpus-per-task variable
         partition (:py:class:`string`) : slurm parition variable
         memory (:py:class:`string`) : slurm mem variable
-        jobname (:py:class:`string`) : slurm job-name variable
         account (:py:class:`string`) : slurm output variable
 
     """
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=4,
-                nodes=1,ntasks_per_node=1,cpus_per_task=1,partition=None,memory='124GB',jobname='job',
+                nodes=1,ntasks_per_node=1,cpus_per_task=1,partition=None,memory='124GB',
                 account=None,time=None,map_by=None,pe=1,rank_by=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
-            omp_num_threads=omp_num_threads,partition=partition,memory=memory,jobname=jobname,
+            omp_num_threads=omp_num_threads,partition=partition,memory=memory,
             account=account,time=time,map_by=map_by,pe=pe,rank_by=rank_by)
             dict.__init__(self,scheduler=scheduler,**rules)
