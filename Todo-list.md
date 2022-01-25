@@ -28,6 +28,8 @@
 
 - Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 
+- Update the tutorials of the Calculator classes due to introduction of the RunRules class.
+
 - Define an update_from_remote function that implement the usage of rsync to fetch the results computed in a remote folder
   into a local one. The function should implement a command like:
 

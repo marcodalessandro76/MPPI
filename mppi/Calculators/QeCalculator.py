@@ -6,20 +6,25 @@ or by the slurm scheduler.
 
 from .Runner import Runner
 from mppi.Utilities import Tools
+from mppi.Calculators.RunRules import build_slurm_header, mpi_command
 import os
 
 class QeCalculator(Runner):
     """
-    Perform a QuantumESPRESSO calculation. Computations are managed by a scheduler that,
+    Perform a QuantumESPRESSO calculation. The parameters used to define the parellelization
+    strategy are defined in the runRules objet, provided in the constructor of this class
+
+    Computations are managed by a scheduler that,
     in the actual implementation of the class, can be `direct` or `slurm`.
 
     Parameters:
-       omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
-       mpi (:py:class:`int`) : number of mpi processes
-       mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. 'mpirun -np' or 'mpiexec -np'
+       runRulues (:class:`RunRules`) : instance of the :class:`RunRules` class
+       #omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
+       #mpi (:py:class:`int`) : number of mpi processes
+       #mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. 'mpirun -np' or 'mpiexec -np'
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
-       scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
-            'direct' that runs the computation using the python subprocess package and 'slurm' that creates a slurm script
+       #scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
+            'direct', that runs the computation using the python subprocess package and 'slurm', that creates a slurm script
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking if the log
             file of the run contains the string `job_done`, defined as a data member of this class
        clean_restart (:py:class:`bool`) : if True delete the folder $prefix.save before running the computation
@@ -28,8 +33,8 @@ class QeCalculator(Runner):
        wait_end_run (:py:class:`bool`) : with this option disabled the run method does not wait the end of the run.
             This option may be useful for interacting with the code in particular in _asincronous_ computation managed
             by the slurm scheduler
-       sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
-            For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
+       #sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
+       #    For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
             With this options enabled the ``out_dir`` of the run is set in the ``BeenOND_dir`` folder and the input wavefunction
             of the source folder (if needed) are copied in the ``BeeOND_dir``. At the end of the run the ``out_dir`` is moved
@@ -45,7 +50,8 @@ class QeCalculator(Runner):
     in the ``run_dir`` folder.
 
     Example:
-     >>> code = calculator(omp=1,mpi=4,mpi_run='mpirun -np',skip=True,clean_restart=True,verbose=True,scheduler='direct')
+     >>> rr = RunRules(scheduler='slurm',ntasks_per_node=4,memory='12GB')
+     >>> code = calculator(rr,skip=True,clean_restart=True,verbose=True)
      >>> code.run(input = ..., run_dir = ...,name = ..., source_dir = ..., **kwargs)
 
      where the arguments of the run method are:
@@ -66,17 +72,25 @@ class QeCalculator(Runner):
     BeeOND_dir = '/mnt/${SLURM_JOB_USER}-jobid_${SLURM_JOB_ID}'
     job_done = 'JOB DONE.'
 
-    def __init__(self,
-                 omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
-                 executable = 'pw.x', scheduler = 'direct', skip =  True, clean_restart = True,
-                 dry_run = False, wait_end_run = True, sbatch_options = [], activate_BeeOND = True,
-                  verbose = True, **kwargs):
+    def __init__(self,runRules,executable = 'pw.x', skip =  True, clean_restart = True,
+                 dry_run = False, wait_end_run = True, activate_BeeOND = False,
+                 verbose = True, **kwargs):
         # Use the initialization from the Runner class (all options inside _global_options)
-        Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
-                        scheduler=scheduler,skip=skip, clean_restart=clean_restart,
-                        dry_run=dry_run,wait_end_run=wait_end_run,sbatch_options=sbatch_options,
-                        activate_BeeOND=activate_BeeOND,verbose=verbose, **kwargs)
-        print('Initialize a QuantumESPRESSO calculator with scheduler %s'%self._global_options['scheduler'])
+        Runner.__init__(self,**runRules,executable=executable,skip=skip,clean_restart=clean_restart,
+                        dry_run=dry_run,wait_end_run=wait_end_run,activate_BeeOND=activate_BeeOND,
+                        verbose=verbose, **kwargs)
+        print('Initialize a QuantumESPRESSO calculator')
+    # def __init__(self,
+    #              omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
+    #              executable = 'pw.x', scheduler = 'direct', skip =  True, clean_restart = True,
+    #              dry_run = False, wait_end_run = True, sbatch_options = [], activate_BeeOND = True,
+    #               verbose = True, **kwargs):
+    #     # Use the initialization from the Runner class (all options inside _global_options)
+    #     Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
+    #                     scheduler=scheduler,skip=skip, clean_restart=clean_restart,
+    #                     dry_run=dry_run,wait_end_run=wait_end_run,sbatch_options=sbatch_options,
+    #                     activate_BeeOND=activate_BeeOND,verbose=verbose, **kwargs)
+    #     print('Initialize a QuantumESPRESSO calculator with scheduler %s'%self._global_options['scheduler'])
 
     def pre_processing(self):
         """
@@ -247,8 +261,8 @@ class QeCalculator(Runner):
             :py:class:`string`: string with the name of the slurm script
 
         """
-        omp = self.run_options.get('omp')
-        mpi = self.run_options.get('mpi')
+        #omp = self.run_options.get('omp')
+        #mpi = self.run_options.get('mpi')
         input = self.run_options.get('input')
         prefix = input.get_prefix()
         out_dir = input.get_outdir()
@@ -258,42 +272,53 @@ class QeCalculator(Runner):
         save_dir = os.path.join(out_dir_path,prefix)+'.save'
         job = 'job_'+name
 
-        sbatch_options = self.run_options.get('sbatch_options')
+        #sbatch_options = self.run_options.get('sbatch_options')
         activate_BeeOND = self.run_options.get('activate_BeeOND')
         comm_str = self.run_command()
 
-        lines = []
-        lines.append('#!/bin/bash')
-        lines.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
-        lines.append('#SBATCH --cpus-per-task=%s    ### Number of threads per task (OMP threads)'%omp)
-        for option in sbatch_options: # add other SBATCH options
-            lines.append('#SBATCH %s'%option)
-        lines.append('#SBATCH --output=%s.out'%job)
-        lines.append('')
+        lines = build_slurm_header(self.run_options)
 
-        lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
+        # lines = []
+        # lines.append('#!/bin/bash')
+        # lines.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
+        # lines.append('#SBATCH --cpus-per-task=%s    ### Number of threads per task (OMP threads)'%omp)
+        # for option in sbatch_options: # add other SBATCH options
+        #     lines.append('#SBATCH %s'%option)
+        # lines.append('#SBATCH --output=%s.out'%job)
+        # lines.append('')
+        #
+        # lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
+        # lines.append('export OUT_DIR=%s'%out_dir)
+        # lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
+        # lines.append('export SAVE_DIR=%s'%save_dir)
+        # lines.append('')
+        #
+        # lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
+        # lines.append('echo "Job name $SLURM_JOB_NAME "')
+        # lines.append('echo "Job id $SLURM_JOB_ID"')
+        # lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
+        # lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
+        # lines.append('echo "Number of mpi $SLURM_NTASKS"')
+        # lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
+        # lines.append('echo "OUT_DIR input parameter is $OUT_DIR"')
+        # lines.append('echo "OUT_DIR path is $OUT_DIR_PATH"')
+        # lines.append('echo "SAVE_DIR path is $SAVE_DIR"')
+        # lines.append('echo " "')
+        # lines.append('')
+
         lines.append('export OUT_DIR=%s'%out_dir)
-        lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
         lines.append('export OUT_DIR_PATH=%s'%out_dir_path)
         lines.append('export SAVE_DIR=%s'%save_dir)
-        lines.append('')
-
-        lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
-        lines.append('echo "Job name $SLURM_JOB_NAME "')
-        lines.append('echo "Job id $SLURM_JOB_ID"')
-        lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
-        lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
-        lines.append('echo "Number of mpi $SLURM_NTASKS"')
-        lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
         lines.append('echo "OUT_DIR input parameter is $OUT_DIR"')
-        lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
         lines.append('echo "OUT_DIR path is $OUT_DIR_PATH"')
         lines.append('echo "SAVE_DIR path is $SAVE_DIR"')
         lines.append('echo " "')
         lines.append('')
 
         if activate_BeeOND:
+            lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
             lines.append('echo "THe BeeOND option is activated. The I/O is performed in $BEEOND_DIR"')
+            lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
             lines.append('if [ ! -d $BEEOND_DIR ]; then')
             lines.append('echo "$BEEOND_DIR not found!"')
             lines.append('exit')
@@ -342,13 +367,15 @@ class QeCalculator(Runner):
 
         """
         executable = self.run_options.get('executable')
-        mpi = self.run_options.get('mpi')
-        mpi_run = self.run_options.get('mpi_run')
+        #mpi = self.run_options.get('mpi')
+        #mpi_run = self.run_options.get('mpi_run')
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
         verbose = self.run_options.get('verbose')
 
-        command = mpi_run + ' ' + str(mpi) + ' ' + executable
+        mpi_run = mpi_command(self.run_options)
+        command = mpi_run + ' ' + executable
+        #command = mpi_run + ' ' + str(mpi) + ' ' + executable
         input_name = name + '.in'
         output_name = name + '.log'
         comm_str =  command + ' -inp %s > %s'%(input_name,output_name)

@@ -46,6 +46,7 @@ the programs (pw.x,ph.x,...) of the suite.
 
 The YamboCalculator object manage the yambo and ypp executables and also their time-dependent variants
 
+.. toctree:: runRules
 .. toctree:: qeCalculator
 .. toctree:: yamboCalculator
 
