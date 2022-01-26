@@ -26,11 +26,15 @@ def build_slurm_header(pars):
     lines.append('#SBATCH --nodes=%s              ### Number of nodes'%pars['nodes'])
     lines.append('#SBATCH --ntasks-per-node=%s    ### Number of MPI tasks per node'%pars['ntasks_per_node'])
     lines.append('#SBATCH --cpus-per-task=%s      ### Number of HT per task'%pars['cpus_per_task'])
+    if pars['gpus_per_node'] is not None:
+        lines.append('#SBATCH --gpus-per-node=%s      ### Number of GPUS per node'%pars['gpus_per_node'])
     lines.append('#SBATCH --mem %s             ### Memory per node'%pars['memory'])
-    if pars['partition'] is not None:
-        lines.append('#SBATCH --partition %s'%pars['partition'])
     if pars['time'] is not None:
         lines.append('#SBATCH --time %s         ### Walltime, format: HH:MM:SS'%pars['time'])
+    if pars['partition'] is not None:
+        lines.append('#SBATCH --partition %s'%pars['partition'])
+    if pars['account'] is not None:
+        lines.append('#SBATCH --account %s'%pars['account'])
     lines.append('#SBATCH --job-name=%s'%job)
     lines.append('#SBATCH --output=%s.out'%job)
     lines.append('')
@@ -44,9 +48,12 @@ def build_slurm_header(pars):
     lines.append('echo "Number of tasks $SLURM_NTASKS"')
     lines.append('echo "Number of tasks per node $SLURM_TASKS_PER_NODE"')
     lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
-    lines.append('echo "OMP_NUM_THREADS=$OMP_NUM_THREADS"')
+    lines.append('echo "Number of gpus per node $SLURM_GPUS_PER_NODE"')
+    lines.append('echo "OMP_NUM_THREADS : $OMP_NUM_THREADS"')
     lines.append('')
+    lines.append('echo " "')
     lines.append('echo "###############End of the header section###############"')
+    lines.append('echo " "')
     lines.append('')
 
     return lines
@@ -89,20 +96,25 @@ class RunRules(dict):
         nodes (:py:class:`int`) : slurm nodes variable
         ntasks_per_node (:py:class:`int`) : slurm ntasks-per-node variable
         cpus_per_task (:py:class:`int`) : slurm cpus-per-task variable
-        partition (:py:class:`string`) : slurm parition variable
+        gpus_per_node (:py:class:`int`) : slurm gpus-per-node variable
         memory (:py:class:`string`) : slurm mem variable
-        account (:py:class:`string`) : slurm output variable
+        time (:py:class:`string`) : slurm time variable, format 'HH:MM:SS'
+        partition (:py:class:`string`) : slurm parition variable
+        account (:py:class:`string`) : slurm account variable
+        map_by (:py:class:`string`) : the mpi unit for the --map-by option of mpirun
+        pe (:py:class:`int`) : number of `processing elements` in the --map-by:unit:PE=n option of mpirun
+        rank_by (:py:class:`string`) : the unit for the --rank-by option of mpirun
 
     """
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=4,
-                nodes=1,ntasks_per_node=1,cpus_per_task=1,partition=None,memory='124GB',
-                account=None,time=None,map_by=None,pe=1,rank_by=None):
+                nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory='124GB',
+                time=None,partition=None,account=None,map_by=None,pe=1,rank_by=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
-            omp_num_threads=omp_num_threads,partition=partition,memory=memory,
-            account=account,time=time,map_by=map_by,pe=pe,rank_by=rank_by)
+            omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,memory=memory,time=time,
+            partition=partition,account=account,map_by=map_by,pe=pe,rank_by=rank_by)
             dict.__init__(self,scheduler=scheduler,**rules)
