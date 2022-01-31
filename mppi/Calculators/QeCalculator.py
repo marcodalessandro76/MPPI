@@ -69,7 +69,7 @@ class QeCalculator(Runner):
         Runner.__init__(self,**runRules,executable=executable,skip=skip,clean_restart=clean_restart,
                         dry_run=dry_run,wait_end_run=wait_end_run,activate_BeeOND=activate_BeeOND,
                         verbose=verbose,**kwargs)
-        print('Initialize a QuantumESPRESSO calculator')
+        print('Initialize a QuantumESPRESSO calculator with scheduler %s' %self._global_options['scheduler'])
 
     def pre_processing(self):
         """
