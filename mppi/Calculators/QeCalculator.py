@@ -44,6 +44,9 @@ class QeCalculator(Runner):
      >>> code = calculator(rr,skip=True,clean_restart=True,verbose=True)
      >>> code.run(input = ..., run_dir = ...,name = ..., source_dir = ..., **kwargs)
 
+     When the run method is called the class runs the command:
+         cd run_dir ; `mpirun command` executable_name -inp name.in > name.log
+
      where the arguments of the run method are:
 
     Args:
@@ -121,8 +124,8 @@ class QeCalculator(Runner):
 
     def post_processing(self):
         """
-        Return the name, including the path, of the data-file-schema.xml file. If the file is absent the
-        method displays a warning.
+        Return the name, including the path, of the data-file-schema.xml file.
+        If the file is absent the method displays a warning.
 
         Return:
             :py:class:`string` : name, including the path, of the xml data-file-schema file

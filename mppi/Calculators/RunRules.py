@@ -35,6 +35,8 @@ def build_slurm_header(pars):
         lines.append('#SBATCH --partition %s'%pars['partition'])
     if pars['account'] is not None:
         lines.append('#SBATCH --account %s'%pars['account'])
+    if pars['qos'] is not None:
+        lines.append('#SBATCH --qos %s'%pars['qos'])
     lines.append('#SBATCH --job-name=%s'%job)
     lines.append('#SBATCH --output=%s.out'%job)
     lines.append('')
@@ -101,6 +103,7 @@ class RunRules(dict):
         time (:py:class:`string`) : slurm time variable, format 'HH:MM:SS'
         partition (:py:class:`string`) : slurm parition variable
         account (:py:class:`string`) : slurm account variable
+        qos (:py:class:`string`) : slurm qos variable
         map_by (:py:class:`string`) : the mpi unit for the --map-by option of mpirun
         pe (:py:class:`int`) : number of `processing elements` in the --map-by:unit:PE=n option of mpirun
         rank_by (:py:class:`string`) : the unit for the --rank-by option of mpirun
@@ -109,12 +112,12 @@ class RunRules(dict):
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=4,
                 nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory='124GB',
-                time=None,partition=None,account=None,map_by=None,pe=1,rank_by=None):
+                time=None,partition=None,account=None,qos=None,map_by=None,pe=1,rank_by=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
             omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,memory=memory,time=time,
-            partition=partition,account=account,map_by=map_by,pe=pe,rank_by=rank_by)
+            partition=partition,account=account,qos=qos,map_by=map_by,pe=pe,rank_by=rank_by)
             dict.__init__(self,scheduler=scheduler,**rules)

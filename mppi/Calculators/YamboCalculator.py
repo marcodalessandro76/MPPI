@@ -92,7 +92,7 @@ def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
         print("""
         There are no o-* files.
         Maybe you have performed a ypp computation or wait_end_run and/or
-        the dry_run option are active?
+        the dry_run option are active.
         Otherwise a possible error has occured during the computation
         """)
     # add the dft database from the SAVE folder
@@ -112,12 +112,7 @@ class YamboCalculator(Runner):
 
     Parameters:
        runRulues (:class:`RunRules`) : instance of the :class:`RunRules` class
-       #omp (:py:class:`int`) : value of the OMP_NUM_THREADS variable
-       #mpi (:py:class:`int`) : number of mpi processes
-       #mpi_run (:py:class:`string`) : command for the execution of mpirun, e.g. `mpirun -np` or `mpiexec -np`
        executable (:py:class:`string`) : set the executable (yambo, ypp, yambo_rt, ...) of the Yambo package
-       #scheduler (:py:class:`string`) : choose the scheduler used to submit the job, actually the choices implemented are
-       #    'direct' that runs the computation using the python subprocess package and 'slurm' that creates a slurm script
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking that the
             report file built by yambo exsists and contains the string `game_over`, defined as a data member of this class
        clean_restart (:py:class:`bool`) : if True delete the folder with the output files and the database before running the computation
@@ -126,8 +121,6 @@ class YamboCalculator(Runner):
        wait_end_run (:py:class:`bool`) : with this option disabled the run method does not wait the end of the run.
             This option may be useful for interacting with the code in particular in _asincronous_ computation managed
             by the slurm scheduler
-       #sbatch_options (:py:class:`list`) : the elements of this list are strings used as options in the slurm script.
-       #    For instance it is possible to specify the number of tasks per node as `--ntasks-per-node=16`
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
             The value of the ``BeeOND_dir`` is written as a data member of the class and can be modified if needed
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
@@ -175,18 +168,6 @@ class YamboCalculator(Runner):
                         dry_run=dry_run,wait_end_run=wait_end_run,activate_BeeOND=activate_BeeOND,
                         verbose=verbose,**kwargs)
         print('Initialize a Yambo calculator with scheduler %s' %self._global_options['scheduler'])
-    # def __init__(self,
-    #              omp = os.environ.get('OMP_NUM_THREADS', 1), mpi = 2, mpi_run = 'mpirun -np',
-    #              executable = 'yambo', scheduler = 'direct', skip = True, clean_restart = True,
-    #              dry_run = False, wait_end_run = True, sbatch_options = [], activate_BeeOND = True,
-    #              verbose = True, **kwargs):
-    #     # Use the initialization from the Runner class (all options inside _global_options)
-    #     Runner.__init__(self, omp=omp, mpi=mpi, mpi_run=mpi_run, executable=executable,
-    #                     scheduler=scheduler, skip=skip, clean_restart=clean_restart,
-    #                     dry_run=dry_run,wait_end_run=wait_end_run,sbatch_options=sbatch_options,
-    #                     activate_BeeOND=activate_BeeOND,verbose=verbose, **kwargs)
-    #     print('Initialize a Yambo calculator with scheduler %s' %self._global_options['scheduler'])
-
 
     def pre_processing(self):
         """
@@ -374,41 +355,12 @@ class YamboCalculator(Runner):
             :py:class:`string`: string with the name of the slurm script
 
         """
-        #omp = self.run_options.get('omp')
-        #mpi = self.run_options.get('mpi')
         run_dir = os.path.abspath(self.run_options.get('run_dir', '.'))
         name = self.run_options.get('name','default')
         activate_BeeOND = self.run_options.get('activate_BeeOND')
         jobname = self.run_options.get('jobname',name)
         job = 'job_'+name
         comm_str = self.run_command()
-        #sbatch_options = self.run_options.get('sbatch_options')
-
-        # lines = []
-        # lines.append('#!/bin/bash')
-        # lines.append('#SBATCH --ntasks=%s           ### Number of tasks (MPI processes)'%mpi)
-        # lines.append('#SBATCH --cpus-per-task=%s    ### Number of threads per task (OMP threads)'%omp)
-        # for option in sbatch_options: # add other SBATCH options
-        #     lines.append('#SBATCH %s'%option)
-        # lines.append('#SBATCH --output=%s.out'%job)
-        # lines.append('')
-        #
-        # lines.append('export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK')
-        # lines.append('export RUN_DIR=%s'%run_dir)
-        #
-        # lines.append('')
-        #
-        # lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
-        # lines.append('echo "Job name $SLURM_JOB_NAME "')
-        # lines.append('echo "Job id $SLURM_JOB_ID"')
-        # lines.append('echo "Job nodelist $SLURM_JOB_NODELIST"')
-        # lines.append('echo "Number of nodes $SLURM_JOB_NUM_NODES"')
-        # lines.append('echo "Number of mpi $SLURM_NTASKS"')
-        # lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
-        # lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
-        # lines.append('echo "RUN_DIR path is $RUN_DIR"')
-        # lines.append('echo " "')
-        # lines.append('')
 
         lines = build_slurm_header(self.run_options)
 
@@ -454,17 +406,13 @@ class YamboCalculator(Runner):
             :py:class:`string` : command that runs the computation
 
         """
-        #scheduler = self.run_options.get('scheduler')
         executable = self.run_options.get('executable')
-        #mpi = self.run_options.get('mpi')
-        #mpi_run = self.run_options.get('mpi_run')
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name')
         jobname = self.run_options.get('jobname',name)
         verbose = self.run_options.get('verbose')
 
         mpi_run = mpi_command(self.run_options)
-        #command = mpi_run + ' ' + str(mpi) + ' ' + executable
         command = mpi_run + ' ' + executable
         input_name = name + '.in'
         comm_str =  command + ' -F %s -J %s -C %s'%(input_name,jobname,name)
