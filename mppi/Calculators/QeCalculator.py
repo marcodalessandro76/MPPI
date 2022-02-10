@@ -187,7 +187,7 @@ class QeCalculator(Runner):
 
         if scheduler == 'direct':
             # Set the OMP_NUM_THREADS variable in the environment
-            os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
+            os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp_num_threads'])
             if not dry_run:
                 comm_str = 'cd %s ; %s'%(run_dir,self.run_command())
                 job = Popen(comm_str, shell = True)

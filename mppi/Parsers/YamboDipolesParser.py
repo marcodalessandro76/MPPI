@@ -53,9 +53,24 @@ class YamboDipolesParser():
         except:
             raise IOError("Error opening file %s in YamboDipolesParser"%self.filename)
 
-        self.dip_ir = np.array(database.variables['DIP_iR'][0])
-        self.dip_p = np.array(database.variables['DIP_P'][0])
-        self.dip_v = np.array(database.variables['DIP_v'][0])
+        #self.dip_ir = np.array(database.variables['DIP_iR'][0])
+        #self.dip_p = np.array(database.variables['DIP_P'][0])
+        #self.dip_v = np.array(database.variables['DIP_v'][0])        
+        try:
+            self.dip_ir = np.array(database.variables['DIP_iR'][0])
+        except KeyError:
+            if verbose: print('iR dipoles not found in the ndb.dipoles')
+            self.dip_ir = np.array([0])
+        try:
+            self.dip_p = np.array(database.variables['DIP_P'][0])
+        except KeyError:
+            if verbose: print('P dipoles not found in the ndb.dipoles')
+            self.dip_p = np.array([0])
+        try:
+            self.dip_v = np.array(database.variables['DIP_v'][0])
+        except KeyError:
+            if verbose: print('v dipoles not found in the ndb.dipoles')
+            self.dip_v = np.array([0])
         try:
             self.dip_spin = np.array(database.variables['DIP_spin'][0])
         except KeyError:

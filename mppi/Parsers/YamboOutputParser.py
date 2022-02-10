@@ -212,7 +212,7 @@ class YamboOutputParser(dict):
             k_full (:py:class:`int`): k-point index of the full state
             band_full (:py:class:`int`) : band index of the full state
             **kwargs : these parameters allows the user to set the k_empty and
-                band_empty parameters. If not provided the valus k_empty=k_full
+                band_empty parameters. If not provided the values k_empty=k_full
                 and band_empty=band_full+1 are used.
 
         Return:

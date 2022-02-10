@@ -74,7 +74,7 @@ def mpi_command(pars):
     """
     mpi_run = 'mpirun'
     if pars['scheduler'] == 'direct':
-        mpi_run += ' ' + '-np %s'%pars['rules']['mpi']
+        mpi_run += ' ' + '-np %s'%pars['mpi']
     if pars['scheduler'] == 'slurm':
         ntasks = pars['ntasks_per_node']*pars['nodes']
         mpi_run += ' ' + '-np %s'%ntasks

@@ -9,31 +9,31 @@ from mppi.Utilities import Tools
 from mppi.Calculators.RunRules import build_slurm_header, mpi_command
 import os
 
-def get_report(outputPath):
+def get_report(path):
     """
     Look for the name of the r-* file produced by the execution of the code.
 
     Args:
-        outputPath (:py:class:`string`) : folder with the r-* and the o-* files
+        path (:py:class:`string`) : folder with the r-* and the o-* files
 
     Return:
-        :py:class:`string` : A string with the name, including the path, of the
+        :py:class:`list` : A list with the name, including the path, of the
         file r-* produced by the run
 
     """
-    report = ''
-    if os.path.isdir(outputPath):
-        for file in os.listdir(outputPath):
+    report = []
+    if os.path.isdir(path):
+        for file in os.listdir(path):
             if 'r-' in file:
-                report = os.path.join(outputPath,file)
+                report.append(os.path.join(path,file))
     return report
 
-def get_output_files(outputPath):
+def get_output_files(path):
     """
     Look for the names of the o- file(s) produced by the execution of the code.
 
     Args:
-        outputPath (:py:class:`string`) : folder with the o-* files
+        path (:py:class:`string`) : folder where the o-* files are stored
 
     Return:
         :py:class:`list` : A list with the names, including the path, of the
@@ -41,18 +41,19 @@ def get_output_files(outputPath):
     """
 
     output = []
-    if os.path.isdir(outputPath):
-        for file in os.listdir(outputPath):
+    if os.path.isdir(path):
+        for file in os.listdir(path):
             if 'o-' in file:
-                output.append(os.path.join(outputPath,file))
+                output.append(os.path.join(path,file))
     return output
 
-def get_db_files(dbsPath):
+def get_db_files(path):
     """
-    Look for the files of tht type ndb.* in the dbsPath
+    Look for the files of tht type ndb.* in the dbsPath.
 
     Args:
-        dbstPath (:py:class:`string`) : folder with the databases created by yambo
+        dbstPath (:py:class:`list`) : list of folders in which the ndb databases created by yambo
+            are sought
 
     Return:
         :py:class:`dict`: A dictionary in which the keys are the extension of the
@@ -60,23 +61,25 @@ def get_db_files(dbsPath):
     """
 
     dbs = {}
-    if os.path.isdir(dbsPath):
-        for file in os.listdir(dbsPath):
-            if 'ndb' in file and 'fragment' not in file:
-                key = file.split('.')[-1]
-                dbs[key] = os.path.join(dbsPath,file)
+    for dir in path:
+        if os.path.isdir(dir):
+            for file in os.listdir(dir):
+                if 'ndb' in file and 'fragment' not in file:
+                    key = file.split('.')[-1]
+                    dbs[key] = os.path.join(dir,file)
     return dbs
 
 def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
     """
     Return a dictionary with the names of the o- file(s), the report 'r-' file,
-    the `ns.db1` in the SAVE folder and the names of the ndb databases written by
-    yambo in the jobname folder.
+    the `ns.db1` in the SAVE folder and the names of the ndb database written by
+    yambo in the jobname folder. ndb database are sought in the outputPath and in
+    the dbsPath.
 
     Args:
         run_dir (:py:class:`string`) : `run_dir` folder of the calculation
         outputPath (:py:class:`string`) : folder with the 'o-' files
-        dbsPath (:py:class:`string`) : folder with the ndb databases. If it is
+        dbsPath (:py:class:`list`) : list of folders with the ndb databases. If it is
             None the databases are sought in the outputPath
         verbose (:py:class:`bool`) : set the amount of information provided on terminal
 
@@ -86,7 +89,9 @@ def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
 
     """
     if dbsPath is None:
-            dbsPath = outputPath
+        dbsPath = [outputPath]
+    else:
+        dbsPath += [outputPath]
     results = dict(output=get_output_files(outputPath),report=get_report(outputPath))
     if verbose and len(results['output']) == 0:
         print("""
@@ -146,13 +151,16 @@ class YamboCalculator(Runner):
         input (:py:class:`string`) : instance of the :class:`YamboInput` class
             that define the input objects
         name (:py:class:`string`) : string with the names associated to the input file (without extension).
-            This string is used also as the name of the folder in which results are written as well as a
-            part of the name of the output files.
-        jobname (:py:class:`string`) : string with the values of the jobname. If this variable is not specified
-            the value of name is attributed to jobname by process_run.
+            This string is used also as the name of the folder in which results are written (argument of the -C option of yambo) as
+            well as a part of the name of the output files
+        jobname (:py:class:`list` or :py:class:`string`) : string (or list of strings) with the value(s) of the jobname folders
+            (argument of the -J option of yambo). The first element is the folder name, where yambo writes the database.
+            The other values (if provided) are the folders where yambo seeks for pre existing databases. All the elements of the
+            list are assumed to be located in the  ``run_dir`` of the calculator. If this variable is not specified the value of
+            name is attributed to jobname
         out_dir (:py:class:`string`) : position of the folder in which the $jobname folder is located. This parameter
             is automatically set by the calculator the value of ``BeeOND_dir`` if the option `activate_BeeOND` is enabled.
-            Otherwise all the folders are written in the ``run_dir``.
+            Otherwise all the folders are written in the ``run_dir``
         kwargs : other parameters that are stored in the run_options dictionary
 
     """
@@ -240,8 +248,11 @@ class YamboCalculator(Runner):
         name = self.run_options.get('name','default')
         outputPath = os.path.join(run_dir,name)
         jobname = self.run_options.get('jobname',name)
-        dbsPath = os.path.join(run_dir,jobname)
         verbose = self.run_options.get('verbose')
+
+        if type(jobname) == str : dbsPath = [os.path.join(run_dir,jobname)]
+        if type(jobname) == list :
+            dbsPath = [os.path.join(run_dir,j) for j in jobname]
 
         results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
         if verbose:
@@ -299,7 +310,7 @@ class YamboCalculator(Runner):
 
         if scheduler == 'direct':
             # Set the OMP_NUM_THREADS variable in the environment
-            os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp'])
+            os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp_num_threads'])
             if not dry_run:
                 comm_str = 'cd %s ; %s'%(run_dir,self.run_command())
                 job = Popen(comm_str, shell = True)
@@ -358,7 +369,6 @@ class YamboCalculator(Runner):
         run_dir = os.path.abspath(self.run_options.get('run_dir', '.'))
         name = self.run_options.get('name','default')
         activate_BeeOND = self.run_options.get('activate_BeeOND')
-        jobname = self.run_options.get('jobname',name)
         job = 'job_'+name
         comm_str = self.run_command()
 
@@ -379,7 +389,8 @@ class YamboCalculator(Runner):
             lines.append('echo " "')
             lines.append('')
 
-        lines.append('echo "execute : %s"'%comm_str)
+        # We do not show the " character in the of the comm_str in the echo line
+        lines.append('echo "execute : %s"'%(comm_str.replace('"','')))
         lines.append(comm_str)
         lines.append('echo " "')
         lines.append('')
@@ -412,10 +423,13 @@ class YamboCalculator(Runner):
         jobname = self.run_options.get('jobname',name)
         verbose = self.run_options.get('verbose')
 
+        if type(jobname) == str : J = jobname
+        if type(jobname) == list : J = '"'+','.join(jobname)+'"'
+
         mpi_run = mpi_command(self.run_options)
         command = mpi_run + ' ' + executable
         input_name = name + '.in'
-        comm_str =  command + ' -F %s -J %s -C %s'%(input_name,jobname,name)
+        comm_str =  command + ' -F %s -J %s -C %s'%(input_name,J,name)
         if verbose: print('run command: %s' %comm_str)
 
         return comm_str
@@ -453,17 +467,21 @@ class YamboCalculator(Runner):
     def clean_run_dir(self):
         """
         Clean the run_dir before performing the computation. Delete the job_$name.out
-        file, the out_dir and ndb_dir folders.
+        file, the out_dir and folder and the folder with the databases. If several folders
+        are provided in the jobname field, only the first one is deleted, since the others are
+        assumed to contain databases obtained from other computations.
 
         """
         run_dir = self.run_options.get('run_dir','.')
         name = self.run_options.get('name')
         jobname = self.run_options.get('jobname',name)
         verbose = self.run_options.get('verbose')
-
         job_out = os.path.join(run_dir,'job_'+name+'.out')
         out_dir = os.path.join(run_dir,name)
-        ndb_dir = os.path.join(run_dir,jobname)
+        if type(jobname) == list:
+            ndb_dir = os.path.join(run_dir,jobname[0])
+        else:
+            ndb_dir = os.path.join(run_dir,jobname)
 
         if os.path.isfile(job_out):
             if verbose: print('delete job_out script:',job_out)
