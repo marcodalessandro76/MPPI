@@ -11,14 +11,18 @@ import os
 
 def get_report(path):
     """
-    Look for the name of the r-* file produced by the execution of the code.
+    Look for the name of the r-* file(s) produced by the execution of the code.
+
+    Note that multiple instances of the report could be found, if the computations
+    have been repeated more than once with the `clean_restart=False` option.
 
     Args:
         path (:py:class:`string`) : folder with the r-* and the o-* files
 
     Return:
         :py:class:`list` : A list with the name, including the path, of the
-        file r-* produced by the run
+        file r-* produced by the run. If no report files are found a list with a
+        single (empty) string is produced.
 
     """
     report = []
@@ -26,6 +30,7 @@ def get_report(path):
         for file in os.listdir(path):
             if 'r-' in file:
                 report.append(os.path.join(path,file))
+    if len(report) == 0 : report.append(' ')
     return report
 
 def get_output_files(path):
