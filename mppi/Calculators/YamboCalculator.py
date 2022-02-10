@@ -239,6 +239,9 @@ class YamboCalculator(Runner):
         time needed to perform the simulation (if the `time_profile` string is found
         in the report).
 
+        Note that the first element of the report list is used, so caution is needed if
+        there is more than one report file in the report key of the results dictionary.
+
         Return:
             :py:class:`dict` : the dictionary
                 {'output' : [o-1,o-2,...],'report':...,'dft':...,'dipoles':..., ....}
@@ -256,7 +259,7 @@ class YamboCalculator(Runner):
 
         results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
         if verbose:
-            report = results['report']
+            report = results['report'][0]
             if Tools.find_string_file(report,self.game_over) is None:
                 print('game_over string not found in report. Check the computation!')
             time_sim = Tools.find_string_file(report,self.time_profile)
@@ -273,12 +276,15 @@ class YamboCalculator(Runner):
         defined as a member of the class.
         The method adds the key `is_to_run` to ``the run_options`` of the class.
 
+        Note that the first element of the report list is used, so caution is needed if
+        there is more than one report file in the report key of the results dictionary.
+
         """
         skip = self.run_options.get('skip')
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
         outputPath = os.path.join(run_dir,name)
-        report = get_report(outputPath)
+        report = get_report(outputPath)[0]
         verbose = self.run_options.get('verbose')
 
         if not skip:
