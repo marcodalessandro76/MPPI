@@ -21,8 +21,6 @@ def build_slurm_header(pars):
 
     lines = []
     lines.append('#!/bin/bash')
-    if pars['account'] is not None:
-        lines.append('#SBATCH --account %s'%pars['account'])
     lines.append('#SBATCH --nodes=%s              ### Number of nodes'%pars['nodes'])
     lines.append('#SBATCH --ntasks-per-node=%s    ### Number of MPI tasks per node'%pars['ntasks_per_node'])
     lines.append('#SBATCH --cpus-per-task=%s      ### Number of HT per task'%pars['cpus_per_task'])
