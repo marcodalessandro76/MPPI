@@ -387,7 +387,9 @@ class YamboCalculator(Runner):
 
         if activate_BeeOND:
             lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
+            lines.append('export RUN_DIR=%s'%run_dir)
             lines.append('echo "THe BeeOND option is activated. The I/O of the .ndb database is performed in $BEEOND_DIR"')
+            lines.append('echo "RUN_DIR path is $RUN_DIR"')
             lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
             lines.append('if [ ! -d $BEEOND_DIR ]; then')
             lines.append('echo "$BEEOND_DIR not found!"')
