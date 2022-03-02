@@ -22,9 +22,9 @@
   module. The loop that wait the end of the processes can be removed and the extraction of data from the Queue
   can be changed.
 
-- Try to use the scipy theme and options defined in https://github.com/scipy/scipy/blob/master/doc/source/conf.py
-  The html should look like https://docs.scipy.org/doc/scipy/reference/tutorial/integrate.html. This procedure requires to add
-  a css file like https://github.com/scipy/scipy/blob/master/doc/source/_static/scipy.css
+- The YamboCalculator does not work properly when there are several replica of the report and o- files. In this case we
+  need to improve the get_output_files and get_report functions to be able to identify only the last elements that are
+  associated to the new run. We can use the _number label to identify the replica for each type of o- files.
 
 - Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 

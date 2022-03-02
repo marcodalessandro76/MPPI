@@ -89,8 +89,7 @@ class BandStructure():
         The class make usage of the YamboParser of this package.
 
         Args:
-            results (:py:class:`list`) : list that contiains the o- file provided as the output of a
-                Ypp computation. results is the key ['output'][irun] of the run method of YamboCalculator
+            results (:py:class:`list`) : dictionaty with the output of a Ypp computation
             high_sym_points(:py:class:`dict`) : dictionary with name and coordinates of the
                             high_sym_points of the path
             suffix (string) : specifies the suffix of the o- file use to build the bands
@@ -98,7 +97,7 @@ class BandStructure():
         """
         from mppi import Parsers as P
         import numpy as np
-        data = P.YamboParser(results)
+        data = P.YamboParser(results).data
         kpoints, bands = _parse_Ypp_output(data[suffix])
         return cls(bands=bands,kpoints=kpoints,high_sym_points=high_sym_points)
 
