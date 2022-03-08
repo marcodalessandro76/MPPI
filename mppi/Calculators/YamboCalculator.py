@@ -404,8 +404,8 @@ class YamboCalculator(Runner):
             if os.path.isdir(dbs_dir):
                 lines.append('export DBS_DIR=%s'%dbs_dir)
                 lines.append('echo "found DBS_DIR folder $DBS_DIR. Copy the DBS_DIR in the $BEEOND_DIR folder"')
-                lines.append('echo "rsync -azv --no-o --no-g $DBS_DIR/ $BEEOND_DIR"')
-                lines.append('rsync -azv --no-o --no-g $DBS_DIR/ $BEEOND_DIR')
+                lines.append('echo "rsync -azv --no-o --no-g --omit-dir-times $DBS_DIR/ $BEEOND_DIR"')
+                lines.append('rsync -azv --no-o --no-g --omit-dir-times $DBS_DIR/ $BEEOND_DIR')
                 lines.append('echo " "')
                 lines.append('')
 
