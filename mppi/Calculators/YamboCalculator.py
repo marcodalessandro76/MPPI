@@ -379,16 +379,19 @@ class YamboCalculator(Runner):
         """
         run_dir = os.path.abspath(self.run_options.get('run_dir', '.'))
         name = self.run_options.get('name','default')
+        jobname = self.run_options.get('jobname',name)
         activate_BeeOND = self.run_options.get('activate_BeeOND')
         job = 'job_'+name
         comm_str = self.run_command()
 
-        lines = build_slurm_header(self.run_options)
+        if type(jobname) == str : dbs_dir = os.path.abspath(os.path.join(run_dir,jobname))
+        if type(jobname) == list : dbs_dir = os.path.abspath(os.path.join(run_dir,jobname[0]))
 
+        lines = build_slurm_header(self.run_options)
         if activate_BeeOND:
             lines.append('export BEEOND_DIR=%s'%self.BeeOND_dir)
             lines.append('export RUN_DIR=%s'%run_dir)
-            lines.append('echo "THe BeeOND option is activated. The I/O of the .ndb database is performed in $BEEOND_DIR"')
+            lines.append('echo "The BeeOND option is activated. The I/O of the .ndb database is performed in $BEEOND_DIR"')
             lines.append('echo "RUN_DIR path is $RUN_DIR"')
             lines.append('echo "BEEOND_DIR path is $BEEOND_DIR"')
             lines.append('if [ ! -d $BEEOND_DIR ]; then')
@@ -397,6 +400,15 @@ class YamboCalculator(Runner):
             lines.append('fi')
             lines.append('echo " "')
             lines.append('')
+            # If the jobname foLder with pre-existing ndb is found, it is copied in the BeeOND_dir path
+            if os.path.isdir(dbs_dir):
+                lines.append('export DBS_DIR=%s'%dbs_dir)
+                lines.append('echo "found DBS_DIR folder $DBS_DIR. Copy the DBS_DIR in the $BEEOND_DIR folder"')
+                lines.append('echo "rsync -azv $DBS_DIR/ $BEEOND_DIR"')
+                lines.append('rsync -azv $DBS_DIR/ $BEEOND_DIR')
+                lines.append('echo " "')
+                lines.append('')
+
             lines.append('echo "Add the option -O $BEEOND_DIR to the run command of the calculator"')
             comm_str += ' -O %s'%self.BeeOND_dir
             lines.append('echo " "')
