@@ -26,7 +26,8 @@ def build_slurm_header(pars):
     lines.append('#SBATCH --cpus-per-task=%s      ### Number of HT per task'%pars['cpus_per_task'])
     if pars['gpus_per_node'] is not None:
         lines.append('#SBATCH --gpus-per-node=%s      ### Number of GPUS per node'%pars['gpus_per_node'])
-    lines.append('#SBATCH --mem %s             ### Memory per node'%pars['memory'])
+    if pars['memory'] is not None:
+        lines.append('#SBATCH --mem %s             ### Memory per node'%pars['memory'])
     if pars['time'] is not None:
         lines.append('#SBATCH --time %s         ### Walltime, format: HH:MM:SS'%pars['time'])
     if pars['partition'] is not None:
@@ -108,8 +109,8 @@ class RunRules(dict):
 
     """
 
-    def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=4,
-                nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory='124GB',
+    def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=1,
+                nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory=None,
                 time=None,partition=None,account=None,qos=None,map_by=None,pe=1,rank_by=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)

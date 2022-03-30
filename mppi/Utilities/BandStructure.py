@@ -135,7 +135,9 @@ class BandStructure():
 
         Return:
             (tuple): tuple containing:
-                (:py:class:`list`) : labels of the high symmetry points as found along the path
+                (:py:class:`list`) : labels of the high symmetry points as found along the path.
+                    If the point 'G' is found its label is converted to r'$\Gamma' for a correct
+                    rendering of the plot
 
                 (:py:class:`list`) : coordinate on the path of the high symmetry points
 
@@ -151,7 +153,8 @@ class BandStructure():
         for point in high_sym:
             for ind,k in enumerate(kpoints):
                 if np.allclose(high_sym[point],k,atol,rtol):
-                    labels.append(point)
+                    if point == 'G': labels.append(r'$\Gamma$')
+                    else : labels.append(point)
                     positions.append(path[ind])
         return labels,positions
 

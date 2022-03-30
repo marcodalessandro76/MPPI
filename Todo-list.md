@@ -22,9 +22,17 @@
   module. The loop that wait the end of the processes can be removed and the extraction of data from the Queue
   can be changed.
 
+- Yambo uses a vector like alat parameter, whereas Pw uses a scalar alat. Maybe we need to modify the PwParser class to deal with
+  vector alat (with equal components). In this way the function implemented to work with the Parser can be used by both the Yambo
+  and Pw parsers. Actually only the first element of the Yambo alat is stored in the YamboDftParser alat parameter.
+
 - The YamboCalculator does not work properly when there are several replica of the report and o- files. In this case we
   need to improve the get_output_files and get_report functions to be able to identify only the last elements that are
   associated to the new run. We can use the _number label to identify the replica for each type of o- files.
+
+- The job_*.out file in the YamboCalculator has to be erased also when the clean_restart option is False. Otherwise
+  when the calculation starts the calculator can erroneously assume that the computation is ended. Same behavior also
+  for the QeCalculator?
 
 - Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 
