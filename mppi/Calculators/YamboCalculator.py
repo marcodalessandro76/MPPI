@@ -134,6 +134,7 @@ class YamboCalculator(Runner):
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
             The value of the ``BeeOND_dir`` is written as a data member of the class and can be modified if needed
        verbose (:py:class:`bool`) : set the amount of information provided on terminal
+       fatlog (:py:class:`bool`) : if True set the `-fatlog` key to provide more information in the report file
        kwargs : other parameters that are stored in the _global_options dictionary
 
      Computations are performed in the folder specified by the ``run_dir`` parameter. The ``name`` parameter is
@@ -175,11 +176,11 @@ class YamboCalculator(Runner):
 
     def __init__(self,runRules, executable = 'yambo', skip = True, clean_restart = True,
                  dry_run = False, wait_end_run = True, activate_BeeOND = False,
-                 verbose = True, **kwargs):
+                 verbose = True, fatlog = False, **kwargs):
         # Use the initialization from the Runner class (all options inside _global_options)
         Runner.__init__(self,**runRules,executable=executable,skip=skip,clean_restart=clean_restart,
                         dry_run=dry_run,wait_end_run=wait_end_run,activate_BeeOND=activate_BeeOND,
-                        verbose=verbose,**kwargs)
+                        verbose=verbose,fatlog=fatlog,**kwargs)
         print('Initialize a Yambo calculator with scheduler %s' %self._global_options['scheduler'])
 
     def pre_processing(self):
@@ -446,6 +447,7 @@ class YamboCalculator(Runner):
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name')
         jobname = self.run_options.get('jobname',name)
+        fatlog = self.run_options.get('fatlog')
         verbose = self.run_options.get('verbose')
 
         if type(jobname) == str : J = jobname
@@ -454,6 +456,7 @@ class YamboCalculator(Runner):
         mpi_run = mpi_command(self.run_options)
         command = mpi_run + ' ' + executable
         input_name = name + '.in'
+        if fatlog : command += ' -fatlog '
         comm_str =  command + ' -F %s -J %s -C %s'%(input_name,J,name)
         if verbose: print('run command: %s' %comm_str)
 
