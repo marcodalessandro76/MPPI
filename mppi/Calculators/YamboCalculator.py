@@ -199,6 +199,7 @@ class YamboCalculator(Runner):
         name = self.run_options.get('name','default')
         clean_restart= self.run_options.get('clean_restart')
         verbose = self.run_options.get('verbose')
+        reformat = self.run_options.get('reformat',True)
         SAVE = os.path.join(run_dir,'SAVE')
         self.is_to_run()
         is_to_run = self.run_options.get('is_to_run')
@@ -210,7 +211,7 @@ class YamboCalculator(Runner):
             print('SAVE folder does not exists')
         else:
             if input is not None:
-                input.write(run_dir,name+'.in')
+                input.write(run_dir,name+'.in',reformat=reformat)
             else:
                 print('input not provided')
 
