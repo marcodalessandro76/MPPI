@@ -26,13 +26,12 @@
   vector alat (with equal components). In this way the function implemented to work with the Parser can be used by both the Yambo
   and Pw parsers. Actually only the first element of the Yambo alat is stored in the YamboDftParser alat parameter.
 
-- The YamboCalculator does not work properly when there are several replica of the report and o- files. In this case we
-  need to improve the get_output_files and get_report functions to be able to identify only the last elements that are
-  associated to the new run. We can use the _number label to identify the replica for each type of o- files.
+- The command make html produce the warning
+  WARNING: mathjax_config/mathjax2_config does not work for the current MathJax version, use mathjax3_config instead
+  Check!
 
-- The job_*.out file in the YamboCalculator has to be erased also when the clean_restart option is False. Otherwise
-  when the calculation starts the calculator can erroneously assume that the computation is ended. Same behavior also
-  for the QeCalculator?
+- The clean job_*.out file in the YamboCalculator has been implemented. Check that this works correctly and evaluate if the
+  same procedure has to be performed also for the QeCalculator. Also the clean_run_dir has been called clean_run.
 
 - Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 

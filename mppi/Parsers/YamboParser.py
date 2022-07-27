@@ -1,8 +1,7 @@
 """
 Module that manages the parsing of all the elements of a Yambo computation.
-This parser aim to deal with the output files, the ``ns.db1`` database written in the
-SAVE folder, the ``dipoles`` and all the databases created by yambo in the $jobname
-folder.
+This parser analyzes the output files, the ``ns.db1`` database written in the
+SAVE folder and all the databases created by yambo in the $jobname folder.
 """
 from mppi import Parsers as P
 
@@ -12,6 +11,13 @@ class YamboParser():
     by the :class:`YamboCalculator` class. In the actual implementation of the class the
     parser is able to deal with the o- files, the dipoles database, the ``ndb.RT_G_PAR``
     and the ``ns.db1`` database written in the SAVE folder.
+
+    Args:
+        results (:py:class:`dict`): The dictionary of the results built by the
+            :class:`YamboCalculator` class
+        verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
+        extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
+                        names of the variables in the :class:`YamboOutputParser`
 
     Attributes:
         data (:class:`YamboOutputParser`) : contains the instance of the :class:`YamboOutputParser`
@@ -29,19 +35,11 @@ class YamboParser():
     def __init__(self,results, verbose = False, extendOut = True):
         """
         Initialize the data member of the class.
-
-        Args:
-            results (:py:class:`dict`): The dictionary of the results built by the
-                :class:`YamboCalculator` class
-            verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
-            extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
-                            names of the variables in the :class:`YamboOutputParser`
-
         """
         if 'output' in results:
             self.data = P.YamboOutputParser(results['output'],verbose=verbose,extendOut=extendOut)
         else:
-            print('There are no o- files in the %s dictionary. Please check...'%results)
+            print('There are no o-* files in the %s dictionary. Please check...'%results)
         for key,value in results.items():
             if key == 'dipoles':
                 self.dipoles = P.YamboDipolesParser(value,verbose=verbose)

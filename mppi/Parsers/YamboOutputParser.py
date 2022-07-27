@@ -108,50 +108,34 @@ def parseYamboOutput(file,suffix,extendOut):
     columns = build_columns(lines)
     return make_dict(columns,suffix,extendOut)
 
-def files_from_folder(path):
-    """
-    Scan the files in the folder and build a list with the names of all the files
-    that contain the 'o-' term in their name.
-
-    Args:
-        path (string) : name of the folder
-    """
-    import os
-    listdir= os.listdir(path)
-    ofiles = []
-    for file in listdir:
-        if 'o-' in file:
-            ofiles.append(os.path.join(path,file))
-    return ofiles
-
 class YamboOutputParser(dict):
     """
     Class that performs the parsing of a Yambo o- file(s). The class ineriths from :py:class:`dict`
     and the instance of the class is a dictionary with the data. The keys correspond to the extension
-    of the parsed files
+    of the parsed files.
 
     Args:
-        files (:py:class:`list`): The list of strings with the names of the file to be parsed
+        output (:py:class:`list`): Dictionary with the structure of the output of :py:meth:`get_output_files`
+            of the `YamboCalculator` module.
         verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
         extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
                         names of the variables
-
     """
 
-    def __init__(self,files,verbose=True,extendOut=True):
+    def __init__(self, output, verbose=True,extendOut=True):
         """
         Initialize the data member of the class.
         """
         dict.__init__(self)
-        for file in files:
-            suffix = file.rsplit('.')[-1]
+        for suffix,file in output.items():
             if verbose: print('Parse file',file)
             self[suffix] = parseYamboOutput(file,suffix,extendOut)
 
     @classmethod
-    def from_path(cls,path,verbose = False, extendOut = True):
+    def from_path(cls, path, verbose = True, extendOut = True):
         """
-        Init the a :class:`YamboOutputParser` instance using all the 'o-' files found inside the path.
+        Init the a :class:`YamboOutputParser` instance using the 'o-' files found inside the path. If several replica
+        of the output files are found the method select the one associated to the last Yambo computation.
 
         Args:
             path (:py:class:`string`): name of the folder that contains the 'o-' files
@@ -159,8 +143,28 @@ class YamboOutputParser(dict):
             extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
                             names of the variables
         """
-        files = files_from_folder(path)
+        from mppi.Calculators.YamboCalculator import get_output_files
+
+        files = get_output_files(path)
         return cls(files,verbose=verbose,extendOut=extendOut)
+
+    @classmethod
+    def from_file(cls, file, verbose = True, extendOut = True):
+        """
+        Init the a :class:`YamboOutputParser` instance using a single 'o-' file. The key of the dictionary
+        built by the parser is computed using the :py:meth:`type_identifier` method of the `YamboCalculator` module.
+
+        Args:
+            file (:py:class:`string`): name of the 'o-' file
+            verbose (:py:class:`boolean`) : Determine the amount of information provided on terminal
+            extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
+                            names of the variables
+        """
+        from mppi.Calculators.YamboCalculator import type_identifier
+
+        key = type_identifier(file)
+        output =  {key : file}
+        return cls(output,verbose=verbose,extendOut=extendOut)
 
     def get_info(self):
         """
@@ -211,7 +215,7 @@ class YamboOutputParser(dict):
         Args:
             k_full (:py:class:`int`): k-point index of the full state
             band_full (:py:class:`int`) : band index of the full state
-            **kwargs : these parameters allows the user to set the k_empty and
+            **kwargs : these parameters allow the user to set the k_empty and
                 band_empty parameters. If not provided the values k_empty=k_full
                 and band_empty=band_full+1 are used.
 

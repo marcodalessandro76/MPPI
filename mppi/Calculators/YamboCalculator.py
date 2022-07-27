@@ -9,20 +9,68 @@ from mppi.Utilities import Tools
 from mppi.Calculators.RunRules import build_slurm_header, mpi_command
 import os
 
+def type_identifier(file):
+    """
+    Found the type of the o-file according to its name. Different
+    extension like 'hf' or 'hf_01' are recognized with the same type, that is
+    'hf' in this example.
+
+    Args:
+        file (:py:class:`string`) : file name
+
+    Return:
+        :py:class:`string` : string with the type of the file
+
+    """
+    key = file.split('.')[-1]
+    key_split = key.split('_')
+    if key_split[-1].isdigit():
+        key = key.rsplit('_',1)[0]
+    return key
+
+def get_output_files(path):
+    """
+    Scan the path with the output files and build a dictionary in which the
+    keys are type of output (hf,qp,carriers,...) and the values are the names
+    of the file for each type. If the path contains several replica of the output
+    files (due to the fact the Yambo has been exectuted many times without cleaning
+    the output folder) the function identifies the files associated to the last run.
+
+    Args:
+        path (:py:class:`string`) : folder where the o-* files are stored
+
+    Return:
+        :py:class:`dict` : Dictionary with the types (keys) and names values,
+                    including the path, of the files o-* produced by the run
+
+    """
+    data = {}
+    for file in os.listdir(path):
+        if 'o-' in file:
+            key = type_identifier(file)
+            if key not in data:
+                data[key] = [os.path.join(path,file)]
+            else:
+                data[key].append(os.path.join(path,file))
+    output = {}
+    for key in data:
+        data[key].sort(reverse=True)
+        output[key] = data[key][0]
+    return output
+
 def get_report(path):
     """
     Look for the name of the r-* file(s) produced by the execution of the code.
-
-    Note that multiple instances of the report could be found, if the computations
-    have been repeated more than once with the `clean_restart=False` option.
+    If multiple istances of the report are found, the function selects the one
+    assciated to the last computation.
 
     Args:
         path (:py:class:`string`) : folder with the r-* and the o-* files
 
     Return:
-        :py:class:`list` : A list with the name, including the path, of the
-        file r-* produced by the run. If no report files are found a list with a
-        single (empty) string is produced.
+        :py:class:`string` :String with the name, including the path, of the
+        file r-* produced by the run. If no report files is found an
+        empty string is provided as output
 
     """
     report = []
@@ -31,26 +79,8 @@ def get_report(path):
             if 'r-' in file:
                 report.append(os.path.join(path,file))
     if len(report) == 0 : report.append(' ')
-    return report
-
-def get_output_files(path):
-    """
-    Look for the names of the o- file(s) produced by the execution of the code.
-
-    Args:
-        path (:py:class:`string`) : folder where the o-* files are stored
-
-    Return:
-        :py:class:`list` : A list with the names, including the path, of the
-        files o-* produced by the run
-    """
-
-    output = []
-    if os.path.isdir(path):
-        for file in os.listdir(path):
-            if 'o-' in file:
-                output.append(os.path.join(path,file))
-    return output
+    report.sort(reverse=True)
+    return report[0]
 
 def get_db_files(path):
     """
@@ -124,7 +154,7 @@ class YamboCalculator(Runner):
        runRulues (:class:`RunRules`) : instance of the :class:`RunRules` class
        executable (:py:class:`string`) : set the executable (yambo, ypp, yambo_rt, ...) of the Yambo package
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking that the
-            report file built by yambo exsists and contains the string `game_over`, defined as a data member of this class
+            report file built by yambo exists and contains the string `game_over`, defined as a data member of this class
        clean_restart (:py:class:`bool`) : if True delete the folder with the output files and the database before running the computation
        dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
             for submitting the job, but the computations are not run
@@ -187,7 +217,9 @@ class YamboCalculator(Runner):
         """
         Process local run dictionary. Check that the run_dir exists and that it
         contains the SAVE folder.
-        If clean_restart = True the run_dir is cleaned before the run.
+        If clean_restart = True the results associated to previous computations are deleted before the run.
+        The slurm out script is always deleted before the run, otherwise the calculator can erroneously
+        assume that the run is completed. 
 
         Note:
             If the run_dir and/or the SAVE folder do not exist an alert is
@@ -204,7 +236,7 @@ class YamboCalculator(Runner):
         self.is_to_run()
         is_to_run = self.run_options.get('is_to_run')
 
-        # check if the run_dir and SAVE folder exist and write the input
+        # check if the run_dir and SAVE folder exists and write the input
         if not os.path.isdir(run_dir):
             print('Run_dir %s does not exists'%run_dir)
         elif not os.path.isdir(SAVE):
@@ -217,8 +249,9 @@ class YamboCalculator(Runner):
 
         # clean the run dir
         if is_to_run:
+            self.clean_slurm_out()
             if clean_restart:
-                self.clean_run_dir()
+                self.clean_run()
             else:
                 if verbose: print('run performed starting from existing results')
 
@@ -261,12 +294,11 @@ class YamboCalculator(Runner):
         verbose = self.run_options.get('verbose')
 
         if type(jobname) == str : dbsPath = [os.path.join(run_dir,jobname)]
-        if type(jobname) == list :
-            dbsPath = [os.path.join(run_dir,j) for j in jobname]
+        if type(jobname) == list : dbsPath = [os.path.join(run_dir,j) for j in jobname]
 
         results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
         if verbose:
-            report = results['report'][0]
+            report = results['report']
             if Tools.find_string_file(report,self.game_over) is None:
                 print('game_over string not found in report. Check the computation!')
             time_sim = Tools.find_string_file(report,self.time_profile)
@@ -279,7 +311,7 @@ class YamboCalculator(Runner):
         """
         The method evaluates if the computation has to be performed. If ``skip`` is
         False the run is always performed, instead if ``skip`` is True the method
-        checks if the report file exsists and contains the string `game_over`
+        checks if the report file exists and contains the string `game_over`
         defined as a member of the class.
         The method adds the key `is_to_run` to ``the run_options`` of the class.
 
@@ -291,7 +323,7 @@ class YamboCalculator(Runner):
         run_dir = self.run_options.get('run_dir', '.')
         name = self.run_options.get('name','default')
         outputPath = os.path.join(run_dir,name)
-        report = get_report(outputPath)[0]
+        report = get_report(outputPath)
         verbose = self.run_options.get('verbose')
 
         if not skip:
@@ -493,28 +525,36 @@ class YamboCalculator(Runner):
 
         return is_ended
 
-    def clean_run_dir(self):
+    def clean_slurm_out(self):
         """
-        Clean the run_dir before performing the computation. Delete the job_$name.out
-        file, the out_dir and folder and the folder with the databases. If several folders
-        are provided in the jobname field, only the first one is deleted, since the others are
-        assumed to contain databases obtained from other computations.
+        Delete the job_$name.out file.
+        """
+        name = self.run_options.get('name')
+        verbose = self.run_options.get('verbose')
+        job_out = os.path.join(run_dir,'job_'+name+'.out')
+
+        if os.path.isfile(job_out):
+            if verbose: print('delete job_out script:',job_out)
+            os.system('rm %s'%job_out)
+
+    def clean_run(self):
+        """
+        Delete existing results before performing the computation. Delete the out_dir folder
+        and the folder with the databases. If several folders are provided in the jobname field,
+        only the first one is deleted, since the others are assumed to contain databases obtained
+        from other computations.
 
         """
         run_dir = self.run_options.get('run_dir','.')
         name = self.run_options.get('name')
         jobname = self.run_options.get('jobname',name)
         verbose = self.run_options.get('verbose')
-        job_out = os.path.join(run_dir,'job_'+name+'.out')
         out_dir = os.path.join(run_dir,name)
         if type(jobname) == list:
             ndb_dir = os.path.join(run_dir,jobname[0])
         else:
             ndb_dir = os.path.join(run_dir,jobname)
 
-        if os.path.isfile(job_out):
-            if verbose: print('delete job_out script:',job_out)
-            os.system('rm %s'%job_out)
         if os.path.isdir(out_dir):
             if verbose: print('delete folder:',out_dir)
             os.system('rm -r %s'%out_dir)
