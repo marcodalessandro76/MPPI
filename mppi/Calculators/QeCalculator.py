@@ -99,6 +99,7 @@ class QeCalculator(Runner):
 
         # Clean the folders before the run
         if is_to_run:
+            self.clean_slurm_out()
             if clean_restart:
                 self.clean_run()
             else:
@@ -359,9 +360,22 @@ class QeCalculator(Runner):
 
         return is_ended
 
+    def clean_slurm_out(self):
+        """
+        Delete the job_$name.out file.
+        """
+        run_dir = self.run_options.get('run_dir','.')
+        name = self.run_options.get('name')
+        verbose = self.run_options.get('verbose')
+        job_out = os.path.join(run_dir,'job_'+name+'.out')
+
+        if os.path.isfile(job_out):
+            if verbose: print('delete job_out script:',job_out)
+            os.system('rm %s'%job_out)
+
     def clean_run(self):
         """
-        Clean the run before performing the computation. Delete the $name.log and
+        Delete existing results before performing the computation. Delete the $name.log and
         the job_$name.out file, located in the `run_dir`, and the $prefix.xml file
         and the $prefix.save folder located in the `out_dir`. Finally, if the
         `out_dir` is empty it is deleted.
@@ -375,16 +389,16 @@ class QeCalculator(Runner):
         out_dir = self._get_outdir_path()
 
         logfile = os.path.join(run_dir,name)+'.log'
-        job_out = os.path.join(run_dir,'job_'+name+'.out')
+        #job_out = os.path.join(run_dir,'job_'+name+'.out')
         xmlfile = os.path.join(out_dir,prefix)+'.xml'
         save_dir = os.path.join(out_dir,prefix)+'.save'
 
         if os.path.isfile(logfile):
             if verbose: print('delete log file:',logfile)
             os.system('rm %s'%logfile)
-        if os.path.isfile(job_out):
-            if verbose: print('delete job_out script:',job_out)
-            os.system('rm %s'%job_out)
+        #if os.path.isfile(job_out):
+        #    if verbose: print('delete job_out script:',job_out)
+        #    os.system('rm %s'%job_out)
         if os.path.isfile(xmlfile):
             if verbose: print('delete xml file:',xmlfile)
             os.system('rm %s'%xmlfile)

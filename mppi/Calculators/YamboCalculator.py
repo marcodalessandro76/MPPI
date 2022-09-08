@@ -219,7 +219,7 @@ class YamboCalculator(Runner):
         contains the SAVE folder.
         If clean_restart = True the results associated to previous computations are deleted before the run.
         The slurm out script is always deleted before the run, otherwise the calculator can erroneously
-        assume that the run is completed. 
+        assume that the run is completed.
 
         Note:
             If the run_dir and/or the SAVE folder do not exist an alert is
@@ -236,7 +236,7 @@ class YamboCalculator(Runner):
         self.is_to_run()
         is_to_run = self.run_options.get('is_to_run')
 
-        # check if the run_dir and SAVE folder exists and write the input
+        # Check if the run_dir and SAVE folder exists and write the input
         if not os.path.isdir(run_dir):
             print('Run_dir %s does not exists'%run_dir)
         elif not os.path.isdir(SAVE):
@@ -247,7 +247,7 @@ class YamboCalculator(Runner):
             else:
                 print('input not provided')
 
-        # clean the run dir
+        # Clean the folders before the run
         if is_to_run:
             self.clean_slurm_out()
             if clean_restart:
@@ -529,6 +529,7 @@ class YamboCalculator(Runner):
         """
         Delete the job_$name.out file.
         """
+        run_dir = self.run_options.get('run_dir','.')
         name = self.run_options.get('name')
         verbose = self.run_options.get('verbose')
         job_out = os.path.join(run_dir,'job_'+name+'.out')
