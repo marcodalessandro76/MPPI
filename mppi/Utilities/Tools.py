@@ -164,7 +164,7 @@ def build_SAVE(source_dir, run_dir, command = 'p2y', make_link = True, overwrite
             copytree(src,dest)
             print('Create a copy of %s in %s'%(src,run_dir))
         # build the r_setup
-        comm_str = 'cd %s;OMP_NUM_THREADS=1 mpirun -np 1 yambo'%run_dir
+        comm_str = 'cd %s; OMP_NUM_THREADS=1 mpirun -np 1 yambo'%run_dir
         print('Executing command:', comm_str)
         os.system(comm_str)
 
