@@ -107,11 +107,11 @@ def build_kpath(*kpoints,numstep=40):
     klist.append(kpoints[-1]+[0])
     return klist
 
-def build_SAVE(source_dir, run_dir, command = 'p2y', make_link = True, overwrite_if_found = False):
+def build_SAVE(source_dir, run_dir, p2y_command = 'p2y', yambo_command = 'yambo', make_link = True, overwrite_if_found = False):
     """
-    Build the SAVE folder for a yambo computation.
+    Build the SAVE folder and the r_setup file needed for a yambo computation.
 
-    The function creates the SAVE folder in the source_dir using the command provided as the command
+    This function creates the SAVE folder in the source_dir using the command provided as the command
     parameter (in some cases the option -a 2 is needed to ensure that labelling of the high-symmetry
     kpoints is consistent in both QE and Yambo) and create a symbolic link (or a copy) of the SAVE folder
     in the run_dir. This procedure is performed only if the SAVE folder is not already found in the run_dir,
@@ -123,7 +123,8 @@ def build_SAVE(source_dir, run_dir, command = 'p2y', make_link = True, overwrite
         run_dir (:py:class:`string`) : folder where the SAVE folder is linked or copied. The run_dir can be
             a nested directory path and if the path is not found is created by the function using the
             :py:meth:`os.makedirs`
-        command (:py:class:`string`) : command for generation of the SAVE Folder. Default is 'p2y'.
+        p2y_command (:py:class:`string`) : command for generation of the SAVE Folder. Default is 'p2y'
+        yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'.
         make_link (:py:class:`bool`) : if True create a symbolic link
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the
             r_setup (if found) and build them again
@@ -151,7 +152,7 @@ def build_SAVE(source_dir, run_dir, command = 'p2y', make_link = True, overwrite
             print('SAVE folder already present in %s. No operations performed.'%run_dir)
     # Actions performed if the SAVE_dir is not present (or if it has been removed)
     if not os.path.isdir(SAVE_dir):
-        comm_str = 'cd %s; %s'%(source_dir,command)
+        comm_str = 'cd %s; %s'%(source_dir,p2y_command)
         print('Executing command:', comm_str)
         os.system(comm_str)
         src = os.path.abspath(os.path.join(source_dir,'SAVE'))
@@ -164,7 +165,7 @@ def build_SAVE(source_dir, run_dir, command = 'p2y', make_link = True, overwrite
             copytree(src,dest)
             print('Create a copy of %s in %s'%(src,run_dir))
         # build the r_setup
-        comm_str = 'cd %s; OMP_NUM_THREADS=1 mpirun -np 1 yambo'%run_dir
+        comm_str = 'cd %s; %s'%(run_dir,yambo_command)
         print('Executing command:', comm_str)
         os.system(comm_str)
 
@@ -188,7 +189,6 @@ def make_FixSymm(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 
     Note:
         Although the function does not remove the content of the FixSymm  folder, when 'ypp -y' is executed this folder
         is erased. This fact must be considered if there are relevant data in the FixSymm
-
 
     """
     from mppi import InputFiles as I, Calculators as C

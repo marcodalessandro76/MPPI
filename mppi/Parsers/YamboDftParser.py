@@ -10,6 +10,7 @@ import os
 
 from mppi.Utilities.Constants import HaToeV
 from mppi.Parsers import ParsersUtils as U
+from mppi.Utilities import LatticeUtils as latUtils
 
 class YamboDftParser():
     """
@@ -32,7 +33,7 @@ class YamboDftParser():
         nbands_empty : number of empty bands
         nkpoints : numer of kpoints
         kpoints : list of the kpoints expressed in cartesian coordinates in units of 2pi/alat. Note the Yambo uses
-            a vector like alat parameter, so the components of the kpoints can differ from Pw ones 
+            a vector like alat parameter, so the components of the kpoints can differ from Pw ones
         evals : array of the ks energies for each kpoint (in Hartree)
         spin : number of spin components
         spin_degen : 1 if the number of spin components is 2, 2 otherwise
@@ -58,7 +59,6 @@ class YamboDftParser():
         self.syms = np.array(database.variables['SYMMETRY'][:])
         self.lattice = np.array(database.variables['LATTICE_VECTORS'][:].T)
         self.alat = database.variables['LATTICE_PARAMETER'][:][0]
-
 
         # electronic structure
         self.evals  = np.array(database.variables['EIGENVALUES'][0,:])
@@ -157,7 +157,7 @@ class YamboDftParser():
 
         """
         lattice = self.get_lattice(rescale=rescale)
-        return U.eval_lattice_volume(lattice)
+        return latUtils.eval_lattice_volume(lattice)
 
     def eval_reciprocal_lattice_volume(self, rescale = False):
         """
@@ -169,7 +169,7 @@ class YamboDftParser():
 
         """
         lattice = self.get_reciprocal_lattice(rescale=rescale)
-        return U.eval_lattice_volume(lattice)
+        return latUtils.eval_lattice_volume(lattice)
 
     def get_lattice(self, rescale = False):
         """
@@ -183,7 +183,7 @@ class YamboDftParser():
             :py:class:`array` : array with the lattice vectors a_i as rows
 
         """
-        return U.get_lattice(self.lattice,self.alat,rescale=rescale)
+        return latUtils.get_lattice(self.lattice,self.alat,rescale=rescale)
 
     def get_reciprocal_lattice(self, rescale = False):
         """
@@ -199,7 +199,7 @@ class YamboDftParser():
             :py:class:`array` : array with the reciprocal lattice vectors b_i as rows
 
         """
-        return U.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
+        return latUtils.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
 
 
     #####################################################################################

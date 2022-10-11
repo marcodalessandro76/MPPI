@@ -80,14 +80,16 @@ Organize runs and analyze output in a dataset
 .. toctree:: datasets
 .. toctree:: postProcessing
 
-The *Utilities* module collects some useful tools like the managment of the Dos, the study of the band structure and the generation of
+The *Utilities* module collects some useful tools like the management of the Dos, the study of the band structure and the generation of
 gaussian pulses. Moreover the module contains useful tools to ease the computations. The module is organized in several files.
 
-.. toctree:: constants.rst
 .. toctree:: attributeDict.rst
-.. toctree:: tools.rst
 .. toctree:: bandStructure.rst
+.. toctree:: constants.rst
 .. toctree:: dos.rst
+.. toctree:: tools.rst
+.. toctree:: latticeUtils.rst
+.. toctree:: parallel.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
 Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.

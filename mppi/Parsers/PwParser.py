@@ -5,6 +5,7 @@ data-file-schema.xml file that is found in the run_dir/prefix.save folder.
 
 from mppi.Utilities.Constants import HaToeV
 from mppi.Parsers import ParsersUtils as U
+from mppi.Utilities import LatticeUtils as latUtils
 
 class PwParser():
     """
@@ -17,7 +18,8 @@ class PwParser():
     Attributes:
         natoms : number of atoms in the cell
         natypes : number of atomic species
-        atomic_positions : list with the position of each atom
+        atomic_positions : list with the name and position of each atom, expressed
+            in cartesian coordinates (in a.u.)
         atomic_species : dictionary with mass and pseudo for each species
         alat : lattice parameter (in a.u.)
         lattice : array with the lattice vector. The i-th row represents the
@@ -74,7 +76,7 @@ class PwParser():
         for i in range(self.natoms):
             atype = atoms[i].get('name')
             pos = [float(x) for x in atoms[i].text.strip().split()]
-            self.atomic_positions.append([atype,pos])
+            self.atomic_positions.append([atype,np.array(pos)])
 
         #atomic species
         self.natypes = int(self.data.find("output/atomic_species").get('ntyp'))
@@ -183,7 +185,7 @@ class PwParser():
 
         """
         lattice = self.get_lattice(rescale=rescale)
-        return U.eval_lattice_volume(lattice)
+        return latUtils.eval_lattice_volume(lattice)
 
     def eval_reciprocal_lattice_volume(self, rescale = False):
         """
@@ -195,7 +197,7 @@ class PwParser():
 
         """
         lattice = self.get_reciprocal_lattice(rescale=rescale)
-        return U.eval_lattice_volume(lattice)
+        return latUtils.eval_lattice_volume(lattice)
 
     def get_lattice(self, rescale = False):
         """
@@ -209,7 +211,7 @@ class PwParser():
             :py:class:`array` : array with the lattice vectors a_i as rows
 
         """
-        return U.get_lattice(self.lattice,self.alat,rescale=rescale)
+        return latUtils.get_lattice(self.lattice,self.alat,rescale=rescale)
 
     def get_reciprocal_lattice(self, rescale = False):
         """
@@ -225,7 +227,7 @@ class PwParser():
             :py:class:`array` : array with the reciprocal lattice vectors b_i as rows
 
         """
-        return U.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
+        return latUtils.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
 
     def get_evals(self, set_scissor = None, set_gap = None, set_direct_gap = None, verbose = True):
         """
