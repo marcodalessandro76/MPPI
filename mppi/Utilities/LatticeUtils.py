@@ -6,7 +6,6 @@ of the lattice cell. This functions are also used by the PwParser and the YamboD
 """
 
 import numpy as np
-from itertools import product
 
 def convert_to_crystal(lattice,vector_cartesian):
     """
@@ -107,42 +106,41 @@ def get_reciprocal_lattice(lattice, alat, rescale = False):
     b3 = norm_factor*np.cross(a1,a2)
     return np.array([b1,b2,b3])
 
-def unit_cell_3d(lattice, atom_pos, Nx, Ny, Nz):
+def build_lattice(lattice_vectors, atom_pos, Nx, Ny, Nz):
     """
-    Make arrays of x-, y- and z-positions of a lattice from the
-    lattice vectors, the atom positions and the number of unit cells.
+    Create the arrays of the x,y and z positions of each atom in the lattice.
+    The function make usage of the lattice vectors, of the atoms positions and
+    of the number of replica of the unit cell in the x,y and z directions.
 
     Args:
-        lattice (:py:class:`array`) : array with the lattice vectors. The i-th
+        lattice_vectors (:py:class:`array`) : array with the lattice vectors. The i-th
             row represents the i-th lattice vectors in cartesian units
-        atom_pos (:py:class:`list`) : each element of the list represents the position
-            of an atom in the unit cell, written in the basis of the lattice vectors
+        atom_pos (:py:class:`list`) : each element has the structure of the
+            atomic_positions attribute of the pw xml data-file-schema
+            ['atom_name',x,y,z] and specify the position of the atom in the unit cell
+            in cartesian coordinate
         Nx (:py:class:`int`) : number of unit cells to be plotted in the x-direction
         Ny (:py:class:`int`) : number of unit cells to be plotted in the y-direction
         Nz (:py:class:`int`) : number of unit cells to be plotted in the z-direction
 
     Returns:
-        :py:class:`array` : Array containing the coordinates of all atoms to be plotted
-    """
-    a,b,c = lattice
-    latt_coord_x = []
-    latt_coord_y = []
-    latt_coord_z = []
+        :py:class:`list` : Each element has the structure
+            ['atom_name',x,y,z] where x,y and z are arrays with corresponding coordinates
+            of all the atoms of 'atom__name' type in the lattice
 
+    """
+    from itertools import product
+
+    a,b,c = lattice_vectors
+    latt_coord = []
     for atom in atom_pos:
-        xpos = atom[0]*a[0] + atom[1]*b[0] + atom[2]*c[0]
-        ypos = atom[0]*a[1] + atom[1]*b[1] + atom[2]*c[1]
-        zpos = atom[0]*a[2] + atom[1]*b[2] + atom[2]*c[2]
-        xpos_all = [xpos + n*a[0] + m*b[0] + k*c[0] for n, m, k in
-                     product(range(Nx), range(Ny), range(Nz))]
-        ypos_all = [ypos + n*a[1] + m*b[1] + k*c[1] for n, m, k in
-                     product(range(Nx), range(Ny), range(Nz))]
-        zpos_all = [zpos + n*a[2] + m*b[2] + k*c[2] for n, m, k in
-                     product(range(Nx), range(Ny), range(Nz))]
-        latt_coord_x.append(xpos_all)
-        latt_coord_y.append(ypos_all)
-        latt_coord_z.append(zpos_all)
-    latt_coord_x = np.array(latt_coord_x).flatten()
-    latt_coord_y = np.array(latt_coord_y).flatten()
-    latt_coord_z = np.array(latt_coord_z).flatten()
-    return latt_coord_x, latt_coord_y, latt_coord_z
+        atom_name = atom[0]
+        position = atom[1]
+        xpos = np.array([position[0] + n*a[0] + m*b[0] + k*c[0] for n, m, k in
+                     product(range(Nx), range(Ny), range(Nz))])
+        ypos = np.array([position[1] + n*a[1] + m*b[1] + k*c[1] for n, m, k in
+                     product(range(Nx), range(Ny), range(Nz))])
+        zpos = np.array([position[2] + n*a[2] + m*b[2] + k*c[2] for n, m, k in
+                     product(range(Nx), range(Ny), range(Nz))])
+        latt_coord.append([atom_name,xpos,ypos,zpos])
+    return latt_coord
