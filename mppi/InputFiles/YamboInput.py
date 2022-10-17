@@ -217,6 +217,13 @@ class YamboInput(dict):
         bands = [first_band,last_band]
         self['variables']['BndsRnXp'] = [bands,'']
 
+    def set_RIM_W(self):
+        """
+        Activate the RIM_W option to perform to the random integration method
+        on the effective potential.
+        """
+        self['arguments'].append('RIM_W')
+
     # Set methods useful for Yambo_rt inputs
 
     def set_rt_field(self,index=1,int=1e3,int_units='kWLm2',fwhm=100.,fwhm_units='fs',
