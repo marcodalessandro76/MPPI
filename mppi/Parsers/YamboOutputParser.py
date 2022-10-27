@@ -5,7 +5,7 @@ Module that manages the parsing of a Yambo o- file(s).
 import numpy as np
 
 # Specifies the name of the columns of the o- files for various type of runs. There are
-# two distint dictionaries because the qp labels dependes on the extendOut option.
+# two distint dictionaries because the qp labels depend on the extendOut option.
 
 rt_column_names = {
     'carriers' : ['time','dnhmne','dnh','dne'],

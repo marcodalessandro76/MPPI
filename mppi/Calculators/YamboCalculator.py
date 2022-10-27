@@ -104,18 +104,16 @@ def get_db_files(path):
                     dbs[key] = os.path.join(dir,file)
     return dbs
 
-def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
+def build_results_dict(run_dir, outputPath, dbsPath, verbose = True):
     """
     Return a dictionary with the names of the o- file(s), the report 'r-' file,
     the `ns.db1` in the SAVE folder and the names of the ndb database written by
-    yambo in the jobname folder. ndb database are sought in the outputPath and in
-    the dbsPath.
+    yambo in the jobname folder. Databases are sought in the dbsPath.
 
     Args:
         run_dir (:py:class:`string`) : `run_dir` folder of the calculation
         outputPath (:py:class:`string`) : folder with the 'o-' files
-        dbsPath (:py:class:`list`) : list of folders with the ndb databases. If it is
-            None the databases are sought in the outputPath
+        dbsPath (:py:class:`list`) : list of folders with the ndb databases
         verbose (:py:class:`bool`) : set the amount of information provided on terminal
 
     Return:
@@ -123,16 +121,15 @@ def build_results_dict(run_dir, outputPath, dbsPath = None, verbose = True):
             {'output' : [o-1,o-2,...],'dft':...,'dipoles':..., ....}
 
     """
-    if dbsPath is None:
-        dbsPath = [outputPath]
-    else:
-        dbsPath += [outputPath]
+    #if dbsPath is None: dbsPath = [outputPath]
+    #else:
+    #    dbsPath += [outputPath]
     results = dict(output=get_output_files(outputPath),report=get_report(outputPath))
     if verbose and len(results['output']) == 0:
         print("""
         There are no o-* files.
-        Maybe you have performed a ypp computation or wait_end_run and/or
-        the dry_run option are active.
+        Maybe you have performed a computation that does not create any output file or wait_end_run
+        and/or the dry_run option are active.
         Otherwise a possible error has occured during the computation
         """)
     # add the dft database from the SAVE folder
@@ -279,9 +276,6 @@ class YamboCalculator(Runner):
         time needed to perform the simulation (if the `time_profile` string is found
         in the report).
 
-        Note that the first element of the report list is used, so caution is needed if
-        there is more than one report file in the report key of the results dictionary.
-
         Return:
             :py:class:`dict` : the dictionary
                 {'output' : [o-1,o-2,...],'report':...,'dft':...,'dipoles':..., ....}
@@ -296,7 +290,7 @@ class YamboCalculator(Runner):
         if type(jobname) == str : dbsPath = [os.path.join(run_dir,jobname)]
         if type(jobname) == list : dbsPath = [os.path.join(run_dir,j) for j in jobname]
 
-        results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
+        results = build_results_dict(run_dir,outputPath,dbsPath,verbose=verbose)
         if verbose:
             report = results['report']
             if Tools.find_string_file(report,self.game_over) is None:

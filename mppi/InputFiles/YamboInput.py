@@ -2,7 +2,7 @@
 """
 Class to create and manipulate the yambo input files.
 The class is partially inspired from the YamboIn class of YamboPy. In this implementation
-the input object inherit from dict, so all the standard methods for python dictionary can
+the input object inherit from dict, so all the standard methods for python dictionaries can
 be used to modify the attribute of the input.
 """
 
