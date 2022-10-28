@@ -222,7 +222,7 @@ class YamboInput(dict):
         Activate the RIM_W option to perform to the random integration method
         on the effective potential.
         """
-        if 'RIM_W' not in in self['arguments'] :
+        if 'RIM_W' not in self['arguments'] :
             self['arguments'].append('RIM_W')
 
     def deactivate_RIM_W(self):
