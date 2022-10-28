@@ -82,12 +82,16 @@ def get_report(path):
     report.sort(reverse=True)
     return report[0]
 
-def get_db_files(path):
+def get_db_files(dbsPath):
     """
-    Look for the files of tht type ndb.* in the dbsPath.
+    Look for the files of tht type ndb.* in the dbsPath. Note that the first element of dbsPath
+    is the folder where Yambo writes the ndb database. If a ndb is found in this folder its
+    (eventual) replica in the other folders of dbsPath are not considered (this behavior protects
+    under erroneuos identification of the correct databas that can happen, for instance, if a ndb
+    given as input is not compliant with the actual computation so that Yambo has to compute it).
 
     Args:
-        dbstPath (:py:class:`list`) : list of folders in which the ndb databases created by yambo
+        dbstPath (:py:class:`list`) : list of folders in which the ndb databases created by Yambo
             are sought
 
     Return:
@@ -96,12 +100,13 @@ def get_db_files(path):
     """
 
     dbs = {}
-    for dir in path:
+    for dir in dbsPath:
         if os.path.isdir(dir):
             for file in os.listdir(dir):
                 if 'ndb' in file and 'fragment' not in file:
                     key = file.split('.')[-1]
-                    dbs[key] = os.path.join(dir,file)
+                    if key not in dbs :
+                        dbs[key] = os.path.join(dir,file)
     return dbs
 
 def build_results_dict(run_dir, outputPath, dbsPath, verbose = True):
@@ -121,9 +126,6 @@ def build_results_dict(run_dir, outputPath, dbsPath, verbose = True):
             {'output' : [o-1,o-2,...],'dft':...,'dipoles':..., ....}
 
     """
-    #if dbsPath is None: dbsPath = [outputPath]
-    #else:
-    #    dbsPath += [outputPath]
     results = dict(output=get_output_files(outputPath),report=get_report(outputPath))
     if verbose and len(results['output']) == 0:
         print("""

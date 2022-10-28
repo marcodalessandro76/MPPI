@@ -30,9 +30,6 @@
   WARNING: mathjax_config/mathjax2_config does not work for the current MathJax version, use mathjax3_config instead
   Check!
 
-- The clean job_*.out file has been implemented in the QeCalculator and in the YamboCalculator.
-  Check that this works correctly.
-
 - Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 
 - Define an update_from_remote function that implement the usage of rsync to fetch the results computed in a remote folder
