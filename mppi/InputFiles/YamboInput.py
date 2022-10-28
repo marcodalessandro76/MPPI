@@ -229,7 +229,7 @@ class YamboInput(dict):
         """
         Remove the RIM_W option from the runlevel list.
         """
-        if 'RIM_W' in in self['arguments'] :
+        if 'RIM_W' in self['arguments'] :
             self['arguments'].remove('RIM_W')
 
     # Set methods useful for Yambo_rt inputs
