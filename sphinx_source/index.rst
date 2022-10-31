@@ -49,6 +49,7 @@ The YamboCalculator object manage the yambo and ypp executables and also their t
 .. toctree:: runRules
 .. toctree:: qeCalculator
 .. toctree:: yamboCalculator
+.. toctree:: tools
 
 The parsers manage the results of both QuantumESPRESSO and Yambo computations.
 The parsing of the results of QuantumESPRESSO makes usage of the data-file-schema.xml and is
@@ -87,7 +88,7 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
 .. toctree:: bandStructure.rst
 .. toctree:: constants.rst
 .. toctree:: dos.rst
-.. toctree:: tools.rst
+.. toctree:: fouriertransform.rst
 .. toctree:: latticeUtils.rst
 .. toctree:: parallel.rst
 

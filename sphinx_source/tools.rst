@@ -1,7 +1,7 @@
 Tools
 -----
 
-.. automodule:: mppi.Utilities.Tools
+.. automodule:: mppi.Calculators.Tools
     :members:
     :undoc-members:
     :show-inheritance:

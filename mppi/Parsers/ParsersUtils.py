@@ -183,6 +183,22 @@ from mppi.Utilities.Constants import HaToeV
 #     b3 = norm_factor*np.cross(a1,a2)
 #     return np.array([b1,b2,b3])
 
+def get_variable_from_db(ndb_file,var_name):
+    """
+    Extract the value of a variable from a ndb database
+
+    Args:
+        ndb_file (:py:class:`string`) : the name of the database
+        var_name (:py:class:`string`) : name of the variable
+
+    Return:
+        :py:class:`numpy.ndarray`  : array with the values of the variable
+    """
+    from netCDF4 import Dataset as Ds
+    db = Ds(ndb_file)
+    var = np.array(db.variables[var_name])
+    return var
+
 def compute_transitions(bands,in_list,fin_list):
     """
     Compute the (positive) transition energies for the bands (on a single kpoint).

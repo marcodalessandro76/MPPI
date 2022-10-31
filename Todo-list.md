@@ -32,6 +32,12 @@
 
 - Check the Analysis_BandStructure tutorial and control the ypp band (since -a 2 option has been removed in p2y default).
 
+- The method build save can be modified and eventually divided into two parts. One method could manage the execution of p2y with all  
+  the connected aspects. The other method, that can be called build_run_dir (for instance) manage the creation of the run_dir and the
+  copy (or link or move) of the SAVE folder in the run_dir and the creation of the r_setup. In this case the implementation can be
+  more flexible, for instance we can create a run_dir using an existent SAVE folder so that p2y is not needed. Moreover this can be
+  used also for the SAVE produced by the fixSymm procedure. 
+
 - Define an update_from_remote function that implement the usage of rsync to fetch the results computed in a remote folder
   into a local one. The function should implement a command like:
 

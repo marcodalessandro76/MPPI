@@ -5,7 +5,7 @@ or by the slurm scheduler.
 """
 
 from .Runner import Runner
-from mppi.Utilities import Tools
+from mppi.Calculators.Tools import find_string_file
 from mppi.Calculators.RunRules import build_slurm_header, mpi_command
 import os
 
@@ -295,9 +295,9 @@ class YamboCalculator(Runner):
         results = build_results_dict(run_dir,outputPath,dbsPath,verbose=verbose)
         if verbose:
             report = results['report']
-            if Tools.find_string_file(report,self.game_over) is None:
+            if find_string_file(report,self.game_over) is None:
                 print('game_over string not found in report. Check the computation!')
-            time_sim = Tools.find_string_file(report,self.time_profile)
+            time_sim = find_string_file(report,self.time_profile)
             if  self.run_options['is_to_run'] is True and time_sim is not None:
                 print('Run performed in %s'%time_sim.split()[-1])
 
@@ -325,7 +325,7 @@ class YamboCalculator(Runner):
         if not skip:
             self.run_options['is_to_run'] = True
         else:
-            if Tools.find_string_file(report,self.game_over) is not None:
+            if find_string_file(report,self.game_over) is not None:
                 if verbose: print('Skip the run of',name)
                 self.run_options['is_to_run'] = False
             else:

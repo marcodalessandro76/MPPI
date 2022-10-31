@@ -5,7 +5,7 @@ or by the slurm scheduler.
 """
 
 from .Runner import Runner
-from mppi.Utilities import Tools
+from mppi.Calculators.Tools import find_string_file
 from mppi.Calculators.RunRules import build_slurm_header, mpi_command
 import os
 
@@ -162,7 +162,7 @@ class QeCalculator(Runner):
         if not skip:
             self.run_options['is_to_run'] = True
         else:
-            if Tools.find_string_file(logfile,self.job_done) is not None:
+            if find_string_file(logfile,self.job_done) is not None:
                 if verbose: print('Skip the run of',name)
                 self.run_options['is_to_run'] = False
             else:

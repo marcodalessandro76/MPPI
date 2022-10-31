@@ -27,8 +27,11 @@ qp_column_names = {
 qp_column_names_extendOut = {
     'qp' : ['kpoint','band','E0','E','EmE0','Dft','hf','sce0','sce','dsc_dwe0','z_Re','z_Im','width_mev','width_fs']
 }
-reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names}
-reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut}
+ip_optical_abs_column_names = {
+    'eps_q1_ip' : ['energy','eps_imag','eps_real']
+}
+reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**ip_optical_abs_column_names}
+reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut,**ip_optical_abs_column_names}
 
 def file_to_list(filename,skip='#'):
     """
