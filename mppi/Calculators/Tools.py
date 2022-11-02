@@ -132,7 +132,9 @@ def make_p2y(source_dir, p2y_command = 'p2y', overwrite_if_found = False):
         os.system(comm_str)
     return save_dir
 
-# to be update......
+# to be updated......move the part that build the ypp input file in the YamboInput class? and then use
+# calculator to run the computation and the init_yambo_run_dir to set up the folder for the rt (or other)
+# computations
 def make_FixSymm(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 = [0.,1.,0.],
                 removeTimeReversal = True, overwrite_if_found = False):
     """
