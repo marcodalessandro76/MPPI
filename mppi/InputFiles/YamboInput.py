@@ -192,6 +192,19 @@ class YamboInput(dict):
         for name,value in kwargs.items():
             inp['variables'][name] = [value,units]
 
+    def set_scalar_variables(inp,**kwargs):
+        """
+        Add to the `variables` key of the input dictionary
+        the elements kwargs[key] = kwargs[value] for all the
+        elements of the kwargs provided as input.
+
+        Args:
+            kwargs : variable(s) added in the form name = value
+
+        """
+        for name,value in kwargs.items():
+            inp['variables'][name] = value
+
     def set_extendOut(self):
         """
         Activate the ExtendOut option to print all the variable in the output file.
