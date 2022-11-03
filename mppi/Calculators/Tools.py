@@ -47,7 +47,7 @@ def find_string_file(file,string):
 def init_yambo_run_dir(source_dir, run_dir ='.', make_link = True, overwrite_if_found = False, yambo_command = 'yambo') :
     """
     Create and initialize the run directory where Yambo computations can be performed. The function creates the run_dir (if it
-    does not exists), then perform a copy (or a link) of the save_dir into the run_dir and run Yambo without arguments to
+    does not exists), then perform a copy (or a link) of the source_dir into the run_dir and run Yambo without arguments to
     buid the `r_setup` file.
 
     Args:

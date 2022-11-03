@@ -177,6 +177,21 @@ class YamboInput(dict):
 
     # Set methods useful for Yambo inputs
 
+    def set_array_variables(inp,units='',**kwargs):
+        """
+        Add to the `variables` key of the input dictionary
+        the elements kwargs[key] = [kwargs[value],units] for all the
+        elements of the kwargs provided as input.
+
+        Args:
+            units (:py:class:`string`) : the units associated to (all the) variables
+            kwargs : variable(s) added in the form name = value. All the
+                variables must have the same units
+
+        """
+        for name,value in kwargs.items():
+            inp['variables'][name] = [value,units]
+
     def set_extendOut(self):
         """
         Activate the ExtendOut option to print all the variable in the output file.
@@ -199,23 +214,23 @@ class YamboInput(dict):
         kpoint_bands = kpoint + [first_band,last_band]
         self['variables']['QPkrange'] = [kpoint_bands,'']
 
-    def set_GbndRange(self,first_band,last_band):
-        """
-        Set the the band interval in the variable GbndRnge.
-        This variable specifies the range of bands entering in the sum over states
-        in the correlation part of the self energy.
-        """
-        bands = [first_band,last_band]
-        self['variables']['GbndRnge'] = [bands,'']
-
-    def set_BndsRnXp(self,first_band,last_band):
-        """
-        Set the the band interval in the variable BndsRnXp.
-        This variable specifies the number of bands entering in the sum over states
-        in the RPA response function.
-        """
-        bands = [first_band,last_band]
-        self['variables']['BndsRnXp'] = [bands,'']
+    # def set_GbndRange(self,first_band,last_band):
+    #     """
+    #     Set the the band interval in the variable GbndRnge.
+    #     This variable specifies the range of bands entering in the sum over states
+    #     in the correlation part of the self energy.
+    #     """
+    #     bands = [first_band,last_band]
+    #     self['variables']['GbndRnge'] = [bands,'']
+    #
+    # def set_BndsRnXp(self,first_band,last_band):
+    #     """
+    #     Set the the band interval in the variable BndsRnXp.
+    #     This variable specifies the number of bands entering in the sum over states
+    #     in the RPA response function.
+    #     """
+    #     bands = [first_band,last_band]
+    #     self['variables']['BndsRnXp'] = [bands,'']
 
     def activate_RIM_W(self):
         """
