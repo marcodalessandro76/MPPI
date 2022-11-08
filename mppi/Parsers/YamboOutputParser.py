@@ -33,7 +33,7 @@ eps_column_names = {
     'eps_q1_haydoc_bse' : ['energy','eps_imag','eps_real','eps_o_imag','eps_o_real','eps_p_imag','eps_p_real']
 
 }
-reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**eps__column_names}
+reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**eps_column_names}
 reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut,**eps_column_names}
 
 def file_to_list(filename,skip='#'):
