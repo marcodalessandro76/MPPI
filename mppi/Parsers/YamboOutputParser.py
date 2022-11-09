@@ -5,7 +5,7 @@ Module that manages the parsing of a Yambo o- file(s).
 import numpy as np
 
 # Specifies the name of the columns of the o- files for various type of runs. There are
-# two distint dictionaries because the qp labels depend on the extendOut option.
+# two distinct di   ctionaries because the qp labels depend on the extendOut option.
 
 rt_column_names = {
     'carriers' : ['time','dnhmne','dnh','dne'],
@@ -30,7 +30,7 @@ qp_column_names_extendOut = {
 eps_column_names = {
     'eps_q1_ip' : ['energy','eps_imag','eps_real'],
     'eps_q1_diago_bse' : ['energy','eps_imag','eps_real','eps_o_imag','eps_o_real'],
-    'eps_q1_haydoc_bse' : ['energy','eps_imag','eps_real','eps_o_imag','eps_o_real','eps_p_imag','eps_p_real']
+    'eps_q1_haydock_bse' : ['energy','eps_imag','eps_real','eps_o_imag','eps_o_real','eps_p_imag','eps_p_real']
 
 }
 reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**eps_column_names}
