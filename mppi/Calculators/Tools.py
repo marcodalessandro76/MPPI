@@ -57,7 +57,7 @@ def build_r_setup(run_dir):
     comm_str = 'rm %s'%rsetup_files
     os.system(comm_str)
     print('Build the r_setup in the run_dir path %s'%run_dir)
-    comm_str = 'cd %s; yambo'%rt_run_dir
+    comm_str = 'cd %s; yambo'%run_dir
     os.system(comm_str)
 
 def init_yambo_run_dir(source_dir, run_dir ='.', make_link = True, overwrite_if_found = False, yambo_command = 'yambo') :
@@ -165,7 +165,6 @@ def build_FixSymm_input(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], E
 
     """
     from mppi import InputFiles as I
-    import os
     l_fixsyms_file = os.path.join(run_dir,'l_fixsyms*')
     comm_str = 'rm %s'%l_fixsyms_file
     os.system(comm_str)
