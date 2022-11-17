@@ -274,13 +274,14 @@ class YamboInput(dict):
         self['variables']['GfnQP_Wc'] = [[damping_conduction, 0.0, 0.0], '']
 
     def set_rt_simulationTimes(self,time_step=10,step_units='as',sim_time=1000.,time_units='fs',
-                                io_time = [1.,5.,1.],io_units='fs'):
+                                io_time = [1.,5.,1.],io_cache_time = [1.,1.],io_units='fs'):
         """
         Set the time parameters of the simulation
         """
         self['variables']['RTstep'] = [time_step,step_units]
         self['variables']['NETime'] = [sim_time,time_units]
         self['variables']['IOtime'] = [io_time,io_units]
+        self['variables']['IOCacheTime'] = [io_cache_time,io_units]
 
     def set_rt_cpu(self,k=1,b=1,q=1,qp=1):
         """

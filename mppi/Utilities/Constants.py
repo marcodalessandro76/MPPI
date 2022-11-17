@@ -12,9 +12,24 @@ Planck_ev_ps = 4.135667696e-3
 Planck constant in eV*ps.
 """
 
+Planck_ev_fs = 4.135667696
+"""
+Planck constant in eV*fs.
+"""
+
 Planck_reduced_ev_ps = 6.58211957e-4
 """
 Reduced Planck constant (h/2pi) in eV*ps.
+"""
+
+Planck_reduced_ev_fs = 6.58211957e-1
+"""
+Reduced Planck constant (h/2pi) in eV*fs.
+"""
+
+Light_speed_nm_fsm1 = 299.792458
+"""
+Light speed in in nm/fs
 """
 
 Bohr_radius = 5.291772e-11
