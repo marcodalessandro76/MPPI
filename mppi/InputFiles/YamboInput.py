@@ -227,24 +227,6 @@ class YamboInput(dict):
         kpoint_bands = kpoint + [first_band,last_band]
         self['variables']['QPkrange'] = [kpoint_bands,'']
 
-    # def set_GbndRange(self,first_band,last_band):
-    #     """
-    #     Set the the band interval in the variable GbndRnge.
-    #     This variable specifies the range of bands entering in the sum over states
-    #     in the correlation part of the self energy.
-    #     """
-    #     bands = [first_band,last_band]
-    #     self['variables']['GbndRnge'] = [bands,'']
-    #
-    # def set_BndsRnXp(self,first_band,last_band):
-    #     """
-    #     Set the the band interval in the variable BndsRnXp.
-    #     This variable specifies the number of bands entering in the sum over states
-    #     in the RPA response function.
-    #     """
-    #     bands = [first_band,last_band]
-    #     self['variables']['BndsRnXp'] = [bands,'']
-
     def activate_RIM_W(self):
         """
         Activate the RIM_W option to perform to the random integration method
@@ -260,7 +242,7 @@ class YamboInput(dict):
         if 'RIM_W' in self['arguments'] :
             self['arguments'].remove('RIM_W')
 
-    # Set methods useful for Yambo_rt inputs
+    # Set methods useful for yambo_rt inputs
 
     def set_rt_field(self,index=1,int=1e3,int_units='kWLm2',fwhm=100.,fwhm_units='fs',
                     freq=1.5,freq_units='eV',kind='QSSIN',polarization='linear',
@@ -281,13 +263,13 @@ class YamboInput(dict):
         self['variables'][field_name+'_Dir_circ'] = [direction_circ,'']
         self['variables'][field_name+'_Tstart'] = [tstart,tstart_units]
 
-    def set_rt_bands(self,bands=None,scissor=0.,damping_valence=0.05,damping_conduction=0.05):
+    def set_rt_bands(self,bands=None,scissor=0.,stretch_con=1.,stretch_val=1.,damping_valence=0.05,damping_conduction=0.05):
         """
         Set the bands, the scissor and the damping parameters for the RT analysis
         """
         if bands is not None:
             self['variables']['RTBands'] = [bands,'']
-        self['variables']['GfnQP_E'] = [[scissor, 1.0, 1.0], '']
+        self['variables']['GfnQP_E'] = [[scissor, stretch_con, stretch_val], '']
         self['variables']['GfnQP_Wv'] = [[damping_valence, 0.0, 0.0], '']
         self['variables']['GfnQP_Wc'] = [[damping_conduction, 0.0, 0.0], '']
 
@@ -315,9 +297,11 @@ class YamboInput(dict):
         """
         self['arguments'].append('RmTimeRev')
 
-    def set_ypp_extFields(self, Efield1 = [1.,0.,0.], Efield2 = [0.,1.,0.]):
+    def set_ypp_extFields(self, Efield1 = [1.,0.,0.], Efield2 = None):
         """
-        Set the direction of the external electric field(s)
+        Set the direction of the external electric field(s). The second field (useful for the
+        circular polarization) is added only is the value is not `None`.
         """
         self['variables']['Efield1'] = [Efield1,'']
-        self['variables']['Efield2'] = [Efield2,'']
+        if Efield2 is not None :
+            self['variables']['Efield2'] = [Efield2,'']

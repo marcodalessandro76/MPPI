@@ -13,7 +13,7 @@ where ``A`` is the amplitude of the pulse and the value of :math:`t_0` sets the
 position of the maximum of the gaussian envelope. Here :math:`t_0` is expressed
 in function of the width parameter as the multiple of the half period of the sine
 function nearest to 3w. Due to this choice the maximum of the gaussian profile
-matches with the maximum of the sine function. Finally, the origin of the time
+matches with the maximum of the sine function. The origin of the time
 variable can be set using the :math:`t_{start}` parameter.
 
 The width parameter determines the value of the FWHM of the pulse according to the
