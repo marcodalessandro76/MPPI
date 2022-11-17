@@ -281,7 +281,7 @@ class YamboInput(dict):
         self['variables']['RTstep'] = [time_step,step_units]
         self['variables']['NETime'] = [sim_time,time_units]
         self['variables']['IOtime'] = [io_time,io_units]
-        self['variables']['IOCacheTime'] = [io_cache_time,io_units]
+        self['variables']['IOCachetime'] = [io_cache_time,io_units]
 
     def set_rt_cpu(self,k=1,b=1,q=1,qp=1):
         """
