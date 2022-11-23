@@ -5,11 +5,11 @@ Module that manages the parsing of a Yambo o- file(s).
 import numpy as np
 
 # Specifies the name of the columns of the o- files for various type of runs. There are
-# two distinct di   ctionaries because the qp labels depend on the extendOut option.
+# two distinct dictionaries because the qp labels depend on the extendOut option.
 
 rt_column_names = {
     'carriers' : ['time','dnhmne','dnh','dne'],
-    'currents' : ['time','j_x','j_y','j_z'],
+    'current' : ['time','j_x','j_y','j_z'],
     'polarization' : ['time','Pol_x','Pol_y','Pol_z'],
     'spin_magnetization' :
         ['time','Ms_x','Ms_y','Ms_z','Mv_x','Mv_y','Mv_z','Mc_x','Mc_y','Mc_z'],
@@ -29,6 +29,8 @@ qp_column_names_extendOut = {
 }
 eps_column_names = {
     'eps_q1_ip' : ['energy','eps_imag','eps_real'],
+    'eps_q1_IP' : ['energy','eps_imag','eps_real'],
+    'alpha_q1_IP' : ['energy','alpha_imag','alpha_real'],
     'eps_q1_diago_bse' : ['energy','eps_imag','eps_real','eps_o_imag','eps_o_real'],
     'eps_q1_haydock_bse' : ['energy','eps_imag','eps_real','eps_o_imag','eps_o_real','eps_p_imag','eps_p_real']
 
