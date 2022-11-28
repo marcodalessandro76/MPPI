@@ -76,7 +76,7 @@ class PwInput(dict):
         self.file_lines = f.readlines()
         for group in self._namelist:
             self._store(group)
-        print(self)
+
         self._read_atomic_species()
         self._read_atomic_positions()
         self._read_cell_parameters()
