@@ -1,7 +1,7 @@
 """
 This module collects some tools to deal with the physics of Two Level Systems (TLS).
 This modeling is particularly useful to describe both electromagnetic transition
-between two *optically active* bands and magnetic system in which a time-independent
+between two *optically active* bands and magnetic system in which a time-dependent
 magnetic field induces oscillations between two (non degenerate) states with different
 spin.
 
