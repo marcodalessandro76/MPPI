@@ -9,6 +9,21 @@ from copy import deepcopy
 def fortran_bool(boolean):
     return {True:'.true.',False:'.false.'}[boolean]
 
+def convertTonumber(x):
+    """
+    Check if the input string can be converted to an
+    integer or to a float variable
+
+    Args:
+        x (:py:class:`string`)
+
+    """
+    try :
+        if x.lstrip('-').isnumeric() : return int(x)
+        else : return float(x)
+    except (TypeError, ValueError):
+        return x
+
 class PwInput(dict):
     """
     Class to generate an manipulate the pw.x input files.
@@ -127,7 +142,7 @@ class PwInput(dict):
         import re
         for file_slice in self._slicefile(group):
             for key, value in re.findall('([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
-                self[group][key.strip()]=value.strip()
+                self[group][key.strip()]=convertTonumber(value.strip())
 
     def _read_atomic_species(self):
         """
@@ -139,7 +154,7 @@ class PwInput(dict):
             if "ATOMIC_SPECIES" in line:
                 for i in range(int(self['system']['ntyp'])):
                     atype, mass, psp = next(lines).split()
-                    self['atomic_species'][atype] = [mass,psp]
+                    self['atomic_species'][atype] = [float(mass),psp]
 
     def _read_atomic_positions(self):
         """
