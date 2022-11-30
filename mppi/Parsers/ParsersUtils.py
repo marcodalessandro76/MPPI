@@ -173,23 +173,25 @@ def get_gap(evals, nbands_full, verbose = True):
         nbands_full (:py:class:`int`) : number of occupied bands
 
     Return:
-        :py:class:`dict` : a dictionary with the values of direct and indirect gaps and the positions
-        of the VMB and CBM
+        :py:class:`dict` : a dictionary with the values of direct and indirect gaps and the k-point indexes
+        of the VMB of the CBM and of the direct gap
 
     """
-    homo_band = evals[:,nbands_full-1]*HaToeV
+    val_band = evals[:,nbands_full-1]*HaToeV
     try:
-        lumo_band = evals[:,nbands_full]*HaToeV
+        cond_band = evals[:,nbands_full]*HaToeV
     except IndexError:
         print('There are no empty states. Gap cannot be computed.')
         return None
 
-    VBM = homo_band.max()
-    position_vbm = homo_band.argmax()
-    CBM = lumo_band.min()
-    position_cbm = lumo_band.argmin()
+    VBM = val_band.max()
+    position_vbm = val_band.argmax()
+    CBM = cond_band.min()
+    position_cbm = cond_band.argmin()
     gap = (CBM-VBM)
-    direct_gap = (lumo_band[position_vbm]-homo_band[position_vbm])
+    diff = cond_band-val_band
+    position_direct_gap = np.argmin(diff)
+    direct_gap = diff[position_direct_gap]
 
     # If there are several copies of the same point on the path it can happen that
     # the system is recognized as an indirect gap for numerical noise, so we check
@@ -206,7 +208,8 @@ def get_gap(evals, nbands_full, verbose = True):
             print('===================')
             print('Gap :',gap,'eV')
             print('Direct gap :',direct_gap,'eV')
-    return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,'positon_vbm':position_vbm}
+    return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,
+            'positon_vbm':position_vbm,'positon_direct_gap':position_direct_gap}
 
 def get_transitions(evals, nbands, nbands_full, initial = 'full', final = 'empty',
                     set_scissor = None, set_gap = None, set_direct_gap = None):

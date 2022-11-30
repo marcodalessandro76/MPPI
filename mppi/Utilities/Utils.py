@@ -77,24 +77,6 @@ def floats_from_string(line,sep=None):
       except ValueError: pass
   return line_float
 
-# def build_columns(lines, sep = None):
-#     """
-#     Split each line of the output of file_to_list into a list and convert
-#     its elements to float. The procedure deletes the values that cannot be converted
-#     to float. Then transpose the array so that each element is a column of the data of the file.
-#
-#     Args:
-#         lines (:py:class:`list`): list of string, each element is a line of the file
-#         sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
-#
-#     """
-#     splitted = []
-#     for line in lines:
-#          splitted.append(floats_from_string(line))
-#
-#     columns = np.array(splitted).transpose()
-#     return columns
-
 def file_parser(filename,skip='#',sep=None):
     """
     Parse a file. All the lines the start with the skip string are skipped.

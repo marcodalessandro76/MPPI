@@ -38,75 +38,6 @@ eps_column_names = {
 reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**eps_column_names}
 reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut,**eps_column_names}
 
-# def file_to_list(filename,skip='#'):
-#     """
-#     Read the filename and append all the lines that do not start
-#     with the skip string, to a list.
-#
-#     Args:
-#         filename (str): name of the file
-#         skip (str): first elements of the skipped lines
-#     """
-#     lines = []
-#     with open(filename) as f:
-#         for l in f:
-#             if not l.startswith(skip): lines.append(l)
-#     return lines
-#
-# def floats_from_string(line,sep=None):
-#   """
-#   Split a string using blank spaces and convert the elements to float. If an element
-#   cannot be converted it is skipped.
-#
-#   Args:
-#       line (:py:class:`string`): string that contains a line of the file
-#       sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
-#   """
-#   line_float = []
-#   for value in line.split(sep=sep):
-#       try: line_float.append(float(value))
-#       except ValueError: pass
-#   return line_float
-#
-# # def build_columns(lines, sep = None):
-# #     """
-# #     Split each line of the output of file_to_list into a list and convert
-# #     its elements to float. The procedure deletes the values that cannot be converted
-# #     to float. Then transpose the array so that each element is a column of the data of the file.
-# #
-# #     Args:
-# #         lines (:py:class:`list`): list of string, each element is a line of the file
-# #         sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
-# #
-# #     """
-# #     splitted = []
-# #     for line in lines:
-# #          splitted.append(floats_from_string(line))
-# #
-# #     columns = np.array(splitted).transpose()
-# #     return columns
-#
-# def file_parser(filename,skip='#',sep=None):
-#     """
-#     Parse a file. All the lines the start with the skip string are skipped.
-#     The lines of the file are converted in floats (elements are separated using the
-#     sep parameter). Elements the cannot be converted to float are ignored.
-#
-#     Args:
-#         filename (:py:class:`string`): name of the file
-#         skip (:py:class:`string`): first elements of the skipped lines
-#         sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
-#
-#     """
-#     lines = file_to_list(filename)
-#     splitted = []
-#     for line in lines:
-#          splitted.append(floats_from_string(line,sep=sep))
-#
-#     columns = np.array(splitted).transpose()
-#     return columns
-
-
 def make_dict(columns,suffix,extendOut):
     """
     Create a dictionary from the columns array. If the suffix is found in the
@@ -141,8 +72,6 @@ def parseYamboOutput(file,suffix,extendOut):
     the value of the boolean extendOut), if the suffix is recognized.
     """
     from mppi.Utilities import Utils
-    #lines = file_to_list(file)
-    #columns = build_columns(lines)
     columns = Utils.file_parser(file)
     return make_dict(columns,suffix,extendOut)
 
