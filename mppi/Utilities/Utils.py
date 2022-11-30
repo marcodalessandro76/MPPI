@@ -3,6 +3,9 @@ This module contains some low-level functions.
 Some functions are extracted from the Futile Utils of PyBigDFT.
 """
 
+import numpy as np
+import os
+
 # def push_path(inp,*keys):
 #     """
 #     Follow in the dictionary inp the path indicated by the keys.
@@ -236,7 +239,6 @@ def ensure_dir(file_path):
     Returns:
        bool: True if the directory needed to be created, False if it existed already
     """
-    import os
     directory = file_path
     created=False
     if not os.path.exists(directory):
