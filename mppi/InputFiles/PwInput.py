@@ -9,21 +9,6 @@ from copy import deepcopy
 def fortran_bool(boolean):
     return {True:'.true.',False:'.false.'}[boolean]
 
-def convertTonumber(x):
-    """
-    Check if the input string can be converted to an
-    integer or to a float variable
-
-    Args:
-        x (:py:class:`string`)
-
-    """
-    try :
-        if x.lstrip('-').isnumeric() : return int(x)
-        else : return float(x)
-    except (TypeError, ValueError):
-        return x
-
 class PwInput(dict):
     """
     Class to generate an manipulate the pw.x input files.
@@ -140,9 +125,10 @@ class PwInput(dict):
         attribute the associated variables in the dictionary
         """
         import re
+        from mppi.Utilities import Utils
         for file_slice in self._slicefile(group):
             for key, value in re.findall('([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
-                self[group][key.strip()]=convertTonumber(value.strip())
+                self[group][key.strip()]=Utils.convertTonumber(value.strip())
 
     def _read_atomic_species(self):
         """

@@ -103,7 +103,7 @@ class Runner():
         when subclassing :class:`Runner`.
 
         """
-        from mppi.Utilities import FutileUtils as f
+        from mppi.Utilities import Utils as f
         self._run_options(**kwargs)
         run_args = self.pre_processing()
         run_results = self.process_run(**run_args)

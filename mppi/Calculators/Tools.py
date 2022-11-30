@@ -74,8 +74,8 @@ def init_yambo_run_dir(source_dir, run_dir ='.', make_link = True, overwrite_if_
             the run_dir
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the r_setup and l_setup (if found)
             and build them again (also the 'yambo.in' input file is deleted to build the `r_setup` file).
-            Note that the SAVE folder in the run_dir is erased using the command ``rm -r run_dir\SAVE`` without the final `\`. This ensures
-            that, if the SAVE in the run_dir is a symbolic link, the source folder is not erased
+            Note that the SAVE folder in the run_dir is erased using the command ``rm -r run_dir/SAVE``, without the final `/`.
+            This ensures that, if the SAVE in the run_dir is a symbolic link, the source folder is not erased
         yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
 
     """

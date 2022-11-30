@@ -89,6 +89,7 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
 .. toctree:: constants.rst
 .. toctree:: dos.rst
 .. toctree:: fouriertransform.rst
+.. toctree:: utils.rst
 .. toctree:: latticeUtils.rst
 .. toctree:: parallel.rst
 
