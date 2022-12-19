@@ -44,20 +44,21 @@ def find_string_file(file,string):
                 break
     return line
 
-def build_r_setup(run_dir):
+def build_r_setup(run_dir, yambo_command = 'yambo'):
     """
     Create the `r_setup` file by executing yambo with no arguments in the ``run_dir``.
     If previous instances of the file are found they are erased
 
     Args:
         run_dir (:py:class:`string`) : folder with the SAVE directory
+        yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
 
     """
     rsetup_files = os.path.join(run_dir,'r_setup*')
     comm_str = 'rm %s'%rsetup_files
     os.system(comm_str)
     print('Build the r_setup in the run_dir path %s'%run_dir)
-    comm_str = 'cd %s; yambo'%run_dir
+    comm_str = 'cd %s; %s'%(run_dir,yambo_command)
     os.system(comm_str)
 
 def init_yambo_run_dir(source_dir, run_dir ='.', make_link = True, overwrite_if_found = False, yambo_command = 'yambo') :
@@ -108,7 +109,7 @@ def init_yambo_run_dir(source_dir, run_dir ='.', make_link = True, overwrite_if_
             from shutil import copytree
             copytree(src,dest)
             print('Create a copy of %s in %s'%(src,run_dir))
-        build_r_setup(run_dir)
+        build_r_setup(run_dir,yambo_command=yambo_command)
 
 def make_p2y(source_dir, p2y_command = 'p2y', overwrite_if_found = False):
     """

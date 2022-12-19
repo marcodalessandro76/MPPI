@@ -6,47 +6,6 @@ Some functions are extracted from the Futile Utils of PyBigDFT.
 import numpy as np
 import os
 
-# def push_path(inp,*keys):
-#     """
-#     Follow in the dictionary inp the path indicated by the keys.
-#     If this path does not exists creates it.
-#
-#     Args:
-#        inp (dict): dictionary
-#        keys (str): keys of the path to follow
-#
-#     Returns:
-#        (``branch``,``key``) tuple, where
-#
-#        * ``branch`` (dict): the dictionary of the second-last item of the path
-#        * ``key`` (str): the last item of the path
-#
-#     Example:
-#
-#        >>> inp={}
-#        >>> d,key=push_path(inp,'dft','nspin','mpol')
-#        >>> print (d,key)
-#        >>> print (inp)
-#        {},'mpol'
-#        {'dft': {'nspin': {}}}
-#
-#        >>> inp={'dft': {'nspin': {'mpol': 2}}}
-#        >>> d,key=push_path(inp,'dft','nspin','mpol')
-#        >>> print (d,key)
-#        >>> print (inp)
-#        {'mpol': 2},'mpol'
-#        {'dft': {'nspin': {'mpol': 2}}}
-#
-#     """
-#     tmp=inp
-#     for i,key in enumerate(keys):
-#         k=key
-#         if i==len(keys)-1: break
-#         tmp.setdefault(key,{})
-#         #if key not in tmp: tmp[key]={}
-#         tmp=tmp[key]
-#     return tmp,k
-
 def file_to_list(filename,skip='#'):
     """
     Read the filename and append all the lines that do not start
