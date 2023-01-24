@@ -62,7 +62,7 @@ def convertTonumber(x):
     integer or to a float variable
 
     Args:
-        x (:py:class:`string`)
+        x (:py:class:`string`) : string to be converted
 
     """
     try :

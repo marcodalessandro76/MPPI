@@ -67,9 +67,10 @@ where the parsing of the various elements are performed by the more specific cla
 .. toctree:: yamboOutputParser
 .. toctree:: yamboDftParser
 .. toctree:: yamboDipolesParser
+.. toctree:: yamboRTCarriersParser
 .. toctree:: yamboRTGlesserParser
 
-Finally, the module ParsersUtils collect functions for the data analysis:
+Finally, the module ParsersUtils collects functions for the data analysis:
 
 .. toctree:: parsersUtils
 

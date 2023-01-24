@@ -26,6 +26,9 @@ class YamboParser():
             class that manages the parsing of the ``dipoles`` database
         dft (:class:`YamboDftParser`) : contains the instance of the :class:`YamboDftParser` that
             manages the parsing of the ``ns.db1`` database
+        RTCarriers (:class:`YamboRTCarriersParser`) : contains the instance of the
+            :class:`YamboRTCarriersParser` that manages the parsing of the `ndb.RT_carriers`
+            database
         RTGreen (:class:`YamboRTGlesserParser`) : contains the instance of the
             :class:`YamboRTGlesserParser` that manages the parsing of the `ndb.RT_G_PAR`
             database
@@ -45,6 +48,8 @@ class YamboParser():
                 self.dipoles = P.YamboDipolesParser(value,verbose=verbose)
             if key == 'dft':
                 self.dft = P.YamboDftParser(value,verbose=verbose)
+            if key == 'RT_carriers':
+                self.RTCarriers = P.YamboRTCarriersParser(value,verbose=verbose)
             if key == 'RT_G_PAR':
                 self.RTGreen = P.YamboRTGlesserParser(value,verbose=verbose)
 

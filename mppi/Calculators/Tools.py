@@ -50,7 +50,7 @@ def build_r_setup(run_dir, overwrite_if_found = False, yambo_command = 'yambo'):
 
     Args:
         run_dir (:py:class:`string`) : folder with the SAVE directory
-        overwrite_if_found (:py:class:`bool`) : if True delete previous istance of the r_setp (if found)
+        overwrite_if_found (:py:class:`bool`) : if True delete previous istance of the r_setup file (if found)
         yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
 
     """

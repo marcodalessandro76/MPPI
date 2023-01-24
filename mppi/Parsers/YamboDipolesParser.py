@@ -52,10 +52,7 @@ class YamboDipolesParser():
             database = Dataset(self.filename)
         except:
             raise IOError("Error opening file %s in YamboDipolesParser"%self.filename)
-
-        #self.dip_ir = np.array(database.variables['DIP_iR'][0])
-        #self.dip_p = np.array(database.variables['DIP_P'][0])
-        #self.dip_v = np.array(database.variables['DIP_v'][0])        
+            
         try:
             self.dip_ir = np.array(database.variables['DIP_iR'][0])
         except KeyError:
