@@ -2,7 +2,10 @@
 Module that manages the parsing of the ``ndb.RT_carriers`` database created by `yambo_rt`.
 """
 from netCDF4 import Dataset
-from mppi.Utilities import Constants as C, Dos
+from mppi.Utilities.Constants import HaToeV
+from mppi.Utilities import Dos
+from mppi.Utilities import LatticeUtils as latUtils
+
 import numpy as np
 
 def distance_point_to_segment(point,start,end):
@@ -25,7 +28,7 @@ def distance_point_to_segment(point,start,end):
         :py:class:`tuple` : the tuple (distance,ascissa_path) with the value of the distance
         and the value of the curvilinear ascissa on the line associated to the line element closest
         to the `point`
-        
+
     """
     line_vec = end-start
     point_vec = point-start # coordinates of vec w.r.t. the start of the line
@@ -60,9 +63,9 @@ class YamboRTCarriersParser():
             The structure is k1*b1,k1*b2,..,k1*bn,k2*b1,...
         f_bare (:py:class:`np.array`) : Array that contains the bare bands occupations.
             The structure of the array is [numk*numbands]
-        kpt (:py:class:`np.array`) : Array that contains the kpoints in crystal coordinates.
-            The structure of the array is [3,numk], the first index gives the component and
-            the second one runs over the number of kpoints
+        kpoints (:py:class:`np.array`) : Array that contains the kpoints in cartesian  coordinates
+            in units of 2*np.pi/alat (with a vector alat). The structure of the array is [numk,3],
+            the first index runs over the kpoints and the second one gives the component
         bands_kpts (:py:class:`np.array`) : Array with the [first_band,last_band,numk]
         k_weight (:py:class:`np.array`) : Array that contains the weights of the kpoints.
             The structure of the array is [numk]
@@ -71,7 +74,6 @@ class YamboRTCarriersParser():
             Energies are expressed in eV
         delta_f (:py:class:`np.array`) : Array that contains the time-dependent corrections to
             the bands occupations. The structure of the array is [time,numk*numbands]
-
 
     """
 
@@ -93,12 +95,12 @@ class YamboRTCarriersParser():
             database = Dataset(self.filename)
         except:
             raise IOError("Error opening file %s in YamboRTCarriersParser"%self.filename)
-        self.E_bare = C.HaToeV*np.array(database.variables['RT_carriers_E_bare'])
+        self.E_bare = HaToeV*np.array(database.variables['RT_carriers_E_bare'])
         self.f_bare = np.array(database.variables['RT_carriers_f_bare'])
-        self.kpt = np.array(database.variables['RT_kpt'])
+        self.kpoints = np.array(database.variables['RT_kpt'][:].T)
         self.bands_kpts = np.array(database.variables['RT_bands_kpts'])
         self.k_weight = np.array(database.variables['RT_k_weight'])
-        self.delta_E = C.HaToeV*np.array(database.variables['RT_carriers_delta_E'])
+        self.delta_E = HaToeV*np.array(database.variables['RT_carriers_delta_E'])
         self.delta_f = np.array(database.variables['RT_carriers_delta_f'])
 
     def get_info(self):
@@ -107,6 +109,7 @@ class YamboRTCarriersParser():
         """
         print('YamboRTCarriersParser variables structure')
         print('Bands used and number of k-points',self.bands_kpts)
+        print('kpoints shape',self.kpoints.shape)
         print('E_bare shape',self.E_bare.shape)
         print('f_bare shape',self.f_bare.shape)
         print('delta_E shape',self.delta_E.shape)

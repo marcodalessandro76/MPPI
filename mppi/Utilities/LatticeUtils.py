@@ -106,6 +106,22 @@ def get_reciprocal_lattice(lattice, alat, rescale = False):
     b3 = norm_factor*np.cross(a1,a2)
     return np.array([b1,b2,b3])
 
+def get_yambo_kpoints(kpoints, alat, use_scalar_alat = True):
+    """
+    Get the kpoints using cartesian coordinates in units of 2*np.pi/alat (with a vector alat).
+
+    Args:
+        kpoints (:py:class:`array`) : array with the kpoints.
+        alat (:py:class:`array`) : vector lattice parameters
+        use_scalar_alat (:py:class:`bool`)  : if True express the kpoints in units of 2*np.pi/alat[0]
+
+    Returns:
+        :py:class:`array` : array with the kpoints
+
+    """
+    if use_scalar_alat: kpoints = alat[0]/alat*kpoints
+    return kpoints
+
 def build_lattice(lattice_vectors, atom_pos, Nx, Ny, Nz):
     """
     Create the arrays of the x,y and z positions of each atom in the lattice.

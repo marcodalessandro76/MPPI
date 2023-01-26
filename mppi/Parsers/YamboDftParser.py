@@ -25,8 +25,7 @@ class YamboDftParser():
         lattice : array with the lattice vectors. The i-th row represents the
             i-th lattice vector in cartesian units
         alat : the lattice parameter. Yambo stores a three dimensional array in this
-            field but here only the first element is parsed to have to same structure
-            of the :class:`PwParser` class
+            field, with the lenght of the cell in the three dimension
         num_electrons : number of electrons
         nbands : number of bands
         nbands_full : number of occupied bands
@@ -58,7 +57,7 @@ class YamboDftParser():
         # lattice properties
         self.syms = np.array(database.variables['SYMMETRY'][:])
         self.lattice = np.array(database.variables['LATTICE_VECTORS'][:].T)
-        self.alat = database.variables['LATTICE_PARAMETER'][:][0]
+        self.alat = np.array(database.variables['LATTICE_PARAMETER'][:])
 
         # electronic structure
         self.evals  = np.array(database.variables['EIGENVALUES'][0,:])
@@ -174,7 +173,8 @@ class YamboDftParser():
     def get_lattice(self, rescale = False):
         """
         Compute the lattice vectors. If rescale = True the vectors are expressed in units
-        of the lattice constant.
+        of the lattice constant. We use the first component of the lattice constant, which corresponds
+        to the `alat` or `celldm1` variable of the class :call:`PwParser`
 
         Args:
             rescale (:py:class:`bool`)  : if True express the lattice vectors in units alat
@@ -183,14 +183,16 @@ class YamboDftParser():
             :py:class:`array` : array with the lattice vectors a_i as rows
 
         """
-        return latUtils.get_lattice(self.lattice,self.alat,rescale=rescale)
+        alat = self.alat[0]
+        return latUtils.get_lattice(self.lattice,alat,rescale=rescale)
 
     def get_reciprocal_lattice(self, rescale = False):
         """
         Compute the reciprocal lattice vectors. If rescale = False the vectors are normalized
         so that np.dot(a_i,b_j) = 2*np.pi*delta_ij, where a_i is a basis vector of the direct
         lattice. If rescale = True the reciprocal lattice vectors are expressed in units of
-        2*np.pi/alat.
+        2*np.pi/alat. We use the first component of the lattice constant, which corresponds
+        to the `alat` or `celldm1` variable of the class :call:`PwParser`
 
         Args:
             rescale (:py:class:`bool`)  : if True express the reciprocal vectors in units of 2*np.pi/alat
@@ -199,7 +201,21 @@ class YamboDftParser():
             :py:class:`array` : array with the reciprocal lattice vectors b_i as rows
 
         """
-        return latUtils.get_reciprocal_lattice(self.lattice,self.alat,rescale=rescale)
+        alat = self.alat[0]
+        return latUtils.get_reciprocal_lattice(self.lattice,alat,rescale=rescale)
+
+    def get_kpoints(self, use_scalar_alat = True):
+        """
+        Get the kpoints using cartesian coordinates in units of 2*np.pi/alat (with a vector alat).
+
+        Args:
+            use_scalar_alat (:py:class:`bool`)  : if True express the kpoints in units of 2*np.pi/alat[0]
+
+        Returns:
+            :py:class:`array` : array with the kpoints
+
+        """
+        return latUtils.get_yambo_kpoints(self.kpoints,self.alat,use_scalar_alat=use_scalar_alat)
 
 
     #####################################################################################
