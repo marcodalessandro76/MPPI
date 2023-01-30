@@ -174,7 +174,7 @@ class YamboDftParser():
         """
         Compute the lattice vectors. If rescale = True the vectors are expressed in units
         of the lattice constant. We use the first component of the lattice constant, which corresponds
-        to the `alat` or `celldm1` variable of the class :call:`PwParser`
+        to the `alat` or `celldm1` variable of the class :class:`PwParser`
 
         Args:
             rescale (:py:class:`bool`)  : if True express the lattice vectors in units alat
@@ -192,7 +192,7 @@ class YamboDftParser():
         so that np.dot(a_i,b_j) = 2*np.pi*delta_ij, where a_i is a basis vector of the direct
         lattice. If rescale = True the reciprocal lattice vectors are expressed in units of
         2*np.pi/alat. We use the first component of the lattice constant, which corresponds
-        to the `alat` or `celldm1` variable of the class :call:`PwParser`
+        to the `alat` or `celldm1` variable of the class :class:`PwParser`
 
         Args:
             rescale (:py:class:`bool`)  : if True express the reciprocal vectors in units of 2*np.pi/alat

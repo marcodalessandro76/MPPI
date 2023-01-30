@@ -27,7 +27,8 @@ def _parse_Ypp_output(data):
         kpoints.append(data['col'+str(index_kx+ind)])
      # kpoints is converted to np.array to perform the transpose and convert back
      # to list since it is needed as a list by BandStructure
-    kpoints = list(map(list,list(np.array(kpoints).transpose())))
+    #kpoints = list(map(list,list(np.array(kpoints).transpose())))
+    kpoints = np.array(kpoints).transpose()
     bands = []
     for ind in range(1,index_kx):
         bands.append(data['col'+str(ind)])
@@ -43,8 +44,7 @@ class BandStructure():
     of both QuantumESPRESSO and Ypp are provided.
 
     Args:
-        kpoints (:py:class:`list`) : list with the coordinates of the kpoints
-            used to build the path
+        kpoints (:py:class:`array`) : array with the coordinates of the kpoints used to build the path
         bands (:py:class:`numpy.array`) : the element bands[i] contains the energies of the i-th
             band (in eV)
         high_sym_points(:py:class:`dict`) : dictionary with the names and coordinates of the
@@ -85,11 +85,11 @@ class BandStructure():
     @classmethod
     def from_Ypp(cls,results,high_sym_points,suffix='bands_interpolated'):
         """
-        Initialize the BandStructure class from the result of a Ypp postprocessing.
+        Initialize the BandStructure class from the data dictionay of the result of a Ypp postprocessing.
         The class make usage of the YamboParser of this package.
 
         Args:
-            results (:py:class:`list`) : dictionaty with the output of a Ypp computation
+            results (:py:class:`dict`) : dictionary with the output of a Ypp computation
             high_sym_points(:py:class:`dict`) : dictionary with name and coordinates of the
                             high_sym_points of the path
             suffix (string) : specifies the suffix of the o- file use to build the bands
@@ -99,6 +99,26 @@ class BandStructure():
         import numpy as np
         data = P.YamboParser(results).data
         kpoints, bands = _parse_Ypp_output(data[suffix])
+        return cls(bands=bands,kpoints=kpoints,high_sym_points=high_sym_points)
+
+    @classmethod
+    def from_Ypp_file(cls,results,high_sym_points):
+        """
+        Initialize the BandStructure class from the a o-file built by the Ypp postprocessing.
+        The class make usage of the YamboParser of this package.
+
+        Args:
+            results (:py:class:`string`) : name of the o-file built by the Ypp postprocessing
+            high_sym_points(:py:class:`dict`) : dictionary with name and coordinates of the
+                            high_sym_points of the path
+            suffix (string) : specifies the suffix of the o- file use to build the bands
+
+        """
+        from mppi.Utilities.Utils import file_parser
+        import numpy as np
+        data = file_parser(results)
+        kpoints = data[-3:,:].T
+        bands = data[1:-3]
         return cls(bands=bands,kpoints=kpoints,high_sym_points=high_sym_points)
 
     def get_bands(self):
@@ -115,7 +135,7 @@ class BandStructure():
             kpath(array) : values of the curvilinear ascissa along the path
         """
         import numpy as np
-        kpoints = np.array(self.kpoints)
+        kpoints = self.kpoints
         kpath = [0]
         distance = 0
         for nk in range(1,len(kpoints)):
@@ -163,11 +183,11 @@ class BandStructure():
         Plot the band structure.
 
         Args:
-            plt(:py:class:`matplotlib.pyplot`) : the matplotlib object
-            plt(:py:class:`matplotlib.pyplot.axes`) : the matplotlib axes object. If provided the plot
+            plt (:py:class:`matplotlib.pyplot`) : the matplotlib object
+            axes (:py:class:`matplotlib.pyplot.axes`) : the matplotlib axes object. If provided the plot
                 is performed on the given axes
 
-            selection (list) : the list of bands that are plotted. If None all the
+            selection (:py:class:`list`) : the list of bands that are plotted. If None all the
                 bands computed by QuantumESPRESSO are plotted. The band index starts
                 from zero
             kwargs : further parameter to edit the line style of the plot
