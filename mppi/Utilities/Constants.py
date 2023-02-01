@@ -61,3 +61,13 @@ high_sym_fcc = {'G':[0.,0.,0.],
 """
 High symmetry points of the fcc lattice (expressed in cartesian coordinates in units of 2pi/alat)
 """
+
+high_sym_fcc_crystal = {
+                'G':[0.,0.,0.],
+                'X':[0.,0.5,0.5],
+                'L':[0.5,0.5,0.5],
+                'K':[3./8.,3./4.,3./8.],
+                'W':[1./4.,3./4.,1./2.]}
+"""
+High symmetry points of the fcc lattice (expressed in crystal coordinates)
+"""
