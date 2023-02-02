@@ -9,7 +9,7 @@ import os
 def file_to_list(filename,skip='#'):
     """
     Read the filename and append all the lines that do not start
-    with the skip string, to a list.
+    with the skip string, to a list. Empty lines are skipped
 
     Args:
         filename (str): name of the file
@@ -18,7 +18,8 @@ def file_to_list(filename,skip='#'):
     lines = []
     with open(filename) as f:
         for l in f:
-            if not l.startswith(skip): lines.append(l)
+            if not l.startswith(skip) and len(l.strip()) > 0:
+                lines.append(l)
     return lines
 
 def floats_from_string(line,sep=None):
@@ -27,8 +28,12 @@ def floats_from_string(line,sep=None):
   cannot be converted it is skipped.
 
   Args:
-      line (:py:class:`string`): string that contains a line of the file
-      sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
+        line (:py:class:`string`): string that contains a line of the file
+        sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
+
+  Return:
+        :py:class:`list` : list with the floats extracted from the line
+
   """
   line_float = []
   for value in line.split(sep=sep):
@@ -40,12 +45,17 @@ def file_parser(filename,skip='#',sep=None):
     """
     Parse a file. All the lines the start with the skip string are skipped.
     The lines of the file are converted in floats (elements are separated using the
-    sep parameter). Elements the cannot be converted to float are ignored.
+    sep parameter). Elements that cannot be converted to float are ignored.
 
     Args:
         filename (:py:class:`string`): name of the file
         skip (:py:class:`string`): first elements of the skipped lines
         sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
+
+    Return:
+        :py:class:`array' : array with the floats extracted from the file sorted in columns. So columns[0] contains
+            the first column of the file and so on
+
 
     """
     lines = file_to_list(filename)
