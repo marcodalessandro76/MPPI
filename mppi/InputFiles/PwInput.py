@@ -463,7 +463,7 @@ class PwInput(dict):
         """
         if ibrav == 0 and cell_vectors is None:
             raise ValueError('ibrav = 0 implies that the cell_parameters variable is set')
-        if cell_vectors:
+        if cell_vectors is not None:
             self['cell_parameters'] = {'type' : cell_units, 'values' : cell_vectors}
         self['system']['ibrav'] = ibrav
         if celldm1 is not None: self['system']['celldm(1)'] = celldm1
