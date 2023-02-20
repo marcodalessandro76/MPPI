@@ -39,6 +39,7 @@ Manage the input files with classes able to create and modify the input files of
 and Yambo
 
 .. toctree:: pwInput
+.. toctree:: phInput
 .. toctree:: yamboInput
 
 Run calculations in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all

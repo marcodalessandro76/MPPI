@@ -21,6 +21,7 @@ MPPI notebook section
 
    tutorials/Analysis_BandStructure.ipynb
    tutorials/Analysis_Dos.ipynb
+   tutorials/Analysis_Electron-phonon.ipynb
 
 * Notebooks that explain the physics of the Models section
 

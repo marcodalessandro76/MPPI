@@ -200,3 +200,27 @@ def build_pw_kpath(*kpoints,numstep=40):
         klist.append(k+[numstep])
     klist.append(kpoints[-1]+[0])
     return klist
+
+def build_pw_klist(kpoints,kweight=None):
+    """
+    Build a list of kpoints with the structure [[k1_x,k1_y,k1_z,w1],...[kn_x,kn_y,kn_z,wn]], where wi is the
+    weight of the i-th kpoint
+
+    to be passed to the set_kpoints methods of the :class:`PwInput`
+    for computing the band structure along a path.
+
+
+    Args:
+        kpoints (:py:class:`array`) : array with the coordinates of the kpoints
+        kweight (:py:class:`list`) : array with the weigth of each kpoint. If is None
+            a uniform weight equal to 1 is attributed to each kpoint
+
+    Returns:
+        :py:class:`list` : list of kpoints with the structure [[k1_x,k1_y,k1_z,w1],...[kn_x,kn_y,kn_z,wn]]
+
+    """
+    if kweight is None: kweight = [1 for ind in range(len(kpoints))]
+    klist = []
+    for ind,k in enumerate(kpoints):
+        klist.append(k.tolist()+[kweight[ind]])
+    return klist

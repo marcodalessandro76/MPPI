@@ -9,8 +9,8 @@
          occupations = 'fixed'
                ibrav = 2
            celldm(1) = 10.3
-                ntyp = 1
                  nat = 2
+                ntyp = 1
              ecutwfc = 40
 /&end
 &electrons

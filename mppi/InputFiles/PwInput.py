@@ -11,15 +11,16 @@ def fortran_bool(boolean):
 
 class PwInput(dict):
     """
-    Class to generate an manipulate the pw.x input files.
+    Class to generate an manipulate the QuantumESPRESSO pw.x input files.
     Can be initialized either reading from a file or starting from scratch.
     All the elements that belong to the possible namelist of pw are parsed.
     Instead, among the possible pw cards the actual implementation considers
     only : ATOMIC_SPECIES, ATOMIC_POSITIONS, K_POINTS, CELL_PARAMETERS.
+
     """
 
-    _namelist = ['control','system','electrons','ions','cell']
-    _cards =['atomic_species','atomic_positions','kpoints','cell_parameters']
+    namelist = ['control','system','electrons','ions','cell']
+    cards =['atomic_species','atomic_positions','kpoints','cell_parameters']
 
     default = {'control':{
                    'calculation':"'scf'",
@@ -48,9 +49,9 @@ class PwInput(dict):
         """
         dict.__init__(self)
 
-        for key in self._namelist:
+        for key in self.namelist:
             self[key] = dict()
-        for key in self._cards:
+        for key in self.cards:
             self[key] = dict()
         self.update(deepcopy(self.default))
         self.update(kwargs)
@@ -74,7 +75,7 @@ class PwInput(dict):
         f = open(file,"r")
 
         self.file_lines = f.readlines()
-        for group in self._namelist:
+        for group in self.namelist:
             self._store(group)
 
         self._read_atomic_species()
@@ -99,7 +100,7 @@ class PwInput(dict):
         """
         lines = []
 
-        for group in self._namelist:
+        for group in self.namelist:
             if self[group] != {}:
                 lines.append(self._stringify_group(group))
 
@@ -187,7 +188,7 @@ class PwInput(dict):
                     else:
                         cell['type'] = 'bohr'
                     for i in range(3):
-                        cell_parameters[i] = [ float(x)*a for x in next(lines).split() ]
+                        cell_parameters[i] = [ float(x) for x in next(lines).split() ]
             if cell['type'] == 'angstrom' or cell['type'] == 'bohr':
                 if 'celldm(1)' in self['system']: del self['system']['celldm(1)']
             cell['values'] = cell_parameters
@@ -297,9 +298,9 @@ class PwInput(dict):
     def set_pseudo_dir(self, pseudo_dir='pseudos', abs_path=False):
         """
         Set the position of the folder with the pseudo-potentials.
-        If `abs_path` is True the path is converted in a absolute path. In this way it
-        is possible to provide a relative path (expressed from the root of the folder where the notebook
-        is located) and the pseudo location can be found from an arbitrary folder.
+        If `abs_path` is True the path is converted in a absolute path. In this way it is possible to provide
+        a relative path (expressed from the root of the folder where the notebook is located) and the pseudo
+        location can be found from an arbitrary folder.
 
         Args:
             pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseduopotentials
@@ -482,7 +483,7 @@ class PwInput(dict):
                        the type variable is set to `automatic`
             shift (:py:class:`list`) : shifts in the x,y,z directions. Used only if the
                        type varible is set to `automatic`
-            klist(list) : list with the structure:
+            klist (:py:class:`list`) : list with the structure:
                        [[k1x,k1y,k1z,w1],[k2x,k2y,k2z,w2],....]
                        Used if type variable is not se to `automatic`
 

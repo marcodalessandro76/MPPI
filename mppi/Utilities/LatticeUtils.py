@@ -43,7 +43,7 @@ def convert_to_cartesian(lattice,vector_crystal):
 
     """
     M = lattice.transpose()
-    return np.dot(M,vector_cartesian)
+    return np.dot(M,vector_crystal)
 
 def eval_lattice_volume(lattice):
     """
