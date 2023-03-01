@@ -143,10 +143,10 @@ class PhInput(dict):
         return string
 
     def stringify_kpoints(self,line):
-        line.append('%s'%len(self['kpoints']['values']))
-        for kpt in self['kpoints']['values']:
-            #line.append( ("%12.8lf "*4)%tuple(kpt))
-            line.append(("%s "*4)%tuple(kpt))
+        if 'values' in self['kpoints'] :
+            line.append('%s'%len(self['kpoints']['values']))
+            for kpt in self['kpoints']['values']:
+                line.append( ('%12.8lf %12.8lf %12.8lf %.0f ')%tuple(kpt))
 
     def set_kpoints(self,klist):
         """

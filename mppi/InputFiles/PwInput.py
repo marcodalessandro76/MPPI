@@ -350,7 +350,7 @@ class PwInput(dict):
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
     def set_nscf(self,nbnd,conv_thr=1e-8,diago_full_acc=False,
-                 force_symmorphic=False,verbosity='high'):
+                force_symmorphic=False,verbosity='high'):
         """
         Set the variables for a nscf calculation
 
