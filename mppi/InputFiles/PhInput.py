@@ -12,6 +12,7 @@ class PhInput(dict):
     """
     Class to generate an manipulate the QuantumESPRESSO ph.x input files.
     Can be initialized either reading from a file or starting from scratch.
+    Actually the parser of th kpoints has not yet been implented.
 
 
     Note that the default parameters for the init of the class set the ``qplot=True``
@@ -50,7 +51,8 @@ class PhInput(dict):
             self[key] = dict()
         for key in self.cards:
             self[key] = dict()
-        default = {'inputph':dict(tr2_ph=tr2_ph,trans=trans,qplot=qplot,ldisp=ldisp,prefix=prefix,outdir=outdir)}
+        default = {'inputph':dict(tr2_ph=tr2_ph,trans=fortran_bool(trans),qplot=fortran_bool(qplot),
+                        ldisp=fortran_bool(disp),prefix="'%s'"%prefix,outdir="'%s'"%outdir)}
         self.update(default)
 
         if file is not None:
