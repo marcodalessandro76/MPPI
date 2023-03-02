@@ -52,7 +52,7 @@ class PhInput(dict):
         for key in self.cards:
             self[key] = dict()
         default = {'inputph':dict(tr2_ph=tr2_ph,trans=fortran_bool(trans),qplot=fortran_bool(qplot),
-                        ldisp=fortran_bool(disp),prefix="'%s'"%prefix,outdir="'%s'"%outdir)}
+                        ldisp=fortran_bool(ldisp),prefix="'%s'"%prefix,outdir="'%s'"%outdir)}
         self.update(default)
 
         if file is not None:
