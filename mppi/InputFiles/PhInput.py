@@ -13,7 +13,8 @@ class PhInput(dict):
     Class to generate an manipulate the QuantumESPRESSO ph.x input files.
     Can be initialized either reading from a file or starting from scratch.
 
-    Note thath default parameters for the init of the class set the ``qplot=True``
+
+    Note that the default parameters for the init of the class set the ``qplot=True``
     and ``ldisp=False`` so ph.x performs the calculation on the list of q-points
     in the input in the form
 
@@ -23,24 +24,14 @@ class PhInput(dict):
         xq(1,nqs)  xq(2,nqs)  xq(3,nqs)  nq(nqs) \n
 
     where nqs are the number of points, xq(j,i) is the j-th coordinate of the i-th point,
-     in units of 2pi/a0 (a0 = lattice parameter), and nq(i) is the weigth of the i-th point
+    in units of 2pi/a0 (a0 = lattice parameter), and nq(i) is the weigth of the i-th point
 
     """
 
     namelist = ['inputph']
     cards =['kpoints']
 
-    default = {'inputph':{
-                   'verbosity' : "'high'",
-                   'prefix' : "'pwscf'",
-                   'outdir' : "'./'",
-                   'tr2_ph' : 1e-12,
-                   'trans' : fortran_bool(True),
-                   'qplot' : fortran_bool(True),
-                   'ldisp' : fortran_bool(False)}
-               }
-
-    def __init__(self,file=None,**kwargs):
+    def __init__(self,file=None,tr2_ph=1e-12,trans=True,qplot=True,ldisp=False,prefix='ph',outdir='./'):
         """
         Initialize the keys of the object and update the dictionaries with the kwargs passed as
         input parameters.. If an input file is provided it is parsed and the 'file' key is added
@@ -59,8 +50,8 @@ class PhInput(dict):
             self[key] = dict()
         for key in self.cards:
             self[key] = dict()
-        self.update(deepcopy(self.default))
-        self.update(kwargs)
+        default = {'inputph':dict(tr2_ph=tr2_ph,trans=trans,qplot=qplot,ldisp=ldisp,prefix=prefix,outdir=outdir)}
+        self.update(default)
 
         if file is not None:
             self['file'] = file
@@ -71,8 +62,8 @@ class PhInput(dict):
         Read the arguments and variables from the input file.
 
         Args:
-            file (:py:class:`string`) : name of an exsistent input file, used
-                initialize the dictionaries of the object
+            file (:py:class:`string`) : name of an exsistent input file, used to
+                initialize the dictionary of the object
 
         """
         f = open(file,"r")
@@ -180,6 +171,19 @@ class PhInput(dict):
 
         """
         self['inputph']['outdir'] = "'%s'"%outdir
+
+    def set_inputph_variables(inp,**kwargs):
+        """
+        Add to the `inputph` key of the input dictionary
+        the elements kwargs[key] = kwargs[value] for all the
+        elements of the kwargs provided as input.
+
+        Args:
+            kwargs : variable(s) added in the form name = value
+
+        """
+        for name,value in kwargs.items():
+            inp['inputph'][name] = [value,units]
 
     # Get methods
 
