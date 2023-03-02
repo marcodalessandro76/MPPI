@@ -185,7 +185,7 @@ class PhInput(dict):
 
         """
         for name,value in kwargs.items():
-            inp['inputph'][name] = [value,units]
+            inp['inputph'][name] = value
 
     # Get methods
 
