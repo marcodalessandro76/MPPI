@@ -1,6 +1,6 @@
 """
-This module contains some functions that implement some operations useful to deal
-with Yambo and QuantumESPRESSO calculators.
+This module contains some functions that implement useful operations to deal
+with the Yambo and QuantumESPRESSO calculators.
 The module can be loaded in the notebook in one of the following way
 
 >>> from mppi.Utilities import Tools

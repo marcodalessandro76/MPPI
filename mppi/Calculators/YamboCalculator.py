@@ -430,12 +430,12 @@ class YamboCalculator(Runner):
             lines.append('fi')
             lines.append('echo " "')
             lines.append('')
-            # If the jobname foLder with pre-existing ndb is found, it is copied in the BeeOND_dir path
+            # If the jobname folder with pre-existing ndb is found, it is copied in the BeeOND_dir path
             if os.path.isdir(dbs_dir):
                 lines.append('export DBS_DIR=%s'%dbs_dir)
                 lines.append('echo "found DBS_DIR folder $DBS_DIR. Copy the DBS_DIR in the $BEEOND_DIR folder"')
-                lines.append('echo "rsync -azv --no-p --no-o --no-g --omit-dir-times $DBS_DIR/ $BEEOND_DIR"')
-                lines.append('rsync -azv --no-p --no-o --no-g --omit-dir-times $DBS_DIR/ $BEEOND_DIR')
+                lines.append('echo "rsync -rzv $DBS_DIR/ $BEEOND_DIR"')
+                lines.append('rsync -rzv $DBS_DIR/ $BEEOND_DIR')
                 lines.append('echo " "')
                 lines.append('')
 
@@ -444,7 +444,7 @@ class YamboCalculator(Runner):
             lines.append('echo " "')
             lines.append('')
 
-        # We do not show the " character in the of the comm_str in the echo line
+        # Do not show the " character in the of the comm_str in the echo line
         lines.append('echo "execute : %s"'%(comm_str.replace('"','')))
         lines.append(comm_str)
         lines.append('echo " "')
@@ -452,8 +452,8 @@ class YamboCalculator(Runner):
 
         if activate_BeeOND:
             lines.append('echo "Copy the folder with the ndb database in the $RUN_DIR"')
-            lines.append('echo "rsync -azv $BEEOND_DIR/ $RUN_DIR"')
-            lines.append('rsync -azv $BEEOND_DIR/ $RUN_DIR')
+            lines.append('echo "rsync -rzv $BEEOND_DIR/ $RUN_DIR"')
+            lines.append('rsync -rzv $BEEOND_DIR/ $RUN_DIR')
             lines.append('echo " "')
             lines.append('')
 

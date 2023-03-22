@@ -283,8 +283,8 @@ class QeCalculator(Runner):
             # in the BeeOND_dir
             if os.path.isdir(save_dir):
                 lines.append('echo "found SAVE_DIR folder $SAVE_DIR. Copy the SAVE_DIR in the $BEEOND_DIR folder"')
-                lines.append('echo "rsync -azv $SAVE_DIR $BEEOND_DIR"')
-                lines.append('rsync -azv $SAVE_DIR $BEEOND_DIR')
+                lines.append('echo "rsync -rzv $SAVE_DIR $BEEOND_DIR"')
+                lines.append('rsync -rzv $SAVE_DIR $BEEOND_DIR')
                 lines.append('echo " "')
                 lines.append('')
 
@@ -296,8 +296,8 @@ class QeCalculator(Runner):
         if activate_BeeOND:
             lines.append('echo "Change the outdir key of the input to its original value $OUT_DIR"')
             lines.append('sed -i "/outdir/s:%s:%s:" %s.in'%(self.BeeOND_dir,out_dir,name))
-            lines.append('echo "rsync -azv $BEEOND_DIR/ $OUT_DIR_PATH"')
-            lines.append('rsync -azv $BEEOND_DIR/ $OUT_DIR_PATH')
+            lines.append('echo "rsync -rzv $BEEOND_DIR/ $OUT_DIR_PATH"')
+            lines.append('rsync -rzv $BEEOND_DIR/ $OUT_DIR_PATH')
             lines.append('echo " "')
             lines.append('')
 
