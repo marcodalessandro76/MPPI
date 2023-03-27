@@ -44,98 +44,34 @@ def find_string_file(file,string):
                 break
     return line
 
-def build_r_setup(run_dir, overwrite_if_found = False, yambo_command = 'yambo'):
+def make_p2y(yambo_dir = './', input_dir ='./', options = None, overwrite_if_found = False):
     """
-    Create the `r_setup` file by executing yambo with no arguments in the ``run_dir``.
+    Run p2y in the ``yambo_dir`` using the PW wave functions. The function creates the
+    SAVE Folder using the command provided as the ``p2y_command`` parameter.
 
-    Args:
-        run_dir (:py:class:`string`) : folder with the SAVE directory
-        overwrite_if_found (:py:class:`bool`) : if True delete previous istance of the r_setup file (if found)
-        yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
+        cd $yambo_dir; p2y $options -I $input_dir
 
-    """
-    rsetup_file = os.path.join(run_dir,'r_setup')
-    if os.path.isfile(rsetup_file) and overwrite_if_found:
-        print('Remove previous instance of the r_setup file')
-        comm_str = 'rm %s'%rsetup_file
-        os.system(comm_str)
-    if not os.path.isfile(rsetup_file):
-        print('Build the r_setup in the run_dir path %s'%run_dir)
-        comm_str = 'cd %s; %s'%(run_dir,yambo_command)
-        os.system(comm_str)
-
-def init_yambo_run_dir(source_dir, run_dir ='.', make_link = True, overwrite_if_found = False, yambo_command = 'yambo') :
-    """
-    Create and initialize the run directory where Yambo computations can be performed. The function creates the run_dir (if it
-    does not exists), then perform a copy (or a link) of the source_dir into the run_dir and run the ``build_r_setup`` function.
-
-    Args:
-        source_dir (:py:class:`string`) : location of the SAVE folder with the Yambo core databases
-        run_dir (:py:class:`string`) : location of the run_dir. The run_dir can be
-            a nested directory path and if the path is not found is created by the function using the
-            :py:meth:`os.makedirs`
-        make_link (:py:class:`bool`) : if True create a symbolic link of the SAVE folder, otherwise the SAVE folder is copied in
-            the run_dir
-        overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the r_setup and l_setup (if found)
-            and build them again (also the 'yambo.in' input file is deleted to build the `r_setup` file).
-            Note that the SAVE folder in the run_dir is erased using the command ``rm -r run_dir/SAVE``, without the final `/`.
-            This ensures that, if the SAVE in the run_dir is a symbolic link, the source folder is not erased
-        yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
-
-    """
-    if not os.path.isdir(source_dir):
-        raise ValueError('The SAVE directory', source_dir,
-                         ' does not exists.')
-    if not os.path.isdir(run_dir):
-        os.makedirs(run_dir)
-        print('Create folder path %s'%run_dir)
-    save_dir = os.path.join(run_dir,'SAVE')
-    # Evaluate if the save_dir folder has to be removed if found
-    if os.path.isdir(save_dir):
-        if overwrite_if_found:
-            print('clean the run_dir %s to build a new SAVE folder'%run_dir)
-            rl_setup_file = os.path.join(run_dir,'*_setup')
-            yambo_in_file =  os.path.join(run_dir,'yambo.in')
-            comm_str = 'rm -r %s %s %s'%(save_dir,rl_setup_file,yambo_in_file)
-            print('Executing command:', comm_str)
-            os.system(comm_str)
-        else:
-            print('SAVE folder already present in %s. No operations performed.'%run_dir)
-    # Actions performed if the save_dir is not present (or if it has been removed)
-    if not os.path.isdir(save_dir):
-        src = os.path.abspath(source_dir)
-        dest = os.path.abspath(save_dir)
-        if make_link:
-            os.symlink(src,dest,target_is_directory=True)
-            print('Create a symlink of %s in %s'%(source_dir,run_dir))
-        else:
-            from shutil import copytree
-            copytree(src,dest)
-            print('Create a copy of %s in %s'%(src,run_dir))
-    # Build the r_setup file
-    build_r_setup(run_dir,overwrite_if_found=overwrite_if_found,yambo_command=yambo_command)
-
-def make_p2y(source_dir, p2y_command = 'p2y', overwrite_if_found = False):
-    """
-    Run p2y the build the SAVE folder with the yambo core databases. The function creates the
-    SAVE Folder in the source_dir using the command provided as the ``p2y_command`` parameter.
-    If a SAVE folder is already found in the source_dir no operations are performed, unless the
+    If the ``yambo_dir`` does not exsists it is built by the function.
+    If a SAVE folder is already found in the ``yambo_dir`` no operations are performed, unless the
     overwrite_if_found option is `True`.
 
     Args:
-        source_dir (:py:class:`string`) : name of the folder with the source nscf QuantumESPRESSO computation
-        p2y_command (:py:class:`string`) : command for generation of the SAVE Folder. Default is 'p2y'
+        yambo_dir (:py:class:`string`) : location of the yambo_dir, it can be a nested directory path and if the path
+            is not found is created by the function using the :py:meth:`os.makedirs`
+        input_dir (:py:class:`string`) : name of the folder with the PW wave functions
+        options (:py:class:`string`) : options added to the p2y (if not None). For instance,
+            options = '-nosym -a 2'
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder
 
-    Returns:
-        :py:class:`list` : path of the SAVE folder
-
     """
-    save_dir = os.path.join(source_dir,'SAVE')
-    if not os.path.isdir(source_dir): # check if the source_dir exists
-        raise ValueError('The source directory', source_dir,
+    if not os.path.isdir(yambo_dir):
+        os.makedirs(yambo_dir)
+        print('Create the folder path %s'%yambo_dir)
+    if not os.path.isdir(input_dir):
+        raise ValueError('The input directory', input_dir,
                          ' does not exists.')
-    # Evaluate if the save_dir folder has to be removed if found
+    # Evaluate if the SAVE folder has to be removed if found
+    save_dir = os.path.join(yambo_dir,'SAVE')
     if os.path.isdir(save_dir):
         if overwrite_if_found:
             print('Delete the SAVE folder %s'%save_dir)
@@ -146,10 +82,59 @@ def make_p2y(source_dir, p2y_command = 'p2y', overwrite_if_found = False):
             print('SAVE folder %s already present. No operations performed.'%save_dir)
     # Actions performed if the save_dir is not present (or if it has been removed)
     if not os.path.isdir(save_dir):
-        comm_str = 'cd %s; %s'%(source_dir,p2y_command)
+        comm_str = 'cd %s; p2y'%yambo_dir
+        if options is not None : comm_str += ' ' + options
+        comm_str += ' -I %s'%os.path.relpath(input_dir,start=yambo_dir)
         print('Executing command:', comm_str)
         os.system(comm_str)
-    return save_dir
+
+def build_r_setup(yambo_dir = './', overwrite_if_found = False, yambo_command = 'yambo'):
+    """
+    Create the `r_setup` file by executing the `yambo_command` in the ``yambo_dir``. If an
+    instance of the ``r_setup`` file is found do not perform any operation unless the
+    `overwrite_if_found` option is `True`.
+
+    Args:
+        yambo_dir (:py:class:`string`) : location of the yambo_dir
+        overwrite_if_found (:py:class:`bool`) : if True clean the yambo_dir
+        yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
+
+    """
+    r_setup_file = os.path.join(yambo_dir,'r_setup')
+    l_setup_file = os.path.join(yambo_dir,'l_setup')
+    yambo_in_file =  os.path.join(yambo_dir,'yambo.in')
+    if overwrite_if_found:
+        print('Clean the yambo_dir %s to build a new r_setup file'%yambo_dir)
+        for f in [r_setup_file,l_setup_file,yambo_in_file]:
+            if os.path.isfile(f) :
+                comm_str = 'rm %s'%f
+                print('Executing command:', comm_str)
+                os.system(comm_str)
+    if not os.path.isfile(r_setup_file):
+        print('Build the r_setup in the yambo_dir path %s'%yambo_dir)
+        comm_str = 'cd %s; %s'%(yambo_dir,yambo_command)
+        os.system(comm_str)
+
+def init_yambo_dir(yambo_dir = '.', input_dir = './', overwrite_if_found = False, options = None, yambo_command = 'yambo') :
+    """
+    Create and initialize the run directory where Yambo computations can be performed. The function runs the
+    `make_p2y` and `build_r_setup` function of the module.
+
+    Args:
+        yambo_dir (:py:class:`string`) : location of the yambo_dir, it can be a nested directory path and if the path
+            is not found is created by the function using the :py:meth:`os.makedirs`
+        input_dir (:py:class:`string`) : name of the folder with the PW wave functions
+        make_link (:py:class:`bool`) : if True create a symbolic link of the SAVE folder, otherwise the SAVE folder is copied in
+            the run_dir
+        overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the r_setup and l_setup (if found)
+            and build them again (also the 'yambo.in' input file is deleted to build the `r_setup` file)
+        options (:py:class:`string`) : options added to the p2y (if not None). For instance,
+            options = '-nosym -a 2'
+        yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
+
+    """
+    make_p2y(yambo_dir=yambo_dir,input_dir=input_dir,overwrite_if_found=overwrite_if_found)
+    build_r_setup(yambo_dir=yambo_dir,overwrite_if_found=overwrite_if_found,yambo_command=yambo_command)
 
 def build_FixSymm_input(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 = [0.,1.,0.],
                 removeTimeReversal = True):

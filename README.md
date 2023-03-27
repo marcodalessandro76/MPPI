@@ -58,7 +58,7 @@ then from the source folder of MPPI move to `sphinx_source/tutorials` and run th
     jupyter-lab &
 
 ## Requirements
-- QuantumESPRESSO (tested with 6.6): http://www.quantum-espresso.org/
+- QuantumESPRESSO (tested with 6.6 and later versions): http://www.quantum-espresso.org/
 - yambo (tested with 5.1 devel): http://www.yambo-code.org/
 
 ## Authors
