@@ -113,7 +113,8 @@ def build_r_setup(yambo_dir = './', overwrite_if_found = False, yambo_command = 
         comm_str = 'cd %s; %s'%(yambo_dir,yambo_command)
         os.system(comm_str)
 
-def init_yambo_dir(yambo_dir = '.', input_dir = './', overwrite_if_found = False, options = None, yambo_command = 'yambo') :
+def init_yambo_dir(yambo_dir = '.', input_dir = './', overwrite_if_found = False,
+        p2y_command = 'p2y', yambo_command = 'yambo') :
     """
     Create and initialize the run directory where Yambo computations can be performed. The function runs the
     `make_p2y` and `build_r_setup` function of the module.
@@ -126,12 +127,11 @@ def init_yambo_dir(yambo_dir = '.', input_dir = './', overwrite_if_found = False
             the run_dir
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder in the run_dir and the r_setup and l_setup (if found)
             and build them again (also the 'yambo.in' input file is deleted to build the `r_setup` file)
-        options (:py:class:`string`) : options added to the p2y (if not None). For instance,
-            options = '-nosym -a 2'
+        p2y_command (:py:class:`string`) : command for execution of the p2y program. Default is 'p2y'
         yambo_command (:py:class:`string`) : command for generation the r_setup file. Default is 'yambo'
 
     """
-    make_p2y(yambo_dir=yambo_dir,input_dir=input_dir,overwrite_if_found=overwrite_if_found)
+    make_p2y(yambo_dir=yambo_dir,input_dir=input_dir,overwrite_if_found=overwrite_if_found,p2y_command=p2y_command)
     build_r_setup(yambo_dir=yambo_dir,overwrite_if_found=overwrite_if_found,yambo_command=yambo_command)
 
 def build_FixSymm_input(run_dir, polarization= 'linear', Efield1 = [1.,0.,0.], Efield2 = [0.,1.,0.],
