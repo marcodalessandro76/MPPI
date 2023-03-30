@@ -44,14 +44,14 @@ def find_string_file(file,string):
                 break
     return line
 
-def make_p2y(yambo_dir = './', input_dir ='./', options = None, overwrite_if_found = False):
+def make_p2y(yambo_dir = './', input_dir ='./', overwrite_if_found = False, p2y_command = 'p2y'):
     """
     Run p2y in the ``yambo_dir`` using the PW wave functions. The function creates the
     SAVE Folder using the command provided as the ``p2y_command`` parameter.
 
-        cd $yambo_dir; p2y $options -I $input_dir
+        cd $yambo_dir; $p2y_command -I $input_dir
 
-    If the ``yambo_dir`` does not exsists it is built by the function.
+    If the ``yambo_dir`` does not exists it is built by the function.
     If a SAVE folder is already found in the ``yambo_dir`` no operations are performed, unless the
     overwrite_if_found option is `True`.
 
@@ -59,9 +59,8 @@ def make_p2y(yambo_dir = './', input_dir ='./', options = None, overwrite_if_fou
         yambo_dir (:py:class:`string`) : location of the yambo_dir, it can be a nested directory path and if the path
             is not found is created by the function using the :py:meth:`os.makedirs`
         input_dir (:py:class:`string`) : name of the folder with the PW wave functions
-        options (:py:class:`string`) : options added to the p2y (if not None). For instance,
-            options = '-nosym -a 2'
         overwrite_if_found (:py:class:`bool`) : if True delete the SAVE folder
+        p2y_command (:py:class:`string`) : command for execution of the p2y program. Default is 'p2y'
 
     """
     if not os.path.isdir(yambo_dir):
@@ -82,8 +81,7 @@ def make_p2y(yambo_dir = './', input_dir ='./', options = None, overwrite_if_fou
             print('SAVE folder %s already present. No operations performed.'%save_dir)
     # Actions performed if the save_dir is not present (or if it has been removed)
     if not os.path.isdir(save_dir):
-        comm_str = 'cd %s; p2y'%yambo_dir
-        if options is not None : comm_str += ' ' + options
+        comm_str = 'cd %s; %s'%(yambo_dir,p2y_command)
         comm_str += ' -I %s'%os.path.relpath(input_dir,start=yambo_dir)
         print('Executing command:', comm_str)
         os.system(comm_str)
@@ -189,11 +187,7 @@ def build_pw_kpath(*kpoints,numstep=40):
 def build_pw_klist(kpoints,kweight=None):
     """
     Build a list of kpoints with the structure [[k1_x,k1_y,k1_z,w1],...[kn_x,kn_y,kn_z,wn]], where wi is the
-    weight of the i-th kpoint
-
-    to be passed to the set_kpoints methods of the :class:`PwInput`
-    for computing the band structure along a path.
-
+    weight of the i-th kpoint.
 
     Args:
         kpoints (:py:class:`array`) : array with the coordinates of the kpoints
