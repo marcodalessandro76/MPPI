@@ -46,9 +46,10 @@ reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_col
 def make_dict(columns,suffix,extendOut):
     """
     Create a dictionary from the columns array. If the suffix is found in the
-    ref dictionary attribute to the keys the associated names, otherwise
-    associate string value 'col'+str(ind), where ind is the column index starting
-    from zero. The choice of the ref dictionary depends on the value of extendOut.
+    ref dictionary, and if the number of columns matchs the numnber of elements in the reference key,
+    attribute to the keys the associated names, otherwise associate string value 'col'+str(ind), where
+    ind is the column index starting from one. The choice of the ref dictionary depends on the value
+    of extendOut.
 
     Args:
         columns (:py:class:`array`) : array with the data sorted in columns
@@ -62,10 +63,10 @@ def make_dict(columns,suffix,extendOut):
         ref = reference_column_names
     data = {}
     for ind,col in enumerate(columns):
-        if suffix in ref:
+        if suffix in ref and len(ref[suffix]) == len(columns):
             key = ref[suffix][ind]
         else:
-            key = 'col'+str(ind)
+            key = 'col'+str(ind+1)
         data[key] = col
     return data
 
