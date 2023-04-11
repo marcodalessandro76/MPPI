@@ -20,7 +20,7 @@ def _parse_Ypp_output(data):
     given by YamboParser.
     """
     import numpy as np
-    index_kx = len(data.keys())-3
+    index_kx = len(data.keys())-2
 
     kpath = data['col1']
     kpoints = []
