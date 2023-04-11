@@ -22,7 +22,7 @@ def _parse_Ypp_output(data):
     import numpy as np
     index_kx = len(data.keys())-3
 
-    kpath = data['col0']
+    kpath = data['col1']
     kpoints = []
     for ind in [0,1,2]:
         kpoints.append(data['col'+str(index_kx+ind)])
