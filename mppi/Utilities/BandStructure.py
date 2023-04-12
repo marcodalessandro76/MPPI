@@ -28,7 +28,7 @@ def _parse_Ypp_output(data):
         kpoints.append(data['col'+str(index_kx+ind)])
     kpoints = np.array(kpoints).transpose()
     bands = []
-    for ind in range(1,index_kx):
+    for ind in range(2,index_kx):
         bands.append(data['col'+str(ind)])
     bands = np.array(bands)
 
