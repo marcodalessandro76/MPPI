@@ -68,6 +68,7 @@ where the parsing of the various elements are performed by the more specific cla
 .. toctree:: yamboOutputParser
 .. toctree:: yamboDftParser
 .. toctree:: yamboDipolesParser
+.. toctree:: yamboQPParser
 .. toctree:: yamboRTCarriersParser
 .. toctree:: yamboRTGlesserParser
 
@@ -94,6 +95,7 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
 .. toctree:: utils.rst
 .. toctree:: latticeUtils.rst
 .. toctree:: parallel.rst
+.. toctree:: mergeQPndb.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
 Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.

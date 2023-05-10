@@ -14,7 +14,7 @@ or, for instance, to load only BandStructure
 
 """
 
-def _parse_Ypp_output(data):
+def parse_Ypp_output(data):
     """
     Extract the kpath, kpoints and bands from the dictionary results['output'][type]
     given by YamboParser.
@@ -38,13 +38,13 @@ class BandStructure():
     """
     Class to manage and plot the band structure.
 
-    The class can be initialized in various way. Specific classmethods to init using the output
-    of both QuantumESPRESSO and Ypp are provided.
+    The class can be initialized in various way. Specific classmethods to perform the init using
+    the output of both QuantumESPRESSO and Ypp are provided.
 
     Args:
         kpoints (:py:class:`array`) : array with the coordinates of the kpoints used to build the path.
             The coordinate used to express the kpoints are arbitrary, consistence with the ``high_sym_points``
-                parameter is required
+            parameter is required
         bands (:py:class:`numpy.array`) : the element bands[i] contains the energies of the i-th
             band (in eV)
         kpath (:py:class:`array`) : array with the value of the curvilinear abscissa along the path.
@@ -104,7 +104,7 @@ class BandStructure():
         from mppi import Parsers as P
         import numpy as np
         data = P.YamboParser(results).data
-        kpath,kpoints,bands = _parse_Ypp_output(data[suffix])
+        kpath,kpoints,bands = parse_Ypp_output(data[suffix])
         return cls(kpath=None,kpoints=kpoints,bands=bands,high_sym_points=high_sym_points)
 
     @classmethod

@@ -160,3 +160,43 @@ def build_lattice(lattice_vectors, atom_pos, Nx, Ny, Nz):
                      product(range(Nx), range(Ny), range(Nz))])
         latt_coord.append([atom_name,xpos,ypos,zpos])
     return latt_coord
+
+def distance_point_to_segment(point,start,end):
+    """
+    Compute the distance between a point and a segment that
+    has the points `start` and `end` as edges.
+    The function checks if the orthogonal projection of the point to
+    the segment line belongs to the segment itself. If not, the distance
+    is computed as the minum value between the distances of the `point`
+    w.r.t. the start and end points of the segment.
+    Note that the function uses vectors analysis so it can be used in both
+    2D and 3D.
+
+    Args:
+        point (:py:class:`np.array`) : cartesian coordinates of the point
+        start (:py:class:`np.array`) : cartesian coordinates of the start point of the segment
+        end (:py:class:`np.array`) : cartesian coordinates of the end point of the segment
+
+    Returns :
+        :py:class:`tuple` : the tuple (distance,ascissa_path) with the value of the distance
+        and the value of the curvilinear ascissa on the line associated to the line element closest
+        to the `point`
+
+    """
+    line_vec = end-start
+    point_vec = point-start # coordinates of vec w.r.t. the start of the line
+    line_unit = line_vec/np.linalg.norm(line_vec)
+    dot_prod = np.dot(point_vec,line_unit)
+    proj_vec = dot_prod*line_unit # projection of the point_vec in the direction of the segment
+    if dot_prod < 0:
+        distance = np.linalg.norm(point-start)
+        ascissa_path = 0.
+        return distance,ascissa_path
+    if np.linalg.norm(proj_vec) > np.linalg.norm(line_vec):
+        distance = np.linalg.norm(point-end)
+        ascissa_path = np.linalg.norm(line_vec)
+        return distance,ascissa_path
+    else:
+        distance = np.linalg.norm(proj_vec-point_vec)
+        ascissa_path = np.linalg.norm(proj_vec)
+        return distance,ascissa_path

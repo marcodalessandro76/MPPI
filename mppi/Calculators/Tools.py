@@ -68,8 +68,6 @@ def make_p2y(yambo_dir = './', input_dir ='./', overwrite_if_found = False, p2y_
         print('Create the folder path %s'%yambo_dir)
     if not os.path.isdir(input_dir):
         print('The input directory', input_dir,' does not exists.')
-        #raise ValueError('The input directory', input_dir,
-        #                 ' does not exists.')
     # Evaluate if the SAVE folder has to be removed if found
     save_dir = os.path.join(yambo_dir,'SAVE')
     if os.path.isdir(save_dir):

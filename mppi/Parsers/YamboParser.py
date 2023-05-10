@@ -26,6 +26,8 @@ class YamboParser():
             class that manages the parsing of the ``dipoles`` database
         dft (:class:`YamboDftParser`) : contains the instance of the :class:`YamboDftParser` that
             manages the parsing of the ``ns.db1`` database
+        qp (:class:`YamboQPParser`) : contains the instance of the :class:`YamboQPParser` that
+            manages the parsing of the ``ndb.QP`` database
         RTCarriers (:class:`YamboRTCarriersParser`) : contains the instance of the
             :class:`YamboRTCarriersParser` that manages the parsing of the `ndb.RT_carriers`
             database
@@ -48,6 +50,8 @@ class YamboParser():
                 self.dipoles = P.YamboDipolesParser(value,verbose=verbose)
             if key == 'dft':
                 self.dft = P.YamboDftParser(value,verbose=verbose)
+            if key == 'QP':
+                self.qp = P.YamboQPParser(value,verbose=verbose)
             if key == 'RT_carriers':
                 self.RTCarriers = P.YamboRTCarriersParser(value,verbose=verbose)
             if key == 'RT_G_PAR':
@@ -62,16 +66,17 @@ class YamboParser():
         Args:
             run_dir (:py:class:`string`) : `run_dir` folder of the calculation
             outputPath (:py:class:`string`) : folder with the 'o-' files
-            dbsPath (:py:class:`string`) : folder with the ndb databases. If it is
-                None the databases are sought in the outputPath
+            dbsPath (:py:class:`list`) : list of folders with the ndb databases. If this argument is set to
+                `None' the databases are sought in the outputPath
             verbose (:py:class:`boolean`) : determine the amount of information provided on terminal
             extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
                             names of the variables in the :class:`YamboOutputParser`
 
         """
         from mppi.Calculators.YamboCalculator import build_results_dict
+        if dbsPath is None : dbsPath = [outputPath]
         results = build_results_dict(run_dir,outputPath,dbsPath=dbsPath,verbose=verbose)
-        return cls(results,verbose=verbose)
+        return cls(results,verbose=verbose,extendOut=extendOut)
 
     def get_info(self):
         """
@@ -85,6 +90,12 @@ class YamboParser():
             print(' ')
         if hasattr(self,'dft'):
             self.dft.get_info()
+            print(' ')
+        if hasattr(self,'qp'):
+            self.qp.get_info()
+            print(' ')
+        if hasattr(self,'RTCarriers'):
+            self.RTCarriers.get_info()
             print(' ')
         if hasattr(self,'RTGreen'):
             self.RTGreen.get_info()

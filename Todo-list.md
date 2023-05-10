@@ -10,8 +10,11 @@
 
 ## TODO
 
+- Complete the YamboQPParser class and the associated tutorial in the YamboParser notebook. Use the YamboQPParser to complete
+  the MergeQPndb function in the Utilities module.
+
 - Add the spin to the Dos class and add a from_Yambo method in the Dos class, this requires that the weights of the
-  k points are computed by the YamboDftParser
+  k points are computed by the YamboDftParser.
 
 - Complete the Analysis_Dos notebook.
 
