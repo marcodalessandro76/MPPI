@@ -53,7 +53,13 @@ def build_slurm_header(pars):
     lines.append('echo "OMP_NUM_THREADS : $OMP_NUM_THREADS"')
     lines.append('')
     lines.append('echo " "')
-    lines.append('echo "###############End of the header section###############"')
+    if pars['preprocessing'] is not None:
+        with open(pars['preprocessing']) as f:
+            for l in f:
+                lines.append(l)
+    lines.append('')
+    lines.append('echo " "')
+    lines.append('echo "############### End of the header section ###############"')
     lines.append('echo " "')
     lines.append('')
 
@@ -106,17 +112,22 @@ class RunRules(dict):
         map_by (:py:class:`string`) : the mpi unit for the --map-by option of mpirun
         pe (:py:class:`int`) : number of `processing elements` in the --map-by:unit:PE=n option of mpirun
         rank_by (:py:class:`string`) : the unit for the --rank-by option of mpirun
+        pre_processing (:py:class:`string`) : name of the file with pre-processing actions peformed by
+            the script before running the computation. For instance, it can be used to load the module
+            needed by the running applications
 
     """
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=1,
                 nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory=None,
-                time=None,partition=None,account=None,qos=None,map_by=None,pe=1,rank_by=None):
+                time=None,partition=None,account=None,qos=None,map_by=None,pe=1,rank_by=None,
+                pre_processing=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
             omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,memory=memory,time=time,
-            partition=partition,account=account,qos=qos,map_by=map_by,pe=pe,rank_by=rank_by)
+            partition=partition,account=account,qos=qos,map_by=map_by,pe=pe,rank_by=rank_by,
+            pre_processing=pre_processing)
             dict.__init__(self,scheduler=scheduler,**rules)

@@ -209,7 +209,7 @@ def get_gap(evals, nbands_full, verbose = True):
             print('Gap :',gap,'eV')
             print('Direct gap :',direct_gap,'eV')
     return {'gap':gap,'direct_gap':direct_gap,'position_cbm':position_cbm,
-            'positon_vbm':position_vbm,'positon_direct_gap':position_direct_gap}
+            'position_vbm':position_vbm,'position_direct_gap':position_direct_gap}
 
 def get_transitions(evals, nbands, nbands_full, initial = 'full', final = 'empty',
                     set_scissor = None, set_gap = None, set_direct_gap = None):

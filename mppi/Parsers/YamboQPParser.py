@@ -1,6 +1,7 @@
 """
 Module that manages the parsing of the ``ndb.RT_carriers`` database created by `yambo_rt`.
 """
+
 from netCDF4 import Dataset
 
 import numpy as np
@@ -17,8 +18,8 @@ class YamboQPParser():
     Attributes:
         QP_table (:py:class:`np.array`) : Array ...
         QP_kpts (:py:class:`np.array`) : Array ...
-        QP_E (:py:class:`np.array`) : Array ...
-        QP_Eo (:py:class:`np.array`) : Array ...
+        QP_E (:py:class:`np.array`) : Array with the quasi-particle energies (in Hartree)
+        QP_Eo (:py:class:`np.array`) : Array with the dft energies (in Hartree)
         QP_Z (:py:class:`np.array`) : Array ...
     """
 

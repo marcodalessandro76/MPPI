@@ -174,7 +174,7 @@ def build_pw_kpath(*kpoints,numstep=40):
         numstep (int): specifies the number of intermediate points used to build the path
 
     Returns:
-        :py:class:`list` : list of kpoints as nedded by pw in the bands computation with the tpiba_b option
+        :py:class:`list` : list of kpoints as needed by pw in the bands computation with the tpiba_b option
 
     """
     klist = []
