@@ -53,8 +53,8 @@ def build_slurm_header(pars):
     lines.append('echo "OMP_NUM_THREADS : $OMP_NUM_THREADS"')
     lines.append('')
     lines.append('echo " "')
-    if pars['preprocessing'] is not None:
-        with open(pars['preprocessing']) as f:
+    if pars['pre_processing'] is not None:
+        with open(pars['pre_processing']) as f:
             for l in f:
                 lines.append(l)
     lines.append('')
