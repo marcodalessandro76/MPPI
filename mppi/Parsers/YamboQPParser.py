@@ -1,5 +1,5 @@
 """
-Module that manages the parsing of the ``ndb.RT_carriers`` database created by `yambo_rt`.
+Module that manages the parsing of the ``ndb.QP`` database created by `yambo`.
 """
 
 from netCDF4 import Dataset
@@ -52,7 +52,7 @@ class YamboQPParser():
         self.QP_Eo = np.array(database.variables['QP_Eo'][:])
         self.QP_Z = np.array(database.variables['QP_Z'][:])
         #print(database['PARS'])
-        print(list(map(int,database['PARS'][:])))
+        #print(list(map(int,database['PARS'][:])))
 
     def get_info(self):
         """
