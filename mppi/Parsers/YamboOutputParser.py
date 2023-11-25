@@ -63,7 +63,9 @@ def make_dict(columns,suffix,extendOut):
         ref = reference_column_names
     data = {}
     for ind,col in enumerate(columns):
-        if suffix in ref and len(ref[suffix]) == len(columns):
+        if suffix in ref:
+            if len(ref[suffix]) != len(columns):
+                print('WARNING YamboOutputParser %s reference columns name do not match the length of the output file'%suffix)
             key = ref[suffix][ind]
         else:
             key = 'col'+str(ind+1)
