@@ -49,7 +49,7 @@ def make_dict(columns,suffix,extendOut):
     ref dictionary, and if the number of columns matchs the numnber of elements in the reference key,
     attribute to the keys the associated names, otherwise associate string value 'col'+str(ind), where
     ind is the column index starting from one. The choice of the ref dictionary depends on the value
-    of extendOut.
+    of the ``extendOut`` variable.
 
     Args:
         columns (:py:class:`array`) : array with the data sorted in columns
@@ -63,9 +63,7 @@ def make_dict(columns,suffix,extendOut):
         ref = reference_column_names
     data = {}
     for ind,col in enumerate(columns):
-        if suffix in ref:
-            if len(ref[suffix]) != len(columns):
-                print('WARNING YamboOutputParser %s reference columns name do not match the length of the output file'%suffix)
+        if suffix in ref and len(ref[suffix]) == len(columns):
             key = ref[suffix][ind]
         else:
             key = 'col'+str(ind+1)
