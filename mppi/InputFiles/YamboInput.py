@@ -24,7 +24,7 @@ class YamboInput(dict):
     # Also the 'options' like RmTimeRev or DephCVonly were included in the _runlevels list but they have
     # been removed since otherwise it seems that these values are always included in the arguments list
     # after the parsing of the input file.
-    _runlevels  = ['mpa','rim_cut','RIM_W','chi','em1s','bse','optics','bsk','bss','em1d','gw0','HF_and_locXC','setup',
+    _runlevels  = ['mpa','rim_cut','rim_w','RIM_W','chi','em1s','bse','optics','bsk','bss','em1d','gw0','HF_and_locXC','setup',
                    'ppa','cohsex','life','collisions','negf','el_ph_scatt','el_el_scatt','excitons',
                    'wavefunction','fixsyms','QPDBs', 'QPDB_merge','RealTime','RT_X','RToccDos',
                    'RToccBnd','RToccEner','RToccTime','RTlifeBnd','amplitude','bzgrids','Random_Grid',

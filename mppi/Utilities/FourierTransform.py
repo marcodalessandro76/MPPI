@@ -1,5 +1,5 @@
 """
-This module a function for the computation of the one-dimensional fourier transform of a
+This module contains a function for the computation of the one-dimensional fourier transform of a
 real valued function. The module can be loaded in the notebook in one of the following way
 
 >>> from mppi.Utilities import FourierTransform
