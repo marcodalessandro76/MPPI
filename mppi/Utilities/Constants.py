@@ -53,6 +53,11 @@ The impedence of free space in Ohm. The field amplitude E (in V/m) is related to
 the field intensity P (in W/m^2) by the relation E = sqrt(Z0*P)
 """
 
+Boltzmann = 8.617333262145e-5
+"""
+The Boltzmann constant in eV/K  
+"""
+
 high_sym_fcc = {'G':[0.,0.,0.],
                 'X':[0.,0.,1.],
                 'L':[0.5,0.5,0.5],
