@@ -40,6 +40,10 @@ def build_slurm_header(pars):
     lines.append('#SBATCH --output=%s.out'%job)
     lines.append('')
     lines.append('export OMP_NUM_THREADS=%s'%pars['omp_num_threads'])
+    if pars['omp_places'] is not None:
+        lines.append('export OMP_PLACES=%s'%pars['omp_places'])
+    if pars['omp_proc_bind'] is not None:
+        lines.append('export OMP_PROC_BIND=%s'%pars['omp_proc_bind'])
     lines.append('')
     lines.append('echo "Cluster name $SLURM_CLUSTER_NAME"')
     lines.append('echo "Job name $SLURM_JOB_NAME "')
@@ -109,6 +113,8 @@ class RunRules(dict):
         partition (:py:class:`string`) : slurm parition variable
         account (:py:class:`string`) : slurm account variable
         qos (:py:class:`string`) : slurm qos variable
+        omp_places (:py:class:`string`) : the OMP_PLACES option, can be `cores` or `socket`
+        omp_proc_bind (:py:class:`string`) : the OMP_PROC_BIND option, can be `close` or `spread`
         map_by (:py:class:`string`) : the mpi unit for the --map-by option of mpirun
         pe (:py:class:`int`) : number of `processing elements` in the --map-by:unit:PE=n option of mpirun
         rank_by (:py:class:`string`) : the unit for the --rank-by option of mpirun
@@ -120,14 +126,14 @@ class RunRules(dict):
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=1,
                 nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory=None,
-                time=None,partition=None,account=None,qos=None,map_by=None,pe=1,rank_by=None,
-                pre_processing=None):
+                time=None,partition=None,account=None,qos=None,omp_places=None,omp_proc_bind=None,
+                map_by=None,pe=1,rank_by=None,pre_processing=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
             omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,memory=memory,time=time,
-            partition=partition,account=account,qos=qos,map_by=map_by,pe=pe,rank_by=rank_by,
-            pre_processing=pre_processing)
+            partition=partition,account=account,qos=qos,omp_places=omp_places,omp_proc_bind=omp_proc_bind,
+            map_by=map_by,pe=pe,rank_by=rank_by,pre_processing=pre_processing)
             dict.__init__(self,scheduler=scheduler,**rules)
