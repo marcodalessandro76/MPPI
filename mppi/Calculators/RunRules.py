@@ -26,6 +26,8 @@ def build_slurm_header(pars):
     lines.append('#SBATCH --cpus-per-task=%s      ### Number of HT per task'%pars['cpus_per_task'])
     if pars['gpus_per_node'] is not None:
         lines.append('#SBATCH --gpus-per-node=%s      ### Number of GPUS per node'%pars['gpus_per_node'])
+     if pars['gres_gpu'] is not None:
+        lines.append('#SBATCH --gres=gpu:%s      ### Value of the --gres=gpu: variable'%pars['gres_gpu'])
     if pars['memory'] is not None:
         lines.append('#SBATCH --mem %s             ### Memory per node'%pars['memory'])
     if pars['time'] is not None:
@@ -108,6 +110,7 @@ class RunRules(dict):
         ntasks_per_node (:py:class:`int`) : slurm ntasks-per-node variable
         cpus_per_task (:py:class:`int`) : slurm cpus-per-task variable
         gpus_per_node (:py:class:`int`) : slurm gpus-per-node variable
+        gres_gpu (:py:class:`int`) : value of the --gres=gpu slurm variable
         memory (:py:class:`string`) : slurm mem variable
         time (:py:class:`string`) : slurm time variable, format 'HH:MM:SS'
         partition (:py:class:`string`) : slurm parition variable
@@ -125,7 +128,7 @@ class RunRules(dict):
     """
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=1,
-                nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,memory=None,
+                nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,gres_gpu=None,memory=None,
                 time=None,partition=None,account=None,qos=None,omp_places=None,omp_proc_bind=None,
                 map_by=None,pe=1,rank_by=None,pre_processing=None):
         if scheduler == 'direct':
@@ -133,7 +136,7 @@ class RunRules(dict):
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
-            omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,memory=memory,time=time,
-            partition=partition,account=account,qos=qos,omp_places=omp_places,omp_proc_bind=omp_proc_bind,
-            map_by=map_by,pe=pe,rank_by=rank_by,pre_processing=pre_processing)
+            omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,gres_gpu=gres_gpu,memory=memory,
+            time=time,partition=partition,account=account,qos=qos,omp_places=omp_places,
+            omp_proc_bind=omp_proc_bind,map_by=map_by,pe=pe,rank_by=rank_by,pre_processing=pre_processing)
             dict.__init__(self,scheduler=scheduler,**rules)
