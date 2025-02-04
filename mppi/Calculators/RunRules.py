@@ -26,7 +26,7 @@ def build_slurm_header(pars):
     lines.append('#SBATCH --cpus-per-task=%s      ### Number of HT per task'%pars['cpus_per_task'])
     if pars['gpus_per_node'] is not None:
         lines.append('#SBATCH --gpus-per-node=%s      ### Number of GPUS per node'%pars['gpus_per_node'])
-     if pars['gres_gpu'] is not None:
+    if pars['gres_gpu'] is not None:
         lines.append('#SBATCH --gres=gpu:%s      ### Value of the --gres=gpu: variable'%pars['gres_gpu'])
     if pars['memory'] is not None:
         lines.append('#SBATCH --mem %s             ### Memory per node'%pars['memory'])
