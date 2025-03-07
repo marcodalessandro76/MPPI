@@ -25,7 +25,7 @@ class YamboInput(dict):
     # been removed since otherwise it seems that these values are always included in the arguments list
     # after the parsing of the input file.
     _runlevels  = ['mpa','rim_cut','rim_w','RIM_W','chi','em1s','bse','optics','bsk','bss','em1d','gw0','HF_and_locXC','setup',
-                   'ppa','cohsex','life','collisions','electrons','bnds','negf','el_ph_scatt','el_el_scatt','excitons',
+                   'ppa','cohsex','kernel','life','collisions','electrons','bnds','negf','el_ph_scatt','el_el_scatt','excitons',
                    'wavefunction','fixsyms','QPDBs', 'QPDB_merge','RealTime','RT_X','RToccDos',
                    'RToccBnd','RToccEner','RToccTime','RTlifeBnd','amplitude','bzgrids','Random_Grid',
                    'gkkp','el_ph_corr','WRbsWF','Select_energy', 'RTDBs','photolum','kpts_map',
