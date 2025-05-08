@@ -57,6 +57,9 @@ def build_slurm_header(pars):
     lines.append('echo "Number of threads per task $SLURM_CPUS_PER_TASK"')
     lines.append('echo "Number of gpus per node $SLURM_GPUS_PER_NODE"')
     lines.append('echo "OMP_NUM_THREADS : $OMP_NUM_THREADS"')
+    lines.append('echo "# Info GPU"')
+    lines.append("export NUM_GPUS=$(echo $SLURM_JOB_GPUS | tr ',' '\n' | wc -l)")
+    lines.append('echo "GPUs allocated (total): $NUM_GPUS"')
     lines.append('')
     lines.append('echo " "')
     if pars['pre_processing'] is not None:
