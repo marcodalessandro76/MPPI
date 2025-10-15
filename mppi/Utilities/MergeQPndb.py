@@ -4,7 +4,9 @@ into a single database.
 The function is deeply inspired from the merge_qp function of yambopy
 """
 
+import numpy as np
 from netCDF4 import Dataset
+
 
 # def parse_ndbQP(file):
 #     """
@@ -33,10 +35,17 @@ from netCDF4 import Dataset
 def merge_qp(output,files):
     """
     Merge the quasiparticle databases produced by yambo
+    
+    Args:
+        output (:py:class:`string`) : name of the output file
+        files  (:py:class:`list`)   : list of the input files to be merged
+
     """
     #read all the files and display main info in each of them
-    filenames = [ f.name for f in files]
-    datasets  = [ Dataset(filename) for filename in filenames]
+    #filenames = [ f.name for f in files]
+    #datasets  = [ Dataset(filename) for filename in filenames]
+    datasets  = [ Dataset(f) for f in files]
+    
     #call compatibility version if old dataset detected
     try:
         qp_test = datasets[0]['QP_E']
@@ -47,8 +56,10 @@ def merge_qp(output,files):
 
     print("=========input=========")
     QP_table, QP_kpts, QP_E, QP_E0, QP_Z = [], [], [], [], []
-    for d,filename in zip(datasets,filenames):
-        PARS = list(map(int,d['PARS'][:]))
+    #for d,filename in zip(datasets,filenames):
+    for d,filename in zip(datasets,files):    
+        #PARS = list(map(int,d['PARS'][:]))
+        PARS = list(map(int, np.ma.filled(d['PARS'][:], 0)))
         nkpoints, nqps, nstrings = PARS[1],PARS[2],PARS[-1]
         #_, nkpoints, nqps, _, nstrings = list(map(int,d['PARS'][:]))
         print("filename:    ", filename)
