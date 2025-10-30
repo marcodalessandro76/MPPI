@@ -81,6 +81,46 @@ def convertTonumber(x):
     except (TypeError, ValueError):
         return x
 
+def is_point_near_line(point, line_start, line_end, tolerance):
+    """
+    Check if a point is near a line segment defined by two endpoints.
+
+    Parameters:
+        point (tuple): The point to check (x0, y0)
+        line_start (tuple): Starting point of the line (x1, y1)
+        line_end (tuple): Ending point of the line (x2, y2)
+        tolerance (float): Maximum allowed distance to consider the point "near"
+
+    Returns:
+        bool: True if the point is within the tolerance from the line segment, False otherwise
+    """
+    # Convert input points to NumPy arrays
+    P = np.array(point)
+    A = np.array(line_start)
+    B = np.array(line_end)
+
+    # Vector from A to B and from A to P
+    AB = B - A
+    AP = P - A
+
+    # Length of the segment
+    norm_AB = np.linalg.norm(AB)
+    if norm_AB == 0:
+        # Degenerate case: A and B are the same point
+        return np.linalg.norm(P - A) <= tolerance
+
+    # Projection scalar of AP onto AB
+    t = np.dot(AP, AB) / np.dot(AB, AB)
+
+    # Clamp t to [0, 1] to stay within the segment
+    t = max(0, min(1, t))
+    closest_point = A + t * AB
+
+    # Distance from P to the closest point on the segment
+    distance = np.linalg.norm(P - closest_point)
+
+    return distance <= tolerance
+
 def dict_set(inp,*subfields):
     """Ensure the provided fields and set the value
 
