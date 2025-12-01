@@ -66,6 +66,66 @@ def file_parser(filename,skip='#',sep=None):
     columns = np.array(splitted).transpose()
     return columns
 
+def array_dump_to_text(data, filename, columns=None, sep="       ", decimals=6):
+    """
+    Writes a 2D Python array to a text file.
+    
+    Args:
+        data (list of lists): 2D array to write to file
+        filename (str): name of the output text file
+        columns (list of str, optional): list of column names. If None, default names "col1", "col2", ... are used.
+        sep (str, optional): separator string between columns. Default is 7 spaces. 
+        decimals (int, optional): number of decimal places for numeric values. Default is 6.    
+
+    """
+    ncols = len(data[0])
+
+    # Generate column names automatically if needed
+    if columns is None:
+        columns = [f"col{i+1}" for i in range(ncols)]
+    else:
+        if len(columns) != ncols:
+            raise ValueError("Number of column names does not match data width.")
+
+    # Validate row lengths
+    for row in data:
+        if len(row) != ncols:
+            raise ValueError("All rows must have the same number of columns.")
+
+    # Detect numeric or string
+    def is_numeric(x):
+        return isinstance(x, (int, float))
+
+    # Format function for numbers
+    def fmt(x):
+        if is_numeric(x):
+            return f"{x:.{decimals}f}"
+        return str(x)
+
+    # Transform everything into strings
+    str_data = [[fmt(x) for x in row] for row in data]
+
+    # Compute column widths
+    col_widths = [
+        max(len(columns[i]), max(len(str_data[r][i]) for r in range(len(str_data))))
+        for i in range(ncols)
+    ]
+
+    # Format header (right aligned)
+    def format_header():
+        return sep.join(columns[i].rjust(col_widths[i]-1) for i in range(ncols))
+
+    # Format a row (right aligned for all values)
+    def format_row(row):
+        return sep.join(row[i].rjust(col_widths[i]) for i in range(ncols))
+
+    # Write the file
+    with open(filename, "w") as f:
+        f.write("# " + format_header() + "\n")   # header line
+        for row in str_data:
+            f.write(format_row(row) + "\n")
+
+
 def convertTonumber(x):
     """
     Check if the input string can be converted to an
