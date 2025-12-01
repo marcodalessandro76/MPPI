@@ -113,7 +113,7 @@ def array_dump_to_text(data, filename, columns=None, sep="       ", decimals=6):
 
     # Format header (right aligned)
     def format_header():
-        return sep.join(columns[i].rjust(col_widths[i]-1) for i in range(ncols))
+        return sep.join(columns[i].rjust(col_widths[i]) for i in range(ncols))
 
     # Format a row (right aligned for all values)
     def format_row(row):
