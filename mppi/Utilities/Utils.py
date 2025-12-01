@@ -66,7 +66,7 @@ def file_parser(filename,skip='#',sep=None):
     columns = np.array(splitted).transpose()
     return columns
 
-def array_dump_to_text(data, filename, columns=None, sep="       ", decimals=6):
+def array_dump_to_file(data, filename, columns=None, sep="       ", decimals=6):
     """
     Writes a 2D Python array to a text file.
     
