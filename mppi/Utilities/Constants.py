@@ -29,8 +29,19 @@ Reduced Planck constant (h/2pi) in eV*fs.
 
 Light_speed_nm_fsm1 = 299.792458
 """
-Light speed in in nm/fs
+Light speed in nm/fs
 """
+
+Light_speed_au = 137.03599911
+"""
+Light speed in atomic units (Bohr/fs)
+"""
+
+fsToAu = 41.341373
+"""
+Femto-second to atomic units conversion factor
+"""
+
 
 Bohr_radius = 5.291772e-11
 """
