@@ -1,12 +1,11 @@
 """
 Module that manages the parsing of the ``ndb.Nonlinear`` database created by `yambo_nl`.
-The module is (almost) identical clpy of the ``nldb.py`` of yambopy.  
+The module is an (almost) identical clone of the ``nldb.py`` of yambopy.  
 """
 
 from netCDF4 import Dataset
 from mppi.Utilities.Constants import HaToeV, Light_speed_au, fsToAu
-fs2aut = 41.3413745758
-#from yambopy.units import ha2ev,fs2aut,speed_of_light
+from mppi.Utilities.Utils import Plot_Array_time    
 import numpy as np
 import sys, os
 
@@ -221,4 +220,44 @@ class YamboNLDBParser(object):
             s+="Efield Freq range   : "+str(efield["freq_range"]*HaToeV)+" [ev] \n"
             s+="Efield Initial time : "+str(efield["initial_time"]/fsToAu)+" [fs] \n"
         print(s)
+
+    def get_time(self,convert_to_fs=True):
+        """
+        Get the time points of the real-time propagation.
         
+        Args:
+            convert_to_fs (:py:class:`boolean`) : if True, convert the time points from atomic units to femto-seconds
+        
+        Returns:
+            :py:class:`array` : array with the time points of the real-time propagation (in fs)
+        """
+        if convert_to_fs:
+            return self.IO_TIME_points/fsToAu
+        return self.IO_TIME_points
+        
+    def plot_polarization(self,convert_to_fs=True,xlim=None,run_index=0):
+        """
+        Plot the polarization of the system as a function of time.
+
+        Args:
+            convert_to_fs (:py:class:`boolean`) : if True, convert the time points from atomic units to femto-seconds
+            xlim (:py:class:`tuple`) : tuple with the limits of the x-axis
+            run_index (:py:class:`int`) : index of the run for which to plot the polarization          
+        """
+        time = self.get_time(convert_to_fs)
+        pol = self.Polarization[run_index]
+        Plot_Array_time(time,pol,xlim=xlim,label='Polarization')
+    
+    def plot_current(self,convert_to_fs=True,xlim=None,run_index=0):
+        """
+        Plot the current of the system as a function of time.
+
+        Args:
+            convert_to_fs (:py:class:`boolean`) : if True, convert the time points from atomic units to femto-seconds
+            xlim (:py:class:`tuple`) : tuple with the limits of the x-axis        
+            run_index (:py:class:`int`) : index of the run for which to plot the current  
+        """
+        time = self.get_time(convert_to_fs)
+        curr = self.Current[run_index]
+        Plot_Array_time(time,curr,xlim=xlim,label='J')
+
