@@ -1,10 +1,16 @@
 """
 This module contains useful physical constant and conversion factors
 """
+import numpy as np
 
 HaToeV = 27.211386
 """
 Energy conversion factor from Hartree to eV units
+"""
+
+Planck_au = 2.*np.pi
+"""
+Planck constant in Atomic units. (hbar = 1 in atomic units).
 """
 
 Planck_ev_ps = 4.135667696e-3
@@ -37,11 +43,10 @@ Light_speed_au = 137.03599911
 Light speed in atomic units (Bohr/fs)
 """
 
-fsToAu = 41.341373
+FsToAu = 41.341373
 """
 Femto-second to atomic units conversion factor
 """
-
 
 Bohr_radius = 5.291772e-11
 """

@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def Plot_Array_time(time, data, xlim=None,label=None):
+def Plot_3dArray_time(time, data, xlim=None,label=None):
     """"
     Plot the array data as a function of time. The data is expected to be a 2D array with the first dimension of size 3, 
     corresponding to the three cartesian directions.
@@ -21,8 +21,10 @@ def Plot_Array_time(time, data, xlim=None,label=None):
     char_size=14
     fig, axes = plt.subplots(nrows=3,ncols=1,figsize=(8,10))
 
-    #fig.suptitle(' Real-time polarization in the three cartesian directions ', fontsize=char_size)
-    
+    if label is None:
+        label = 'Array'
+    axes[0].set_title('Real-time %s in the three cartesian directions'%label, fontsize=char_size)
+
     axes[0].plot(time,data[0],label=label[0]+'x')
     axes[1].plot(time,data[1],label=label[0]+'y')
     axes[2].plot(time,data[2],label=label[0]+'z')
@@ -30,14 +32,10 @@ def Plot_Array_time(time, data, xlim=None,label=None):
     for ind in range(3):
         axes[ind].legend(fontsize=char_size-2)
         
-
     if xlim is not None:
         for ind in range(3):
              axes[ind].set_xlim(xlim)
 
-    if label is None:
-        label = 'Array'
-    axes[0].set_title('Real-time %s in the three cartesian directions'%label, fontsize=char_size)
     plt.show()
 
 

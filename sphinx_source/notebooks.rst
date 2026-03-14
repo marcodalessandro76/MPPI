@@ -12,6 +12,7 @@ MPPI notebook section
    tutorials/Tutorial_YamboCalculator.ipynb
    tutorials/Tutorial_PwParser.ipynb
    tutorials/Tutorial_YamboParser.ipynb
+   tutorials/Tutorial_YamboNLDBParser.ipynb
    tutorials/Tutorial_Datasets.ipynb
 
 * Some examples in which the functionalities of the code are used to obtain and analyze scientific results
@@ -19,9 +20,11 @@ MPPI notebook section
  .. toctree::
    :maxdepth: 2
 
+   tutorials/Analysis_FourierTransform.ipynb
    tutorials/Analysis_BandStructure.ipynb
    tutorials/Analysis_Dos.ipynb
    tutorials/Analysis_Electron-phonon.ipynb
+   tutorials/Analysis_OpticsRT.ipynb
 
 * Notebooks that explain the physics of the Models section
 

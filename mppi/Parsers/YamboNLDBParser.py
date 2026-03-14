@@ -4,8 +4,8 @@ The module is an (almost) identical clone of the ``nldb.py`` of yambopy.
 """
 
 from netCDF4 import Dataset
-from mppi.Utilities.Constants import HaToeV, Light_speed_au, fsToAu
-from mppi.Utilities.Utils import Plot_Array_time    
+from mppi.Utilities.Constants import HaToeV, Light_speed_au, FsToAu
+from mppi.Utilities.Utils import Plot_3dArray_time    
 import numpy as np
 import sys, os
 
@@ -196,7 +196,7 @@ class YamboNLDBParser(object):
         s="\n * * * ndb.Nonlinear db data * * * \n\n"
         s+="Gauge         : "+str(self.Gauge)+"\n"
         s+="NE_steps      : "+str(self.NE_steps)+"\n"
-        s+="RT_step       : "+str(self.RT_step/fsToAu)+" [fs] \n"
+        s+="RT_step       : "+str(self.RT_step/FsToAu)+" [fs] \n"
         s+="n_frequencies : "+str(self.n_frequencies)+"\n"   
         s+="n_angles      : "+str(self.n_angles)+"\n"   
         s+="NL_initial_versor   : "+str(self.NL_initial_versor)+"\n"   
@@ -207,7 +207,7 @@ class YamboNLDBParser(object):
         s+="Use Dipoles   : "+str(self.l_use_DIPOLES)+"\n"
         s+="QP_ng_SH      : "+str(self.QP_ng_SH)+"\n"
         s+="QP_ng_Sx      : "+str(self.QP_ng_Sx)+"\n"  
-        s+="RAD_LifeTime  : "+str(self.RAD_LifeTime/fsToAu)+" [fs] \n" 
+        s+="RAD_LifeTime  : "+str(self.RAD_LifeTime/FsToAu)+" [fs] \n" 
         s+="Integrator    : "+str(self.Integrator)+"\n"
         s+="Correlation   : "+str(self.Correlation)+"\n"
         for efield in self.Efield:
@@ -218,7 +218,7 @@ class YamboNLDBParser(object):
             s+="Efield Intesity     : "+str(efield["intensity"])+"\n"
             s+="Efield Damping      : "+str(efield["damping"])+"\n"
             s+="Efield Freq range   : "+str(efield["freq_range"]*HaToeV)+" [ev] \n"
-            s+="Efield Initial time : "+str(efield["initial_time"]/fsToAu)+" [fs] \n"
+            s+="Efield Initial time : "+str(efield["initial_time"]/FsToAu)+" [fs] \n"
         print(s)
 
     def get_time(self,convert_to_fs=True):
@@ -232,7 +232,7 @@ class YamboNLDBParser(object):
             :py:class:`array` : array with the time points of the real-time propagation (in fs)
         """
         if convert_to_fs:
-            return self.IO_TIME_points/fsToAu
+            return self.IO_TIME_points/FsToAu
         return self.IO_TIME_points
         
     def plot_polarization(self,convert_to_fs=True,xlim=None,run_index=0):
@@ -246,7 +246,7 @@ class YamboNLDBParser(object):
         """
         time = self.get_time(convert_to_fs)
         pol = self.Polarization[run_index]
-        Plot_Array_time(time,pol,xlim=xlim,label='Polarization')
+        Plot_3dArray_time(time,pol,xlim=xlim,label='Polarization')
     
     def plot_current(self,convert_to_fs=True,xlim=None,run_index=0):
         """
@@ -259,5 +259,5 @@ class YamboNLDBParser(object):
         """
         time = self.get_time(convert_to_fs)
         curr = self.Current[run_index]
-        Plot_Array_time(time,curr,xlim=xlim,label='J')
+        Plot_3dArray_time(time,curr,xlim=xlim,label='J')
 

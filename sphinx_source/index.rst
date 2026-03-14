@@ -28,9 +28,6 @@ In this way you do not need to recompile the package if you make some modificati
 
 Finally, you can also install the package inside a virtual environment.
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
 
 Module Members
 --------------
@@ -38,72 +35,100 @@ Module Members
 Manage the input files with classes able to create and modify the input files of QuantumESPRESSO
 and Yambo
 
-.. toctree:: pwInput
-.. toctree:: phInput
-.. toctree:: yamboInput
+.. toctree::
+   :maxdepth: 1
+
+   pwInput
+   phInput
+   yamboInput
 
 Run calculations in QuantumESPRESSO and Yambo. The QeCalculator manage the execution of all
 the programs (pw.x,ph.x,...) of the suite.
 
 The YamboCalculator object manage the yambo and ypp executables and also their time-dependent variants
 
-.. toctree:: runRules
-.. toctree:: qeCalculator
-.. toctree:: yamboCalculator
-.. toctree:: tools
+.. toctree::
+   :maxdepth: 1
+
+   runRules
+   qeCalculator
+   yamboCalculator
+   tools
 
 The parsers manage the results of both QuantumESPRESSO and Yambo computations.
 The parsing of the results of QuantumESPRESSO makes usage of the data-file-schema.xml and is
 managed by the PwParser:
 
-.. toctree:: pwParser
+.. toctree::
+   :maxdepth: 1
+   :caption: Parsing of QuantumESPRESSO results
+
+   pwParser
 
 The parsing of the Yambo results uses both the o-* files and various databases produced by Yambo.
 The collective results are managed by the YamboParser class:
 
-.. toctree:: yamboParser
+.. toctree::
+   :maxdepth: 1
+   
+   yamboParser
 
 where the parsing of the various elements are performed by the more specific classes:
 
-.. toctree:: yamboOutputParser
-.. toctree:: yamboDftParser
-.. toctree:: yamboDipolesParser
-.. toctree:: yamboQPParser
-.. toctree:: yamboRTCarriersParser
-.. toctree:: yamboRTGlesserParser
-.. toctree:: yamboNLDBParser
+.. toctree::
+   :maxdepth: 1
+
+   yamboOutputParser
+   yamboDftParser
+   yamboDipolesParser
+   yamboQPParser
+   yamboRTCarriersParser
+   yamboRTGlesserParser
+   yamboNLDBParser
 
 Finally, the module ParsersUtils collects functions for the data analysis:
 
-.. toctree:: parsersUtils
+.. toctree::
+   :maxdepth: 1
+
+   parsersUtils
 
 The elements of the module are used by the parsers and can be accessed also by the user to perform
 various operations
 
 Organize runs and analyze output in a dataset
 
-.. toctree:: datasets
-.. toctree:: postProcessing
+.. toctree::
+   :maxdepth: 1
+
+   datasets
+   postProcessing
 
 The *Utilities* module collects some useful tools like the management of the Dos, the study of the band structure and the generation of
 gaussian pulses. Moreover the module contains useful tools to ease the computations. The module is organized in several files.
 
-.. toctree:: attributeDict.rst
-.. toctree:: bandStructure.rst
-.. toctree:: constants.rst
-.. toctree:: dos.rst
-.. toctree:: fouriertransform.rst
-.. toctree:: utils.rst
-.. toctree:: latticeUtils.rst
-.. toctree:: parallel.rst
-.. toctree:: mergeQPndb.rst
-.. toctree:: opticsRT.rst
+.. toctree::
+   :maxdepth: 1
+
+   attributeDict.rst
+   bandStructure.rst
+   constants.rst
+   dos.rst
+   fouriertransform.rst
+   utils.rst
+   latticeUtils.rst
+   parallel.rst
+   mergeQPndb.rst
+   opticsRT.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
 Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.
 
-.. toctree:: gaussianPulse.rst
-.. toctree:: twoLevelSystems.rst
+.. toctree::
+   :maxdepth: 1
+
+   gaussianPulse.rst
+   twoLevelSystems.rst
 
 
 MPPI notebook section
