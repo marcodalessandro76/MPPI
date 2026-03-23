@@ -5,7 +5,7 @@ The module is an (almost) identical clone of the ``nldb.py`` of yambopy.
 
 from netCDF4 import Dataset
 from mppi.Utilities.Constants import HaToeV, Light_speed_au, FsToAu
-from mppi.Utilities.Utils import Plot_3dArray_time    
+from mppi.Utilities.Utils import Plot_3dArray  
 import numpy as np
 import sys, os
 
@@ -246,7 +246,7 @@ class YamboNLDBParser(object):
         """
         time = self.get_time(convert_to_fs)
         pol = self.Polarization[run_index]
-        Plot_3dArray_time(time,pol,xlim=xlim,label='Polarization')
+        Plot_3dArray(time,pol,xlim=xlim,label='Polarization')
     
     def plot_current(self,convert_to_fs=True,xlim=None,run_index=0):
         """
@@ -259,5 +259,5 @@ class YamboNLDBParser(object):
         """
         time = self.get_time(convert_to_fs)
         curr = self.Current[run_index]
-        Plot_3dArray_time(time,curr,xlim=xlim,label='J')
+        Plot_3dArray(time,curr,xlim=xlim,label='J')
 

@@ -1,7 +1,7 @@
-OpticsRT
+LRoptics
 --------
 
-.. automodule:: mppi.Utilities.OpticsRT
+.. automodule:: mppi.Utilities.LRoptics
     :members:
     :undoc-members:
     :show-inheritance:

@@ -3,37 +3,111 @@ This module contains some low-level functions.
 Some functions are extracted from the Futile Utils of PyBigDFT.
 """
 
+from mppi.Utilities import Constants as C
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def Plot_3dArray_time(time, data, xlim=None,label=None):
+def damp_ft(ft, time, t_initial, damp_type="LORENTZIAN", eta=0.1,time_units='fs'):
+    """
+    Apply a damping to a function in the time domain to avoid spurious oscillations in the spectrum.
+    The damping function is applied as a multiplicative factor to the function in the time domain and it is defined as
+
+    - LORENTZIAN : exp(-|t-t_initial|*eta/hbar) 
+    - GAUSSIAN : exp(-(t-t_initial)**2*(eta/hbar)**2
+    
+    where eta has the dimension of energy and is expressed in eV, and hbar is the reduced Planck constant
+ 
+    Args:
+        ft (:py:class:`numpy.ndarray`): The function in the time domain to be damped
+        time (:py:class:`numpy.ndarray`): array with the time values 
+        t_initial (:py:class:`float`): The switch on time of the external field, used as reference for the damping.      
+        damp_type (:py:class:`str`): The type of damping function to apply. Can be "LORENTZIAN" or "GAUSSIAN". Default is "LORENTZIAN". 
+        eta (:py:class:`float`): The damping factor to apply expressed in eV. Default is 0.1.
+        time_units (:py:class:`str`): set the units to time sampling. Default is 'fs' and the other possible choice is 'au'.
+    
+    Return:
+        :py:class:`numpy.ndarray`: The damped function in the time domain
+    """
+
+    if eta == 0.0:
+        print("No damping applied to the F_t.")
+        return ft
+    if time_units == 'fs':
+        damp_factor=eta/C.Planck_reduced_ev_fs
+    elif time_units == 'au':
+        damp_factor=eta/C.HaToeV # (hbar = 1 in au)
+    else:
+        print("Unknown time units. No damping applied.")
+        return 0
+
+    ft_damped=np.empty_like(ft)
+    if damp_type.upper() == "LORENTZIAN":
+        ft_damped[:]=ft[:]*np.exp(-abs(time[:]-t_initial)*damp_factor)
+    elif damp_type.upper() == "GAUSSIAN":
+        ft_damped[:]=ft[:]*np.exp(-(time[:]-t_initial)**2*damp_factor**2)
+    else:
+        print("Unknown damping type. No damping applied.")
+        return 0
+
+    return ft_damped
+
+
+def Plot_3dArray(xvalues, data, xlim=None,label=None):
     """"
-    Plot the array data as a function of time. The data is expected to be a 2D array with the first dimension of size 3, 
+    Plot the array data . The data is expected to be a 2D array with the first dimension of size 3, 
     corresponding to the three cartesian directions.
     Args:
-        time (:py:class:`array`): array with the time values
+        xvalues (:py:class:`array`): array with the x-values
         data (:py:class:`array`): 2D array with the data to plot
         xlim (:py:class:`tuple`, optional): limits for the x-axis
         label (:py:class:`str`, optional): label for the plot
     """
     
-    char_size=14
+    char_size=12
     fig, axes = plt.subplots(nrows=3,ncols=1,figsize=(8,10))
 
-    if label is None:
-        label = 'Array'
-    axes[0].set_title('Real-time %s in the three cartesian directions'%label, fontsize=char_size)
+    if label is None: label = 'Array'
+    axes[0].set_title('Plot of %s in the three cartesian directions'%label, fontsize=char_size)
 
-    axes[0].plot(time,data[0],label=label[0]+'x')
-    axes[1].plot(time,data[1],label=label[0]+'y')
-    axes[2].plot(time,data[2],label=label[0]+'z')
+    axes[0].plot(xvalues,data[0],label=label[0]+'x')
+    axes[1].plot(xvalues,data[1],label=label[0]+'y')
+    axes[2].plot(xvalues,data[2],label=label[0]+'z')
     
     for ind in range(3):
         axes[ind].legend(fontsize=char_size-2)
         
     if xlim is not None:
         for ind in range(3):
+             axes[ind].set_xlim(xlim)
+
+    plt.show()
+
+def Plot_ComplexArray(xvalues, data, xlim=None,label=None):
+    """"
+    Plot the complex array data as a function of time. The data is expected to be a complex function.
+    Args:
+        xvalues (:py:class:`array`): array with the x-values
+        data (:py:class:`array`): 2D array with the data to plot
+        xlim (:py:class:`tuple`, optional): limits for the x-axis
+        label (:py:class:`str`, optional): label for the plot
+    """
+    
+    char_size=12
+    fig, axes = plt.subplots(nrows=2,ncols=1,figsize=(8,6))
+
+    if label is None:
+        label = 'F'
+    axes[0].set_title('Plot of the real and imaginary parts of %s'%label, fontsize=char_size)
+
+    axes[0].plot(xvalues,np.real(data),label='Re '+label)
+    axes[1].plot(xvalues,np.imag(data),label='Im '+label)
+    
+    for ind in range(2):
+        axes[ind].legend(fontsize=char_size-2)
+        
+    if xlim is not None:
+        for ind in range(2):
              axes[ind].set_xlim(xlim)
 
     plt.show()

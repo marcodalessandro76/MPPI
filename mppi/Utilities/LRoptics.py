@@ -1,63 +1,21 @@
 """
-This module defines the tools to extract the optical properties of the system from the real-time propagation.
+This module defines the tools to extract the linear optical properties of the system from the real-time polarization.
 The module can be loaded in the notebook as follows
 
->>> from mppi.Utilities import OpticsRT as O
+>>> from mppi.Utilities import LRoptics as LR
 
->>> O.Linear_Response
+>>> LR.Linear_Response
 
 """
 import numpy as np
 from mppi.Utilities import FourierTransform as FT
 from mppi.Utilities import Constants as C
-
-def damp_ft(ft, time, t_initial, damp_type="LORENTZIAN", eta=0.1,time_units='fs'):
-    """
-    Apply a damping to a function in the time domain to avoid spurious oscillations in the spectrum.
-    The damping function is applied as a multiplicative factor to the function in the time domain and it is defined as
-    - LORENTZIAN : exp(-|t-t_initial|*eta/h) 
-    - GAUSSIAN : exp(-(t-t_initial)**2*(eta/h)**2
-    where eta has the dimension of energy and is expressed in eV, and h is the Planck constant (or reduced hbar???)
-    
-    Args:
-        ft (:py:class:`numpy.ndarray`): The function in the time domain to be damped
-        time (:py:class:`numpy.ndarray`): array with the time values 
-        t_initial (:py:class:`float`): The switch on time of the external field, used as reference for the damping.      
-        damp_type (:py:class:`str`): The type of damping function to apply. Can be "LORENTZIAN" or "GAUSSIAN". Default is "LORENTZIAN". 
-        eta (:py:class:`float`): The damping factor to apply expressed in eV. Default is 0.1.
-        time_units (:py:class:`str`): set the units to time sampling. Default is 'fs' and the other possible choice is 'au'.
-    
-    Return:
-        :py:class:`numpy.ndarray`: The damped function in the time domain
-    """
-
-    if eta == 0.0:
-        print("No damping applied to the F_t.")
-        return ft
-    if time_units == 'fs':
-        damp_factor=eta/C.Planck_ev_fs
-    elif time_units == 'au':
-        damp_factor=eta/C.HaToeV/C.Planck_au
-    else:
-        print("Unknown time units. No damping applied.")
-        return 0
-    print('Damping factor =',damp_factor)
-
-    ft_damped=np.empty_like(ft)
-    if damp_type.upper() == "LORENTZIAN":
-        ft_damped[:]=ft[:]*np.exp(-abs(time[:]-t_initial)*damp_factor)
-    elif damp_type.upper() == "GAUSSIAN":
-        ft_damped[:]=ft[:]*np.exp(-(time[:]-t_initial)**2*damp_factor**2)
-    else:
-        print("Unknown damping type. No damping applied.")
-        return 0
-
-    return ft_damped
+from mppi.Utilities.Utils import damp_ft
 
 def eval_Efield_w(energy,efield):
     """
     Compute the external field in the frequency domain.
-    Only the case of a delta-shaped field is implemented, for which the FT is given by E(w)=E0*exp(i*w*t_initial), 
+    Only the case of a delta-shaped field is implemented, for which the FT is given by E(w)=E0*exp(-i*w*t_initial), 
     where E0 is the amplitude of the field and t_initial is the switch on time of the field.
     The exponent corresponds to exp(i*E*t_0/hbar), where hbar = 1 in atomic units, so w has to be expressed in Hartree and
     t_initial in atomic units as well. 
@@ -74,6 +32,7 @@ def eval_Efield_w(energy,efield):
     else:
         print('Fields different from Delta function not implemented yet')
         return 0
+
 
     return efield_w
 
@@ -100,32 +59,34 @@ def Linear_Response(time, pol,efield, pol_ref=None, damp_type="LORENTZIAN", eta=
         print("Linear response implemented only for Delta function external fields ")
         return 0
     
+    t = time.copy()
     if time_units == 'fs':
         print('Time units = fs. Rescaled to au')
-        time *= C.FsToAu
+        t *= C.FsToAu
     elif time_units != 'au':
         print("Invalid time units. Please use 'fs' or 'au'.")
         return 0
 
-    Nt = time.size
-    dt = time[1]-time[0]
-    energy = FT.eval_energy_array(Nt,dt,time_units='au',verbose=True) 
+    Nt = t.size
+    dt = t[1]-t[0]
+    energy = FT.eval_energy_array(Nt,dt,time_units='au',verbose=False) 
     t_initial = efield['initial_time']
 
     if pol_ref is not None:
         pol=pol-pol_ref
-    pol_damped=damp_ft(pol,time,t_initial,damp_type=damp_type,eta=eta,time_units='au')
-    P_w = np.fft.rfft(pol_damped)
-    P_w_out = 2.*np.conjugate(P_w)
+    pol_damped=damp_ft(pol,t,t_initial,damp_type=damp_type,eta=eta,time_units='au')
+    P_w = 2*np.conjugate(np.fft.rfft(pol_damped))
     efield_w = eval_Efield_w(energy,efield)    
     pol_w_along_E=np.zeros(energy.size,dtype=complex)
     for i_d in range(3):
-        pol_w_along_E[:]+=P_w_out[i_d,:]*efield["versor"][i_d]   
+        pol_w_along_E[:]+=P_w[i_d,:]*efield["versor"][i_d]   
     eps=1.0+4.0*np.pi*pol_w_along_E/efield_w
+
    
     return C.HaToeV*energy, eps                  
     
 #####################################################
+##### TO BE REMOVED #################################
 
 import sys
 from matplotlib import pyplot as plt

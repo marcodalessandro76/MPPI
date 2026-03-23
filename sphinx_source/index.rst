@@ -119,7 +119,8 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
    latticeUtils.rst
    parallel.rst
    mergeQPndb.rst
-   opticsRT.rst
+   lrOptics.rst
+   nlOptics.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
 Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.
