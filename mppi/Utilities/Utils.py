@@ -52,66 +52,127 @@ def damp_ft(ft, time, t_initial, damp_type="LORENTZIAN", eta=0.1,time_units='fs'
 
     return ft_damped
 
-
-def Plot_3dArray(xvalues, data, xlim=None,label=None):
-    """"
-    Plot the array data . The data is expected to be a 2D array with the first dimension of size 3, 
-    corresponding to the three cartesian directions.
+def Plot_3dArray(xvalues, data, data2=None, xlim=None, label=None, label2=None):
+    """
+    Plot array data in the three Cartesian directions.
+    
     Args:
-        xvalues (:py:class:`array`): array with the x-values
-        data (:py:class:`array`): 2D array with the data to plot
-        xlim (:py:class:`tuple`, optional): limits for the x-axis
-        label (:py:class:`str`, optional): label for the plot
+        xvalues (:py:class:`array`): x values
+        data (:py:class:`array`): 2D array with shape (3, N)
+        data2 (:py:class:`array`, optional): second dataset, same shape as data
+        xlim (:py:class:`tuple`, optional): x-axis limits
+        label (:py:class:`str`, optional): label for data
+        label2 (:py:class:`str`, optional): label for data2
     """
     
-    char_size=12
-    fig, axes = plt.subplots(nrows=3,ncols=1,figsize=(8,10))
-
-    if label is None: label = 'Array'
-    axes[0].set_title('Plot of %s in the three cartesian directions'%label, fontsize=char_size)
-
-    axes[0].plot(xvalues,data[0],label=label[0]+'x')
-    axes[1].plot(xvalues,data[1],label=label[0]+'y')
-    axes[2].plot(xvalues,data[2],label=label[0]+'z')
-    
-    for ind in range(3):
-        axes[ind].legend(fontsize=char_size-2)
-        
-    if xlim is not None:
-        for ind in range(3):
-             axes[ind].set_xlim(xlim)
-
-    plt.show()
-
-def Plot_ComplexArray(xvalues, data, xlim=None,label=None):
-    """"
-    Plot the complex array data as a function of time. The data is expected to be a complex function.
-    Args:
-        xvalues (:py:class:`array`): array with the x-values
-        data (:py:class:`array`): 2D array with the data to plot
-        xlim (:py:class:`tuple`, optional): limits for the x-axis
-        label (:py:class:`str`, optional): label for the plot
-    """
-    
-    char_size=12
-    fig, axes = plt.subplots(nrows=2,ncols=1,figsize=(8,6))
+    char_size = 12
+    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8, 10))
 
     if label is None:
         label = 'F'
-    axes[0].set_title('Plot of the real and imaginary parts of %s'%label, fontsize=char_size)
+    if data2 is not None and label2 is None:
+        label2 = 'F2'
 
-    axes[0].plot(xvalues,np.real(data),label='Re '+label)
-    axes[1].plot(xvalues,np.imag(data),label='Im '+label)
-    
-    for ind in range(2):
-        axes[ind].legend(fontsize=char_size-2)
-        
+    axes[0].set_title(
+        'Plot of the array in the three cartesian directions',
+        fontsize=char_size
+    )
+
+    data = np.asarray(data)
+    if data.shape[0] != 3:
+        raise ValueError("data must have shape (3, N)")
+
+    directions = ['x', 'y', 'z']
+
+    # -------- funzione interna --------
+    def plot_dataset(data, base_label):
+        for i in range(3):
+            axes[i].plot(
+                xvalues,
+                data[i],
+                label=f"{base_label}_{directions[i]}"
+            )
+
+    plot_dataset(data, label)
+    if data2 is not None:
+        data2 = np.asarray(data2)
+
+        if data2.shape != data.shape:
+            raise ValueError("data2 must have the same shape as data")
+
+        plot_dataset(data2, label2)
+
+    for ind in range(3):
+        axes[ind].legend(fontsize=char_size - 2)
+
     if xlim is not None:
-        for ind in range(2):
-             axes[ind].set_xlim(xlim)
+        for ind in range(3):
+            axes[ind].set_xlim(xlim)
 
+    plt.tight_layout()
     plt.show()
 
+def Plot_ComplexArray(xvalues, data, data2=None, xlim=None, label=None, label2=None):
+    """
+    Plot real and imaginary parts of complex data.
+    
+    Supports:
+    - data: 1D or 2D
+    - data2: optional, same first dimension as data
+    
+    Args:
+        xvalues (:py:class:`array`): x values
+        data (:py:class:`array`): complex data (1D or 2D)
+        data2 (:py:class:`array`, optional): second dataset
+        xlim (:py:class:`tuple`, optional): x-axis limits
+        label (:py:class:`str`, optional): label for data
+        label2 (:py:class:`str`, optional): label for data2
+    """
+    
+    char_size = 12
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
+
+    if label is None:
+        label = 'F'
+    if data2 is not None and label2 is None:
+        label2 = 'F2'
+
+    axes[0].set_title(
+        'Plot of the real and imaginary parts of complex data',
+        fontsize=char_size
+    )
+
+    data = np.asarray(data)
+    def plot_dataset(data, base_label):
+        if data.ndim == 1:
+            axes[0].plot(xvalues, np.real(data), label='Re ' + base_label)
+            axes[1].plot(xvalues, np.imag(data), label='Im ' + base_label)
+
+        elif data.ndim == 2:
+            n_cols = data.shape[1]
+            for i in range(n_cols):
+                lbl = f"{base_label}[{i}]"
+                axes[0].plot(xvalues, np.real(data[:, i]), label='Re ' + lbl)
+                axes[1].plot(xvalues, np.imag(data[:, i]), label='Im ' + lbl)
+        else:
+            raise ValueError("data must be 1D or 2D array")
+
+    plot_dataset(data, label)
+    if data2 is not None:
+        data2 = np.asarray(data2)
+        if data2.shape[0] != data.shape[0]:
+            raise ValueError("data and data2 must have the same first dimension")
+        plot_dataset(data2, label2)
+
+    for ind in range(2):
+        axes[ind].legend(fontsize=char_size - 2)
+
+    if xlim is not None:
+        for ind in range(2):
+            axes[ind].set_xlim(xlim)
+
+    plt.tight_layout()
+    plt.show()
 
 def file_to_list(filename,skip='#'):
     """
