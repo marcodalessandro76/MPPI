@@ -52,6 +52,65 @@ def damp_ft(ft, time, t_initial, damp_type="LORENTZIAN", eta=0.1,time_units='fs'
 
     return ft_damped
 
+def Plot_Array(xvalues, data, data2=None, xlim=None, label=None, label2=None, figsize=(8,6)):
+    """
+    Plot real array data.
+    
+    Supports:
+    - data: 1D or 2D
+    - data2: optional, same first dimension as data
+    
+    Args:
+        xvalues (:py:class:`array`): x values
+        data (:py:class:`array`): real data (1D or 2D)
+        data2 (:py:class:`array`, optional): second dataset
+        xlim (:py:class:`tuple`, optional): x-axis limits
+        label (:py:class:`str`, optional): label for data
+        label2 (:py:class:`str`, optional): label for data2
+        figsize (:py:class:`tuple`, optional): figure size for the plot (width, height. Default is (8, 6)
+    """
+    
+    char_size = 12
+    fig, axes = plt.subplots(figsize=figsize)
+
+    if label is None:
+        label = 'F'
+    if data2 is not None and label2 is None:
+        label2 = 'F2'
+
+    title = f'Plot of the array data {label}'
+    if data2 is not None:
+        title += f' and {label2}'
+    axes.set_title(title,fontsize=char_size
+    )
+
+    data = np.asarray(data)
+    def plot_dataset(data, base_label):
+        if data.ndim == 1:
+            axes.plot(xvalues, data, label=base_label)
+
+        elif data.ndim == 2:
+            n_cols = data.shape[1]
+            for i in range(n_cols):
+                lbl = f"{base_label}[{i}]"
+                axes.plot(xvalues, np.real(data[:, i]), label=lbl)
+        else:
+            raise ValueError("data must be 1D or 2D array")
+
+    plot_dataset(data, label)
+    if data2 is not None:
+        data2 = np.asarray(data2)
+        if data2.shape[0] != data.shape[0]:
+            raise ValueError("data and data2 must have the same first dimension")
+        plot_dataset(data2, label2)
+
+    
+    axes.legend(fontsize=char_size - 2)
+    if xlim is not None:
+        axes.set_xlim(xlim)
+
+    plt.show()
+
 def Plot_3dArray(xvalues, data, data2=None, xlim=None, label=None, label2=None):
     """
     Plot array data in the three Cartesian directions.
@@ -84,7 +143,6 @@ def Plot_3dArray(xvalues, data, data2=None, xlim=None, label=None, label2=None):
 
     directions = ['x', 'y', 'z']
 
-    # -------- funzione interna --------
     def plot_dataset(data, base_label):
         for i in range(3):
             axes[i].plot(
@@ -349,31 +407,32 @@ def is_point_near_line(point, line_start, line_end, tolerance):
 
     return distance <= tolerance
 
-def dict_set(inp,*subfields):
-    """Ensure the provided fields and set the value
+# Can be removed
+# def dict_set(inp,*subfields):
+#     """Ensure the provided fields and set the value
 
-    Provide a entry point to the dictionary.
-    Useful to define a key in a dictionary that may not have the
-    previous keys already defined.
+#     Provide a entry point to the dictionary.
+#     Useful to define a key in a dictionary that may not have the
+#     previous keys already defined.
 
-    Arguments:
-       inp (dict): the top-level dictionary
-       subfields (str,object): keys, ordered by level, that have to be retrieved from topmost level of ``inp``.
-          The last item correspond to the value to be set .
+#     Arguments:
+#        inp (dict): the top-level dictionary
+#        subfields (str,object): keys, ordered by level, that have to be retrieved from topmost level of ``inp``.
+#           The last item correspond to the value to be set .
 
-    Example:
+#     Example:
 
-       >>> inp={}
-       >>> dict_set(inp,'dft','nspin','mpol',2)
-       >>> print (inp)
-       {'dft': {'nspin': {'mpol': 2}}}
+#        >>> inp={}
+#        >>> dict_set(inp,'dft','nspin','mpol',2)
+#        >>> print (inp)
+#        {'dft': {'nspin': {'mpol': 2}}}
 
-    """
-    if len(subfields) <= 1:
-        raise ValueError('invalid subfields, the sequence should be longer than one item as the last one is the value to be given')
-    keys=subfields[:-1]
-    tmp,key=push_path(inp,*keys)
-    tmp[key]=subfields[-1]
+#     """
+#     if len(subfields) <= 1:
+#         raise ValueError('invalid subfields, the sequence should be longer than one item as the last one is the value to be given')
+#     keys=subfields[:-1]
+#     tmp,key=push_path(inp,*keys)
+#     tmp[key]=subfields[-1]
 
 def dict_get(inp,*subfields):
     """Find the value of the provided sequence of keys in the dictionary, if available.

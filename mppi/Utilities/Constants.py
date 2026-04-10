@@ -69,6 +69,16 @@ The impedence of free space in Ohm. The field amplitude E (in V/m) is related to
 the field intensity P (in W/m^2) by the relation E = sqrt(Z0*P)
 """
 
+SVCMm1_to_VMm1 =29.98*np.power(10,3,dtype=np.double)
+"""
+Conversion factor from [statV/cm] to [V/m]
+"""
+
+AU_toVMm1 =5.14220632*np.power(10,11,dtype=np.double)
+"""
+Conversion factor from atomic units of electric field to V/m
+"""
+
 Boltzmann = 8.617333262145e-5
 """
 The Boltzmann constant in eV/K  

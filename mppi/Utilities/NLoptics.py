@@ -9,102 +9,15 @@ The module can be loaded in the notebook as follows
 """
 import numpy as np
 from mppi.Utilities import Constants as C
+from mppi.Utilities import Utils as U
 from mppi.Parsers import YamboNLDBParser
-
-# def fit_single_frequency(t, y, omega, rcond=None):
-#     """
-#     Fit the data to a sine function A*sin(omega*t+phi) at a given frequency omega. 
-    
-#     Args:
-#         t (:py:class:`numpy.ndarray`): array with the time values   
-#         y (:py:class:`numpy.ndarray`): array with the values of the function 
-#         omega (:py:class:`float`): angular frequency of the sine function
-#         rcond (:py:class:`float`): relative condition number for the least squares fit. Default is None.
-    
-#         Returns:
-#         :py:class:`tuple` : tuple with the values of the amplitude A and the phase phi of the fitted sine function
-#     """ 
-
-#     X = np.column_stack([
-#         np.sin(omega * t),
-#         np.cos(omega * t)])
-    
-#     coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
-#     alpha, beta = coeffs
-    
-#     A = np.sqrt(alpha**2 + beta**2)
-#     phi = np.arctan2(beta, alpha)
-    
-#     return A, phi
-
-# def fit_two_harmonics(t, y, omega, rcond=None):
-#     """
-#     Fit the data to the function A1*sin(omega*t+phi1) + A2*sin(2*omega*t+phi2) at a given frequency omega.
-    
-#     Args:
-#         t (:py:class:`numpy.ndarray`): array with the time values
-#         y (:py:class:`numpy.ndarray`): array with the values of the function
-#         omega (:py:class:`float`): angular frequency of the sine functions
-#         rcond (:py:class:`float`): relative condition number for the least squares fit. Default is None.
-    
-#     Returns:
-#         :py:class:`tuple` : tuple with the values of the amplitudes A1, A2 and the phases phi1, phi2 of the fitted sine functions
-#     """
-#     X = np.column_stack([
-#         np.sin(omega * t),
-#         np.cos(omega * t),
-#         np.sin(2 * omega * t),
-#         np.cos(2 * omega * t)])
-    
-#     coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
-#     alpha1, beta1, alpha2, beta2 = coeffs
-    
-#     A1 = np.sqrt(alpha1**2 + beta1**2)
-#     phi1 = np.arctan2(beta1, alpha1)
-    
-#     A2 = np.sqrt(alpha2**2 + beta2**2)
-#     phi2 = np.arctan2(beta2, alpha2)
-    
-#     return A1, phi1, A2, phi2
-
-# def fit_multiple_harmonics_old(t, y, omega, n_harmonics = 1, rcond=None):
-#     """
-#     Fit the data to the function sum_{n=1}^{n_harmonics} A_n*sin(n*omega*t+phi_n) at a given frequency omega.
-    
-#     Args:
-#         t (:py:class:`numpy.ndarray`): array with the time values
-#         y (:py:class:`numpy.ndarray`): array with the values of the function
-#         omega (:py:class:`float`): angular frequency of the sine functions
-#         n_harmonics (:py:class:`int`): number of harmonics to fit. Default is 1
-#         rcond (:py:class:`float`): relative condition number for the least squares fit. Default is None
-    
-#     Returns:
-#         :py:class:`tuple` : tuple with the values of the amplitudes A_n and the phases phi_n of the fitted sine functions. 
-#         Each component of the tuple is an array with n_harmonics values corresponding to the n harmonics.
-#     """
-#     X = np.column_stack(
-#         [np.sin(n * omega * t) for n in range(1, n_harmonics + 1)] +
-#         [np.cos(n * omega * t) for n in range(1, n_harmonics + 1)]
-#         )
-    
-#     coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
-    
-#     A = np.zeros(n_harmonics)
-#     phi = np.zeros(n_harmonics)
-    
-#     for n in range(n_harmonics):
-#         alpha = coeffs[n]
-#         beta = coeffs[n + n_harmonics]
-        
-#         A[n] = np.sqrt(alpha**2 + beta**2)
-#         phi[n] = np.arctan2(beta, alpha)
-    
-#     return A, phi   
 
 def fit_multiple_harmonics(t, y, omega, n_harmonics=2, inactive_harmonics=None, rcond=None):
     """
-    Fit the data to sum_{n=1}^{n_harmonics} A_n*sin(n*omega*t+phi_n) at a given frequency omega, allowing exclusion of 
-    some selected harmonics.
+    Fit the data to:
+        f(t) = B0 + sum_{n=1}^{n_harmonics} A_n*sin(n*omega*t+phi_n)
+    
+    at a given frequency omega, allowing exclusion of some selected harmonics.    
     
     Args:
         t (:py:class:`numpy.ndarray`): array with the time values
@@ -114,38 +27,63 @@ def fit_multiple_harmonics(t, y, omega, n_harmonics=2, inactive_harmonics=None, 
         inactive_harmonics (:py:class:`list` or None): harmonics to exclude.
                                            Example: [2] excludes the 2nd harmonic.
         rcond (:py:class:`float`): lstsq parameter
-    
+
     Returns:
-        :py:class:`tuple` : tuple with the values of the amplitudes A_n and the phases phi_n of the fitted sine functions. 
-            Each component of the tuple is an array with n_harmonics values corresponding to the n harmonics. 
-            Harmonics that were excluded have A=0 and phi=0.
-            The last component of the tuple is an array with the residuals (euclidean norms of the squared errors) of the fit for each direction
+        :py:class:`tuple` : tuple with the output, namely
+            - A (:py:class:`numpy.ndarray`): amplitudes
+            - phi (:py:class:`numpy.ndarray`): phases
+            - B0 (:py:class:`float`): constant offset
+            - residuals (:py:class:`numpy.ndarray`): euclidean norms of the squared errors of the fit
+        Harmonics that were excluded have A=0 and phi=0.
     """
     
     all_harmonics = set(range(1, n_harmonics + 1))    
-    if inactive_harmonics is None:
-        inactive_harmonics = []
     
-    inactive_harmonics = set(inactive_harmonics)
+    inactive_harmonics = set(inactive_harmonics or [])
     active_harmonics = sorted(all_harmonics - inactive_harmonics)
     
     X = np.column_stack(
+        [np.ones_like(t)] + 
         [np.sin(n * omega * t) for n in active_harmonics] + 
         [np.cos(n * omega * t) for n in active_harmonics]
-        )
+    )
     
     coeffs, residuals, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
+    
+    B0 = coeffs[0]
     A = np.zeros(n_harmonics)
     phi = np.zeros(n_harmonics)
     
     n_active = len(active_harmonics)
+    
     for i, n in enumerate(active_harmonics):
-        alpha = coeffs[i]
-        beta = coeffs[i + n_active]
+        alpha = coeffs[1 + i]
+        beta  = coeffs[1 + i + n_active]
+        
         A[n-1] = np.sqrt(alpha**2 + beta**2)
         phi[n-1] = np.arctan2(beta, alpha)
     
-    return A, phi, np.sqrt(residuals)
+    return A, phi, B0, np.sqrt(residuals)
+
+def eval_multiple_harmonics(t, A, phi, B0, omega):
+    """
+    Evaluate the multiple harmonics function at given time points.
+
+    Args:
+        t (:py:class:`numpy.ndarray`): array with the time values
+        A (:py:class:`numpy.ndarray`): amplitudes
+        phi (:py:class:`numpy.ndarray`): phases
+        B0 (:py:class:`float`): constant offset
+        omega (:py:class:`float`): angular frequency of the sine functions
+
+    Returns:
+        :py:class:`numpy.ndarray`: evaluated function values
+    """
+    n_harmonics = len(A)
+    y = B0 * np.ones_like(t)
+    for n in range(n_harmonics):
+        y += A[n] * np.sin((n + 1) * omega * t + phi[n])
+    return y
 
 class Xn_from_sine():
     """
@@ -153,15 +91,16 @@ class Xn_from_sine():
 
     Args:
         data (:py:class:`YamboNLDBParser`) : data parsed from the nlndb.Nonlineardatabase database
-        X_order (:py:class:`int`) : order of the non-linear susceptibility to be extracted. Can be 1 or 2. Default is 2.
-        Trange (:py:class:`list`) : list with the time range in which the polarization is sampled to compute the sine fit. 
+        X_order (:py:class:`int`) : order of the non-linear susceptibility to be extracted. The zero-th term corresponds to the constant offset of the polarization harmonic expansion. 
+            Default is 2, which means that the non-linear susceptibility up to the second order is extracted
+        Trange (:py:class:`list`) : list with the time range in which the polarization is sampled to compute the sine fit 
             Default is [-1,-1], which means that a time sampling of one period of the external field is used
             (Tstart = time[-1] - Tperiod, Tend = time[-1])
             Further details are provided in the documentation of the method :py:meth:`set_time_sampling`
-        Trange_units (:py:class:`str`) : set the units to time sampling. Default is 'fs' and the other possible choice is 'au'.
+        Trange_units (:py:class:`str`) : set the units to time sampling. Default is 'fs' and the other possible choice is 'au'
         tol (:py:class:`float`) : tolerance for the fit of the sine function. Default is 1e-10
-        inactive_harmonics (:py:class:`list` or None) : list with the harmonics to exclude from the fit. 
-            Example: [2] excludes the 2nd harmonic. Default is None, which means that all the harmonics up to X_order are included in the fit.
+        inactive_harmonics (:py:class:`list` or None) : list with the harmonics to exclude from the fit 
+            Example: [2] excludes the 2nd harmonic. Default is None, which means that all the harmonics up to X_order are included in the fit
         verbose (:py:class:`boolean`) : define the amount of information provided on terminal
     
     Attributes:
@@ -203,7 +142,8 @@ class Xn_from_sine():
         Initialize the class from a nlndb.Nonlineardatabase database file. The file is parsed through the :py:class:`YamboNLDBParser` class.    
         Args:
             file (:py:class:`string`) : name of the nlndb.Nonlineardatabase database file
-            verbose (:py:class:`boolean`) : define the amount of information provided on terminal"""
+            verbose (:py:class:`boolean`) : define the amount of information provided on terminal
+        """
         data = YamboNLDBParser(file)
         return cls(data,verbose)
     
@@ -214,6 +154,7 @@ class Xn_from_sine():
         print('Time range of the simulation (in au):',self.time[0],'-',self.time[-1])
         print('Time range of the simulation (in fs):',self.time[0]/C.FsToAu,'-',self.time[-1]/C.FsToAu)
         print('Type of the external field:',self.fields[0]['name'])
+        print('Order of the non-linear susceptibility extracted:',self.X_order)
         print('Number of frequencies:',self.nfreqs)
         print('Frequency range of the field (in Hartree):',self.fields_freqs[0],'-',self.fields_freqs[-1])
         print('Frequency range of the field (in eV):',self.fields_freqs[0]*C.HaToeV,'-',self.fields_freqs[-1]*C.HaToeV)
@@ -222,7 +163,7 @@ class Xn_from_sine():
     
     def set_time_sampling(self,ifreq):
         """
-        Define the time interval in which the polarization is sampled to compute the sine fit.
+        Define the time interval in which the polarization is sampled to compute the harmonic fit.
         The default time range is one period of the external field (T_start = time[-1] - T_period, T_end = time[-1]). 
         Instead if positive values of Trange are provided the sampling time range is set to that values. Checks are performed to 
         ensure that the time range is consistent with the time sampling of the polarization. Lastly, if the time sampling interval 
@@ -288,75 +229,135 @@ class Xn_from_sine():
         iTstart, iTend = self.set_time_sampling(ifreq)
         omega = self.fields_freqs[ifreq]
 
-        A, phi, residuals = np.zeros((X_order,3)), np.zeros((X_order,3)), np.zeros(3)
+        A, phi, B0, residuals = np.zeros((X_order,3)), np.zeros((X_order,3)), np.zeros(3),  np.zeros(3)
         for idir in range(3):
             t = self.time[iTstart:iTend]
             y = self.pol[ifreq,idir,iTstart:iTend]
-            A[:,idir], phi[:,idir], residuals[idir] = fit_multiple_harmonics(t,y,omega,n_harmonics=X_order,inactive_harmonics=inactive_harmonics,rcond=self.tol)
-        return A, phi, residuals
+            A[:,idir], phi[:,idir], B0[idir], residuals[idir] = fit_multiple_harmonics(t,y,omega,n_harmonics=X_order,inactive_harmonics=inactive_harmonics,rcond=self.tol)
+        return A, phi, B0, residuals
     
-    def check_harmonic_reliability(self):
+    def check_harmonic_reliability(self,plot_ifreq=None,plot_dir=0):
         """
         Check the reliability of multiple harmonics fit by comparing the residuals with the amplitude of the fitted sine function. 
-        If the residuals are larger than the amplitude a warning is raised since the fit can be not accurate.
+        If the residuals are larger than one tenth of the amplitude a warning is raised since the fit can be not accurate.
+        
+        Args:
+            plot_ifreq (:py:class:`int` or None): index of the frequency of the external field to be plotted. If None, no plot is produced. Default is None
+            plot_dir (:py:class:`int`): index of the cartesian direction to be plotted. Default is 0, which corresponds to the x direction
 
         """
         for ifreq in range(self.nfreqs):
-            A, _, residuals = self.perform_harmonic_analysis(ifreq)
+            A, _, _, residuals = self.perform_harmonic_analysis(ifreq)
             for idir in range(3):
-                if residuals[idir] > max(np.abs((A[:,idir]))):
+                if residuals[idir] > max(np.abs((A[:,idir])))/10.0:
                     print(f'Warning: Fit for frequency {ifreq} in direction {idir} is not accurate since the residuals are larger than the amplitude.')
                     print(f'Amplitudes (for each harmonic): {A[:,idir]}',f'Residuals of the fit: {residuals[idir]}')
-
-    def eval_Pw(self):
-        """
-        Compute the polarization in the frequency domain at the (multiples) of the frequencies of the external fields according to the value of X_order
         
+        if plot_ifreq is not None:
+            time = self.time
+            pol = self.pol[plot_ifreq,plot_dir]
+            iTstart, iTend = self.set_time_sampling(plot_ifreq)
+            A, phi, B0, _ = self.perform_harmonic_analysis(plot_ifreq)
+            pol_fit = eval_multiple_harmonics(time, A[:,plot_dir], phi[:,plot_dir], B0[plot_dir], self.fields_freqs[plot_ifreq])
+            Tperiod = 2.0*np.pi/self.fields_freqs[plot_ifreq]
+            Tmin,Tmax = np.max([time[iTstart]-5*Tperiod,time[0]])/C.FsToAu, np.min([time[iTend]+5*Tperiod,time[-1]])/C.FsToAu
+            U.Plot_Array(time/C.FsToAu, pol_fit,xlim=(Tmin,Tmax), label='Harm fit',data2=pol,label2='Pol',figsize=(6,3))
+            diffe = pol-pol_fit
+            U.Plot_Array(time/C.FsToAu, diffe, label='Difference fit-pol',figsize=(6,3)) 
+
+    def eval_Pw(self,plot=False):
+        """
+        Compute the polarization in the frequency domain at the (multiples) of the frequencies of the external fields according to the value of X_order. 
+        Pw has ``X_order+1`` components, where the zero-th term corresponds to the constant offset of the polarization harmonic expansion. The first one is the
+        response at the frequency of the external field, the second one is the response at the second harmonic and so on.
+        
+        Args:
+            plot (:py:class:`bool`, optional): If True, plot the polarization in the frequency domain. Default is False
+
         Returns:
             :py:class:`numpy.ndarray` : array with the polarization in the frequency domain at the (multiple) frequencies of the external fields according 
                 to the value of X_order. The shape of the array is (X_order,nfreqs,3) where 3 is the number of cartesian directions 
         """
         X_order = self.X_order
-        pol_w = np.zeros((X_order,self.nfreqs,3),dtype=complex)
+        pol_w = np.zeros((X_order+1,self.nfreqs,3),dtype=complex)
         for ifreq in range(self.nfreqs):
-            A, phi, _ = self.perform_harmonic_analysis(ifreq)
+            A, phi, B0, _ = self.perform_harmonic_analysis(ifreq)
+            pol_w[0,ifreq,:] = B0
             for n_harm in range(X_order):
-                pol_w[n_harm,ifreq,:] = 1j*A[n_harm,:]/2.0*np.exp(-1j*phi[n_harm,:])
-            
+                pol_w[n_harm+1,ifreq,:] = 1j*A[n_harm,:]/2.0*np.exp(-1j*phi[n_harm,:])
+        
+        if plot:
+            energy = self.fields_freqs * C.HaToeV
+            for n_harm in range(self.X_order+1):
+                U.Plot_ComplexArray(energy, pol_w[n_harm], label=f'P_{n_harm}')
+        
         return pol_w
     
-    def eval_Ew(self):
+    def eval_Ew_power(self):
         """
-        Evaluate the external fields in the frequency domain for all the values of the self.fields_freqs array. 
-        
+        Evaluate the n_harmonic power of the external fields in the frequency domain for all the values of the self.fields_freqs array. 
+        The choice of the field factor for the zero-th order is done in agreement with the one of the YamboPy implementation of the non-linear susceptibility.
         Returns:
-            :py:class:`numpy.ndarray` : array with the external fields in the frequency domain for all the values of the self.fields_freqs array 
+            :py:class:`numpy.ndarray` : array with the harmonic powers of the external fields in the frequency domain for all the values of the self.fields_freqs array.
+                The shape of the array is (X_order+1,nfreqs)
                   
         """
-        efield_w = np.zeros(self.nfreqs,dtype=complex)
-        for ifreq in range(self.nfreqs):
-            E0 = self.fields[ifreq]['amplitude']
-            t0 = self.fields[ifreq]['initial_time']
-            omega = self.fields_freqs[ifreq]
-            efield_w[ifreq] = 1j*E0/2.0*np.exp(1j*t0*omega)
-        return efield_w
+        X_order = self.X_order
+        efield_w_power = np.zeros((X_order+1,self.nfreqs),dtype=complex)
+        for n_harm in range(X_order+1):
+            for ifreq in range(self.nfreqs):
+                E0 = self.fields[ifreq]['amplitude']
+                t0 = self.fields[ifreq]['initial_time']
+                omega = self.fields_freqs[ifreq]
+                if n_harm == 0: 
+                    efield_w_power[n_harm,ifreq] = E0**2/4.0#*np.exp(1j*t0*omega)
+                else:
+                    efield_w_power[n_harm,ifreq] =np.power(1j*E0/2.0*np.exp(1j*t0*omega), n_harm)
+        return efield_w_power
     
-    def compute_Xn(self):
+    def compute_Xn(self,set_units_of_measure=False,plot=False):
         """
-        Compute the non-linear susceptibility of the system at the frequencies of the external fields. 
+        Compute the non-linear susceptibility of the system at the frequencies of the external fields. Analougly to the polarization, the non-linear susceptibility has ``X_order+1`` components,
+        where the zero-th term corresponds to the constant offset of the polarization harmonic expansion. The first one is the response at the frequency of the external field, the second one is the response at the second harmonic and so on. 
+        The non-linear susceptibility is computed as Xn = P(n*omega)/E^n. 
         
+        Args:
+            set_units_of_measure (:py:class:`bool`, optional): If True, set the units of measure of the non-linear susceptibility. Default is False. 
+                The conversion factor is set in agreement with the YamboPy implementation of the non-linear susceptibility
+            plot (:py:class:`bool`, optional): If True, plot the Xn in the frequency domain. Default is False
+
         Returns:
             :py:class:`numpy.ndarray` : array with the non-linear susceptibility of the system at the frequencies of the external fields. 
                 The shape of the array is (X_order,nfreqs,3) where 3 is the number of cartesian directions
         """
         X_order = self.X_order
         pol_w = self.eval_Pw()
-        efield_w = self.eval_Ew()
-        Xn = np.zeros((X_order,self.nfreqs,3),dtype=complex)
+        Xn = np.zeros((X_order+1,self.nfreqs,3),dtype=complex)
+        efield_w_power = self.eval_Ew_power()
         
-        for n_harm in range(X_order):
+        for n_harm in range(X_order+1):
             for idir in range(3):
-                Xn[n_harm,:,idir] = pol_w[n_harm,:,idir] / efield_w**(n_harm+1)
+                Xn[n_harm,:,idir] = pol_w[n_harm,:,idir] / efield_w_power[n_harm]
+            if set_units_of_measure:
+                Xn[n_harm] *= self.set_units_of_measure(n_harm)
+
+        if plot:
+            energy = self.fields_freqs * C.HaToeV
+            for n_harm in range(self.X_order+1):
+                U.Plot_ComplexArray(energy, Xn[n_harm], label=f'X_{n_harm}')
         
         return Xn
+    
+    def set_units_of_measure(self,n_harm):
+        """
+        Set the units of measure of the non-linear susceptibility in agreement with the YamboPy implementation. 
+
+        Args:
+            n_harm (:py:class:`int`) : order of the non-linear susceptibility.
+        """
+        ratio = C.SVCMm1_to_VMm1 / C.AU_toVMm1
+        if n_harm == 0: 
+            return np.power(ratio,1,dtype=np.float64)
+        else:
+            return np.power(ratio,n_harm-1,dtype=np.float64)
 
