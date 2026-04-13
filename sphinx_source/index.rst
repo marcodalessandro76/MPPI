@@ -119,8 +119,15 @@ gaussian pulses. Moreover the module contains useful tools to ease the computati
    latticeUtils.rst
    parallel.rst
    mergeQPndb.rst
+
+The *Optics* module collects tools to perform analysis of the optical properties of the system. The module is organized in several files.
+
+.. toctree::
+   :maxdepth: 1
+
    lrOptics.rst
-   nlOptics.rst
+   xnSingleFrequency.rst
+   xnFrequencyMixing.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
 Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.

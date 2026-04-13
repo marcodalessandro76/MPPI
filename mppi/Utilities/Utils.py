@@ -491,8 +491,7 @@ def dict_merge(dest, src):
     """
     Recursive dict merge. Inspired by :meth:`dict.update`, instead of
     updating only top-level keys, dict_merge recurses down into dicts nested
-    to an arbitrary depth, updating keys. The ``src`` is merged into
-    ``dest``.  From :ref:`angstwad/dict-merge.py`
+    to an arbitrary depth, updating keys. The ``src`` is merged into ``dest``.
 
     Arguments:
        dest (dict): dict onto which the merge is executed
