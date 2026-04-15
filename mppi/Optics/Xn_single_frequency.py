@@ -8,87 +8,162 @@ or the class can be imported directly as
 
 >>> from mppi.Optics.Xn_single_frequency import Xn_single_frequency
 
->>> Xn_single_frequency(data,Trange=[100,-1],X_order=2)
+>>> Xn_single_frequency(data,X_order=2,Trange=[100,-1],Trange_units='fs')
 
 """
 import numpy as np
 from mppi.Utilities import Constants as C
 from mppi.Utilities import Utils as U
+from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies
 from mppi.Parsers import YamboNLDBParser
 
-def fit_multiple_harmonics(t, y, omega, n_harmonics=2, inactive_harmonics=None, rcond=None):
+# def generate_frequencies(omega,n_harmonics=3,inactive_harmonics=None,return_mapping=False,tol=1e-8):
+#     """
+#     Generate positive frequencies for harmonic expansion with a single monochromatic field.
+
+#     Args:
+#         omega (:py:class:`float`): frequency of the first field (pump)
+#         n_harmonics (:py:class:`int`): number of harmonics to include in the expansion. Default is 3
+#         inactive_harmonics (:py:class:`list` or None): list with the harmonics to exclude from the expansion 
+#             Example: [2] excludes the 2nd harmonic. Default is None
+#         return_mapping (:py:class:`bool`): whether to return the mapping
+#         tol (:py:class:`float`): tolerance for frequency comparison
+
+#     Returns:
+#         Omegas (:py:class:`numpy.ndarray`): array of generated frequencies
+#         mapping (:py:class:`dict`, optional): Omega -> list of contributions (n, m)
+#     """
+    
+#     freq_map = {}
+
+#     def add_freq(n):
+#         Omega = abs(n * omega)
+#         if Omega < tol:
+#             return   
+#         key = np.round(Omega,12)
+#         if key not in freq_map:
+#             freq_map[key] = {"Omega": Omega,"contributions": []}
+#         freq_map[key]["contributions"].append({"n": n})
+
+#     all_harmonics = set(range(1, n_harmonics + 1))    
+#     inactive_harmonics = set(inactive_harmonics or [])
+#     active_harmonics = sorted(all_harmonics - inactive_harmonics)
+
+#     for n in active_harmonics:
+#         add_freq(n)
+    
+#     Omegas = np.array(sorted(freq_map.keys()))
+
+#     if return_mapping:
+#         return Omegas, freq_map
+#     else:
+#         return Omegas
+    
+def generate_frequencies(omega,n_harmonics=3,inactive_harmonics=None,tol=1e-8):
     """
-    Fit the data to:
-        f(t) = B0 + sum_{n=1}^{n_harmonics} A_n*sin(n*omega*t+phi_n)
-    
-    at a given frequency omega, allowing exclusion of some selected harmonics.    
-    
+    Generate positive frequencies for harmonic expansion with a single monochromatic field.
+
     Args:
-        t (:py:class:`numpy.ndarray`): array with the time values
-        y (:py:class:`numpy.ndarray`): array with the values of the function
-        omega (:py:class:`float`): angular frequency of the sine functions
-        n_harmonics (:py:class:`int`): number of harmonics to fit. Default is 2
-        inactive_harmonics (:py:class:`list` or None): harmonics to exclude.
-                                           Example: [2] excludes the 2nd harmonic.
-        rcond (:py:class:`float`): lstsq parameter
+        omega (:py:class:`float`): frequency of the first field (pump)
+        n_harmonics (:py:class:`int`): number of harmonics to include in the expansion. Default is 3
+        inactive_harmonics (:py:class:`list` or None): list with the harmonics to exclude from the expansion 
+            Example: [2] excludes the 2nd harmonic. Default is None
+        return_mapping (:py:class:`bool`): whether to return the mapping
+        tol (:py:class:`float`): tolerance for frequency comparison
 
     Returns:
-        :py:class:`tuple` : tuple with the output, namely
-            - A (:py:class:`numpy.ndarray`): amplitudes
-            - phi (:py:class:`numpy.ndarray`): phases
-            - B0 (:py:class:`float`): constant offset
-            - residuals (:py:class:`numpy.ndarray`): euclidean norms of the squared errors of the fit
-
-        Harmonics that were excluded have A=0 and phi=0.
+        Omegas_dict: {n: Omega_n = n * omega}
     """
-    
-    all_harmonics = set(range(1, n_harmonics + 1))    
-    
+
+    Omegas_dict = {}
+
+    all_harmonics = set(range(1, n_harmonics + 1))
     inactive_harmonics = set(inactive_harmonics or [])
     active_harmonics = sorted(all_harmonics - inactive_harmonics)
+
+    for n in active_harmonics:
+        Omega = n * omega
+
+        if abs(Omega) < tol:
+            continue
+
+        Omegas_dict[n] = Omega
+
+    return Omegas_dict
+
+# def fit_multiple_harmonics(t, y, omega, n_harmonics=2, inactive_harmonics=None, rcond=None):
+#     """
+#     Fit the data to:
+#         f(t) = B0 + sum_{n=1}^{n_harmonics} A_n*sin(n*omega*t+phi_n)
     
-    X = np.column_stack(
-        [np.ones_like(t)] + 
-        [np.sin(n * omega * t) for n in active_harmonics] + 
-        [np.cos(n * omega * t) for n in active_harmonics]
-    )
+#     at a given frequency omega, allowing exclusion of some selected harmonics.    
     
-    coeffs, residuals, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
+#     Args:
+#         t (:py:class:`numpy.ndarray`): array with the time values
+#         y (:py:class:`numpy.ndarray`): array with the values of the function
+#         omega (:py:class:`float`): angular frequency of the sine functions
+#         n_harmonics (:py:class:`int`): number of harmonics to fit. Default is 2
+#         inactive_harmonics (:py:class:`list` or None): harmonics to exclude.
+#                                            Example: [2] excludes the 2nd harmonic.
+#         rcond (:py:class:`float`): lstsq parameter
+
+#     Returns:
+#         :py:class:`tuple` : tuple with the output, namely
+#             - A (:py:class:`numpy.ndarray`): amplitudes
+#             - phi (:py:class:`numpy.ndarray`): phases
+#             - B0 (:py:class:`float`): constant offset
+#             - residuals (:py:class:`numpy.ndarray`): euclidean norms of the squared errors of the fit
+
+#         Harmonics that were excluded have A=0 and phi=0.
+#     """
     
-    B0 = coeffs[0]
-    A = np.zeros(n_harmonics)
-    phi = np.zeros(n_harmonics)
+#     all_harmonics = set(range(1, n_harmonics + 1))    
     
-    n_active = len(active_harmonics)
+#     inactive_harmonics = set(inactive_harmonics or [])
+#     active_harmonics = sorted(all_harmonics - inactive_harmonics)
     
-    for i, n in enumerate(active_harmonics):
-        alpha = coeffs[1 + i]
-        beta  = coeffs[1 + i + n_active]
+#     X = np.column_stack(
+#         [np.ones_like(t)] + 
+#         [np.sin(n * omega * t) for n in active_harmonics] + 
+#         [np.cos(n * omega * t) for n in active_harmonics]
+#     )
+    
+#     coeffs, residuals, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
+    
+#     B0 = coeffs[0]
+#     A = np.zeros(n_harmonics)
+#     phi = np.zeros(n_harmonics)
+    
+#     n_active = len(active_harmonics)
+    
+#     for i, n in enumerate(active_harmonics):
+#         alpha = coeffs[1 + i]
+#         beta  = coeffs[1 + i + n_active]
         
-        A[n-1] = np.sqrt(alpha**2 + beta**2)
-        phi[n-1] = np.arctan2(beta, alpha)
+#         A[n-1] = np.sqrt(alpha**2 + beta**2)
+#         phi[n-1] = np.arctan2(beta, alpha)
     
-    return A, phi, B0, np.sqrt(residuals)
+#     return A, phi, B0, np.sqrt(residuals)
 
-def eval_multiple_harmonics(t, A, phi, B0, omega):
-    """
-    Evaluate the multiple harmonics function at given time points.
+# def eval_multiple_harmonics(t, A, phi, B0, omega):
+#     """
+#     Evaluate the multiple harmonics function at given time points.
 
-    Args:
-        t (:py:class:`numpy.ndarray`): array with the time values
-        A (:py:class:`numpy.ndarray`): amplitudes
-        phi (:py:class:`numpy.ndarray`): phases
-        B0 (:py:class:`float`): constant offset
-        omega (:py:class:`float`): angular frequency of the sine functions
+#     Args:
+#         t (:py:class:`numpy.ndarray`): array with the time values
+#         A (:py:class:`numpy.ndarray`): amplitudes
+#         phi (:py:class:`numpy.ndarray`): phases
+#         B0 (:py:class:`float`): constant offset
+#         omega (:py:class:`float`): angular frequency of the sine functions
 
-    Returns:
-        :py:class:`numpy.ndarray`: evaluated function values
-    """
-    n_harmonics = len(A)
-    y = B0 * np.ones_like(t)
-    for n in range(n_harmonics):
-        y += A[n] * np.sin((n + 1) * omega * t + phi[n])
-    return y
+#     Returns:
+#         :py:class:`numpy.ndarray`: evaluated function values
+#     """
+#     n_harmonics = len(A)
+#     y = B0 * np.ones_like(t)
+#     for n in range(n_harmonics):
+#         y += A[n] * np.sin((n + 1) * omega * t + phi[n])
+#     return y
 
 
 class Xn_single_frequency():
@@ -98,7 +173,7 @@ class Xn_single_frequency():
     Args:
         data (:py:class:`YamboNLDBParser`) : data parsed from the nlndb.Nonlineardatabase database
         X_order (:py:class:`int`) : order of the non-linear susceptibility to be extracted. The zero-th term corresponds to the constant offset of the polarization harmonic expansion. 
-            Default is 2, which means that the non-linear susceptibility up to the second order is extracted
+            Default is 3, which means that the non-linear susceptibility up to the third order is extracted
         Trange (:py:class:`list`) : list with the time range in which the polarization is sampled to compute the sine fit 
             Default is [-1,-1], which means that a time sampling of one period of the external field is used
             (Tstart = time[-1] - Tperiod, Tend = time[-1])
@@ -122,10 +197,10 @@ class Xn_single_frequency():
         dt (:py:class:`float`) : time sampling interval in au
     """
 
-    def __init__(self,data,X_order=2,Trange=[-1, -1],Trange_units='fs',tol=1e-10,inactive_harmonics=None,verbose=True):
+    def __init__(self,data,X_order=3,Trange=[-1, -1],Trange_units='fs',tol=1e-10,inactive_harmonics=None,verbose=True):
         self.time = data.IO_TIME_points
         self.pol = np.array(data.Polarization) 
-        self.fields = data.Efield # in this case the variables Efield2 and Efield_general contains the same information to be checked in general
+        self.fields = data.Efield
         self.nfreqs = data.n_frequencies
         self.fields_freqs = np.array([e['freq_range'][0] for e in self.fields]) 
         self.damp = data.NL_damping
@@ -139,6 +214,8 @@ class Xn_single_frequency():
         EFIELDS = ['SIN','SOFTSIN']
         if self.fields[0]['name'] not in EFIELDS:
             raise ValueError(f'Invalid electric field for frequency mixing analysis. Expected one of: {EFIELDS}')
+        if len(data.Efield_general)>1 and data.Efield_general[1]["name"] != 'none':
+                raise ValueError("This analysis is for one monochromatic field only.")
         if verbose:
             self.get_info()
     
@@ -221,7 +298,7 @@ class Xn_single_frequency():
     
     def perform_harmonic_analysis(self,ifreq):
         """
-        Perform harmonic analysis of the polarization using the fit_multiple_harmonics function.
+        Perform harmonic analysis of the polarization using the fit_sum_frequencies function.
 
         Args:
             ifreq (:py:class:`int`) : index of the frequency of the external field
@@ -233,14 +310,19 @@ class Xn_single_frequency():
         X_order = self.X_order
         inactive_harmonics = self.inactive_harmonics
         iTstart, iTend = self.set_time_sampling(ifreq)
+        t = self.time[iTstart:iTend]
         omega = self.fields_freqs[ifreq]
 
         A, phi, B0, residuals = np.zeros((X_order,3)), np.zeros((X_order,3)), np.zeros(3),  np.zeros(3)
+        results_xyz = []
+        Omegas = generate_frequencies(omega,n_harmonics=X_order,inactive_harmonics=inactive_harmonics)
         for idir in range(3):
-            t = self.time[iTstart:iTend]
             y = self.pol[ifreq,idir,iTstart:iTend]
-            A[:,idir], phi[:,idir], B0[idir], residuals[idir] = fit_multiple_harmonics(t,y,omega,n_harmonics=X_order,inactive_harmonics=inactive_harmonics,rcond=self.tol)
-        return A, phi, B0, residuals
+            #A[:,idir], phi[:,idir], B0[idir], residuals[idir] = fit_sum_frequencies(t,y,Omegas,rcond=self.tol)
+            results_xyz.append(fit_sum_frequencies(t,y,Omegas,rcond=self.tol))
+            #A[:,idir], phi[:,idir], B0[idir], residuals[idir] = fit_multiple_harmonics(t,y,omega,n_harmonics=X_order,inactive_harmonics=inactive_harmonics,rcond=self.tol)
+        #return A, phi, B0, residuals
+        return results_xyz
     
     def check_harmonic_reliability(self,plot_ifreq=None,plot_dir=0):
         """
@@ -264,7 +346,9 @@ class Xn_single_frequency():
             pol = self.pol[plot_ifreq,plot_dir]
             iTstart, iTend = self.set_time_sampling(plot_ifreq)
             A, phi, B0, _ = self.perform_harmonic_analysis(plot_ifreq)
-            pol_fit = eval_multiple_harmonics(time, A[:,plot_dir], phi[:,plot_dir], B0[plot_dir], self.fields_freqs[plot_ifreq])
+            Omegas = generate_frequencies(self.fields_freqs[plot_ifreq],n_harmonics=self.X_order,inactive_harmonics=self.inactive_harmonics)
+            pol_fit = eval_sum_frequencies(time, A[:,plot_dir], phi[:,plot_dir], B0[plot_dir], Omegas)
+            #pol_fit = eval_multiple_harmonics(time, A[:,plot_dir], phi[:,plot_dir], B0[plot_dir], self.fields_freqs[plot_ifreq])
             Tperiod = 2.0*np.pi/self.fields_freqs[plot_ifreq]
             Tmin,Tmax = np.max([time[iTstart]-5*Tperiod,time[0]])/C.FsToAu, np.min([time[iTend]+5*Tperiod,time[-1]])/C.FsToAu
             U.Plot_Array(time/C.FsToAu, pol_fit,xlim=(Tmin,Tmax), label='Harm fit',data2=pol,label2='Pol',figsize=(6,3))
@@ -317,7 +401,7 @@ class Xn_single_frequency():
                 t0 = self.fields[ifreq]['initial_time']
                 omega = self.fields_freqs[ifreq]
                 if n_harm == 0: 
-                    efield_w_power[n_harm,ifreq] = E0**2/4.0#*np.exp(1j*t0*omega)
+                    efield_w_power[n_harm,ifreq] = -E0**2/4.0#*np.exp(1j*t0*omega)
                 else:
                     efield_w_power[n_harm,ifreq] =np.power(1j*E0/2.0*np.exp(1j*t0*omega), n_harm)
         return efield_w_power
