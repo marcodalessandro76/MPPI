@@ -2,63 +2,6 @@
 Here we collect some static functions used by the classes of the optics module.
 """
 import numpy as np
-
-# def fit_sum_frequencies(t, y, Omegas, mapping=None, rcond=None):
-#     """
-#     Fit the data (t,y) with a function of the form:
-#         f(t) = B0 + sum_k A_k sin(Omega_k t + phi_k)
-
-#     Args:
-#         t, y (:py:class:`numpy.ndarray`): data
-#         Omegas (:py:class:`numpy.ndarray`): array of frequencies (positive, no duplicates)
-#         mapping (:py:class:`dict`, optional): Omega -> contributions info
-#         rcond (:py:class:`float`, optional): lstsq parameter
-
-#     Returns:
-#         results (list of dict, if mapping is provided) OR
-#         (A, phi, B0, residuals) otherwise
-#     """
-    
-#     Omegas = np.asarray(Omegas)
-#     n_terms = len(Omegas)
-
-#     X_cols = [np.ones_like(t)]
-#     for O in Omegas:
-#         X_cols.append(np.sin(O * t))
-#     for O in Omegas:
-#         X_cols.append(np.cos(O * t))
-
-#     X = np.column_stack(X_cols)
-#     coeffs, residuals, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
-
-#     B0 = coeffs[0]
-#     A = np.zeros(n_terms)
-#     phi = np.zeros(n_terms)
-
-#     results = []
-
-#     for i, O in enumerate(Omegas):
-#         alpha = coeffs[1 + i]
-#         beta  = coeffs[1 + i + n_terms]
-
-#         A[i] = np.sqrt(alpha**2 + beta**2)
-#         phi[i] = np.arctan2(beta, alpha)
-
-#         if mapping is not None:
-#             key = np.round(O, 12)
-#             info = mapping.get(key, {"contributions": None})
-
-#             results.append({
-#                 "Omega": O,
-#                 "A": A[i],
-#                 "phi": phi[i],
-#                 "contributions": info["contributions"]
-#             })
-
-#     if mapping is not None:
-#         return results, B0, np.sqrt(residuals)
-#     else:
-#         return A, phi, B0, np.sqrt(residuals)
     
 def fit_sum_frequencies(t, y, Omegas_dict, rcond=None):
     """
@@ -108,33 +51,12 @@ def fit_sum_frequencies(t, y, Omegas_dict, rcond=None):
 
     return results_dict, B0, np.sqrt(residuals)[0]
 
-# def eval_sum_frequencies(t, A, phi, B0, Omegas):
-#     """
-#     Evaluate the sum of frequencies function 
-#         y(t) = B0 + sum_k A_k sin(Omega_k t + phi_k)
-
-#     at given time points.
-
-#     Args:
-#         t (:py:class:`numpy.ndarray`): array with the time values
-#         A (:py:class:`numpy.ndarray`): amplitudes
-#         phi (:py:class:`numpy.ndarray`): phases
-#         B0 (:py:class:`float`): constant offset
-#         omega (:py:class:`float`): angular frequency of the sine functions
-
-#     Returns:
-#         :py:class:`numpy.ndarray`: evaluated function values
-#     """
-#     n_frequencies = len(A)
-#     y = B0 * np.ones_like(t)
-#     for n in range(n_frequencies):
-#         y += A[n] * np.sin(Omegas[n] * t + phi[n])
-#     return y
-
 def eval_sum_frequencies(t, results_dict, B0):
     """
     Evaluate:
         y(t) = B0 + sum_{key} A_key sin(Omega_key t + phi_key)
+    
+    given the results of fit_sum_frequencies.
 
     Args:
         t (:numpy.ndarray): time array

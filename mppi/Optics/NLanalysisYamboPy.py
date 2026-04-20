@@ -25,6 +25,7 @@ from mppi.Utilities import Constants as C
 from tqdm import tqdm
 from scipy.optimize import least_squares
 import os, sys
+import itertools
 from abc import ABC,abstractmethod
 
 #####################################################################################
