@@ -117,8 +117,7 @@ class Xn_frequency_mixing():
             Further details are provided in the documentation of the method :py:meth:`set_time_sampling`
         Trange_units (:py:class:`str`) : set the units to time sampling. Default is 'fs' and the other possible choice is 'au'
         tol (:py:class:`float`) : tolerance for the fit of the sine function. Default is 1e-10
-        inactive_harmonics (:py:class:`list` or None) : list with the harmonics to exclude from the fit 
-            Example: [2] excludes the 2nd harmonic. Default is None, which means that all the harmonics up to X_order are included in the fit
+        ref_pol (:py:class:`numpy.ndarray` or None) : array with the reference polarization to be subtracted from the original one. Default is None
         verbose (:py:class:`boolean`) : define the amount of information provided on terminal
     
     Attributes:
@@ -136,9 +135,12 @@ class Xn_frequency_mixing():
         verbose (:py:class:`boolean`) : define the amount of information provided on terminal
     """
 
-    def __init__(self,data,X_order=(1, 3),Trange=[-1, -1],Trange_units='fs',tol=1e-10,verbose=True):
+    def __init__(self,data,X_order=(1, 3),Trange=[-1, -1],Trange_units='fs',tol=1e-10,ref_pol=None,verbose=True):
         self.time = data.IO_TIME_points
-        self.pol = np.array(data.Polarization) 
+        self.pol = np.array(data.Polarization)
+        if ref_pol is not None:
+            self.pol -= ref_pol
+            print('Reference polarization found. The difference between the original polarization and the reference one is computed.')
         self.probes = data.Efield
         self.pump = data.Efield_general[1]
         self.nfreqs = data.n_frequencies
@@ -383,11 +385,11 @@ class Xn_frequency_mixing():
                     Ew[key] = np.zeros(self.nfreqs, dtype=complex)
                 n_p,n_P = np.abs(key)
                 if n_p == 0:
-                    Ew[key][ifreq] = 1.0 #-E0_probe**2 / 4.0
+                    Ew[key][ifreq] = 1.0
                 else:
                     Ew[key][ifreq] = np.power(1j * E0_probe / 2.0 * np.exp(1j * t0_probe * omega_probe),n_p)
                 if n_P == 0:
-                    Ew[key][ifreq] *= 1.0 #-E0_pump**2 / 4.0
+                    Ew[key][ifreq] *= 1.0
                 else:
                     Ew[key][ifreq] *= np.power(1j * E0_pump / 2.0 * np.exp(1j * t0_pump * omega_pump),n_P)
 
