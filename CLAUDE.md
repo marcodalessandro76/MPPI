@@ -65,7 +65,7 @@ files in a `<Class>_tutorial/` folder, and avoids `obj.method?` cells (nbconvert
 markdown pointer instead). The old run folders `QeCalculator_test/` and `Si_gs_convergence/` were deleted from the
 cluster copy on 2026-09-30.
 
-Tutorial status: Tutorial_PwInput and Tutorial_QeCalculator rewritten (shorter) and executed on ismhpc
+Tutorial status: Tutorial_PwInput, Tutorial_QeCalculator and Tutorial_PwParser (parses the QeCalculator_tutorial results) rewritten (shorter) and executed on ismhpc
 (QeCalculator: direct runs with mpi=2 on the login node + one slurm job on all12h with BeeOND). Still to review and run:
 all the others. Analysis_BandStructure still uses the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`).
 

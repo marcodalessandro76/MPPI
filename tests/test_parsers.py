@@ -9,6 +9,8 @@ def test_pwparser(ref_dir):
     assert data.nkpoints == 100
     assert data.nbands == 8
     assert data.evals.shape == (100,8)
+    mass, pseudo = list(data.atomic_species.values())[0]
+    assert isinstance(mass,float)
     assert np.isclose(data.weights.sum(),2.0)
     gap = data.get_gap(verbose=False)
     assert np.isclose(gap['gap'],0.465234,atol=1e-5)

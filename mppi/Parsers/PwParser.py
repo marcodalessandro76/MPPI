@@ -87,7 +87,7 @@ class PwParser():
             atype_string = atypes[i].get('name')
             atype_mass = atypes[i].findall('mass')[0].text
             atype_pseudo = atypes[i].findall('pseudo_file')[0].text
-            self.atomic_species[atype_string]=[atype_mass,atype_pseudo]
+            self.atomic_species[atype_string]=[float(atype_mass),atype_pseudo]
 
         #lattice properties
         self.alat = float(self.data.find("output/atomic_structure").get('alat'))
