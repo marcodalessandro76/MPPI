@@ -167,7 +167,7 @@ def build_pw_kpath(*kpoints,numstep=40):
     for computing the band structure along a path.
 
     Example:
-        >>> build_kpath(L,G,X,K,G,numstep=30)
+        >>> build_pw_kpath(L,G,X,K,G,numstep=30)
 
     Args:
         kpoints : arguments that specify the high symmetry points along the k-path

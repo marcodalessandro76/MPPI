@@ -9,6 +9,40 @@ from copy import deepcopy
 def fortran_bool(boolean):
     return {True:'.true.',False:'.false.'}[boolean]
 
+def slice_namelist(file_lines, group):
+    """
+    Return a list with the content of the namelist `&group` of a Fortran input file.
+    The name of the namelist is case insensitive.
+
+    Args:
+        file_lines (:py:class:`list`) : lines of the input file
+        group (:py:class:`string`) : name of the namelist
+
+    """
+    import re
+    return re.findall(r'&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(file_lines),re.MULTILINE|re.IGNORECASE)
+
+def parse_namelist_variables(file_slice):
+    """
+    Extract the (key,value) pairs of the variables of a namelist. The values in quotes are
+    taken as a whole (so they can contain spaces, commas, colons...), the comments introduced
+    by the ! character are ignored.
+
+    Args:
+        file_slice (:py:class:`string`) : content of the namelist
+
+    Returns:
+        :py:class:`list` : list of (key,value) tuples. The values are strings, converted to
+        int or float when possible
+
+    """
+    import re
+    from mppi.Utilities import Utils
+    # remove the comments, preserving the ! characters inside quoted strings
+    file_slice = re.sub(r'''('[^']*'|"[^"]*")|!.*''', lambda m: m.group(1) or '', file_slice)
+    variables = re.findall(r'''([a-zA-Z_0-9\(\)]+)\s*=\s*('[^']*'|"[^"]*"|[^\s,/]+)''',file_slice)
+    return [(key.strip(),Utils.convertTonumber(value.strip())) for key,value in variables]
+
 class PwInput(dict):
     """
     Class to generate an manipulate the QuantumESPRESSO pw.x input files.
@@ -115,20 +149,16 @@ class PwInput(dict):
         Return a list that contains the variables associated to the group
         key of the input file
         """
-        import re
-        lines = re.findall(r'&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
-        return lines
+        return slice_namelist(self.file_lines,group)
 
     def _store(self,group):
         """
         Look for the namelist (control, system, electrons,...) in the file and
         attribute the associated variables in the dictionary
         """
-        import re
-        from mppi.Utilities import Utils
         for file_slice in self._slicefile(group):
-            for key, value in re.findall(r'([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
-                self[group][key.strip()]=Utils.convertTonumber(value.strip())
+            for key, value in parse_namelist_variables(file_slice):
+                self[group][key]=value
 
     def _read_atomic_species(self):
         """

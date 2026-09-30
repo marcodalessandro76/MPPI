@@ -104,20 +104,18 @@ class PhInput(dict):
         Return a list that contains the variables associated to the group
         key of the input file
         """
-        import re
-        lines = re.findall(r'&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
-        return lines
+        from mppi.InputFiles.PwInput import slice_namelist
+        return slice_namelist(self.file_lines,group)
 
     def store(self,group):
         """
         Look for the namelist (control, system, electrons,...) in the file and
         attribute the associated variables in the dictionary
         """
-        import re
-        from mppi.Utilities import Utils
+        from mppi.InputFiles.PwInput import parse_namelist_variables
         for file_slice in self.slicefile(group):
-            for key, value in re.findall(r'([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
-                self[group][key.strip()]=Utils.convertTonumber(value.strip())
+            for key, value in parse_namelist_variables(file_slice):
+                self[group][key]=value
 
     def read_kpoints(self):
         """

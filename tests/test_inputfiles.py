@@ -19,6 +19,20 @@ def test_pwinput_roundtrip(io_dir, tmp_path):
     for key in inp.namelist + inp.cards:
         assert inp2[key] == inp[key]
 
+def test_pwinput_quoted_values(io_dir, tmp_path):
+    # quoted strings with colons and commas are read as a whole
+    inp = I.PwInput(os.path.join(io_dir,'graphene_nscf.in'))
+    assert inp.get_prefix() == 'ecut:100,k:9'
+    file = tmp_path/'test.in'
+    file.write_text("&CONTROL\n  prefix = 'my run', outdir='./out dir' ! comment with = sign\n"
+                    "  pseudo_dir = \"../pseudos\"\n/\n&SYSTEM\n ibrav=2, celldm(1)=10.3, nat=2 ntyp=1\n"
+                    " ecutwfc = 30 ! ecutrho = 120\n/\n")
+    inp = I.PwInput(str(file))
+    assert inp.get_prefix() == 'my run'
+    assert inp.get_outdir() == './out dir'
+    assert inp['control']['pseudo_dir'] == '"../pseudos"'
+    assert inp['system'] == {'force_symmorphic':'.false.','ibrav':2,'celldm(1)':10.3,'nat':2,'ntyp':1,'ecutwfc':30}
+
 PW_TEMPLATE = """&control
     calculation = 'relax'
 /
