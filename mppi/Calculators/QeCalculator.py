@@ -6,7 +6,7 @@ or by the slurm scheduler.
 
 from .Runner import Runner
 from mppi.Calculators.Tools import find_string_file
-from mppi.Calculators.RunRules import build_slurm_header, mpi_command
+from mppi.Calculators.RunRules import build_slurm_header, mpi_command, direct_command
 import os
 
 class QeCalculator(Runner):
@@ -190,8 +190,8 @@ class QeCalculator(Runner):
             # Set the OMP_NUM_THREADS variable in the environment
             os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp_num_threads'])
             if not dry_run:
-                comm_str = 'cd %s ; %s'%(run_dir,self.run_command())
-                job = Popen(comm_str, shell = True)
+                comm_str = direct_command(self.run_options,run_dir,self.run_command())
+                job = Popen(comm_str, shell = True, executable = '/bin/bash')
             else:
                 job = None
                 if verbose: print('Dry_run option active. Computation not performed')

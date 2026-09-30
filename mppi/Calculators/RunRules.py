@@ -64,7 +64,7 @@ def build_slurm_header(pars):
     if pars['pre_processing'] is not None:
         with open(pars['pre_processing']) as f:
             for l in f:
-                lines.append(l)
+                lines.append(l.rstrip('\n'))
     lines.append('')
     lines.append('echo " "')
     lines.append('echo "############### End of the header section ###############"')
@@ -72,6 +72,28 @@ def build_slurm_header(pars):
     lines.append('')
 
     return lines
+
+def direct_command(pars, run_dir, run_command):
+    """
+    Define the command executed by the `direct` scheduler. If the `pre_processing` file is
+    provided it is sourced before running the computation, for instance to load the modules
+    needed by the executable.
+
+    Args:
+        pars (:py:class:`dict`) : dictionary with the structure of an instance of
+            the :class:`RunRules`
+        run_dir (:py:class:`string`) : folder in which the computation is performed
+        run_command (:py:class:`string`) : command that runs the computation
+
+    Return:
+        :py:class:`string` : the command, to be executed with bash
+
+    """
+    comm_str = 'cd %s ; %s'%(run_dir,run_command)
+    pre_processing = pars.get('pre_processing')
+    if pre_processing is not None:
+        comm_str = 'source %s ; %s'%(os.path.abspath(pre_processing),comm_str)
+    return comm_str
 
 def mpi_command(pars):
     """
@@ -125,7 +147,8 @@ class RunRules(dict):
         rank_by (:py:class:`string`) : the unit for the --rank-by option of mpirun
         pre_processing (:py:class:`string`) : name of the file with pre-processing actions peformed by
             the script before running the computation. For instance, it can be used to load the module
-            needed by the running applications
+            needed by the running applications. With the `slurm` scheduler the lines of the file are included
+            in the slurm script, with the `direct` scheduler the file is sourced (with bash) before the run command
 
     """
 
@@ -134,7 +157,7 @@ class RunRules(dict):
                 time=None,partition=None,account=None,qos=None,omp_places=None,omp_proc_bind=None,
                 map_by=None,pe=1,rank_by=None,pre_processing=None):
         if scheduler == 'direct':
-            rules = dict(mpi=mpi,omp_num_threads=omp_num_threads)
+            rules = dict(mpi=mpi,omp_num_threads=omp_num_threads,pre_processing=pre_processing)
             dict.__init__(self,scheduler=scheduler,**rules)
         if scheduler == 'slurm':
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
