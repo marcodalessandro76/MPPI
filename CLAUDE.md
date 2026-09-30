@@ -32,8 +32,13 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   `RunRules(pre_processing=...)`: included in slurm scripts and (since fix/bugs) sourced before `direct` runs.
   Without them pw.x fails with `libmkl_gf_lp64.so: cannot open shared object file`. Small direct runs (mpi 2-4,
   omp 1) on the login node `frontend` are OK for the tutorials; slurm partition `debug` (2h) for short test jobs.
-  The user's production RunRules: `scheduler='slurm', partition='all12h', memory='125000', ntasks_per_node=32,
-  cpus_per_task=1, omp_num_threads=1`, `YamboCalculator(rr, executable='yambo_nl', activate_BeeOND=True)`.
+  The user's production RunRules (use them for the slurm runs of the tutorials; ntasks_per_node*cpus_per_task = 32
+  cores per node), always with `partition='all12h', memory='125000'` and `activate_BeeOND=True`:
+  - QE: `time='11:59:00', ntasks_per_node=16, cpus_per_task=2, omp_num_threads=2,
+    pre_processing='/home/dalessandro/module_script/qe_module'`, `QeCalculator(rr, activate_BeeOND=True)`
+  - Yambo: `ntasks_per_node=32, cpus_per_task=1, omp_num_threads=1,
+    pre_processing='/home/dalessandro/module_script/yambo_module'`,
+    `YamboCalculator(rr, executable='yambo_nl', activate_BeeOND=True)`
 - Tests: `python -m pytest tests` (fixtures in `tests/conftest.py`). Tests that need the executables are marked
   `@pytest.mark.requires_qe` / `@pytest.mark.requires_yambo` and are skipped when `pw.x`/`yambo` are not in PATH, so
   the same suite runs on both machines. `Reference_data/nl_results` (~1.3 GB) is not in git: the tests that use it
