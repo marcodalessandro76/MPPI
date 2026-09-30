@@ -27,6 +27,13 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   clash). There: repo `~/Applications/MPPI` (pip editable install, it is the copy the user's notebooks use), miniconda
   python 3.13, `pw.x` (qe-7.0) and `yambo` (Lumen fork 2.1.0) in PATH, slurm. Edits are made on the laptop, pushed,
   then `git pull` on the cluster (the cluster never commits).
+  Environments: the user's `pw.x` needs Intel MPI + MKL, yambo needs OpenMPI, so they cannot share one shell env.
+  The user keeps module files in `~/module_script/` (`qe_module`, `yambo_module`) and passes them as
+  `RunRules(pre_processing=...)`: included in slurm scripts and (since fix/bugs) sourced before `direct` runs.
+  Without them pw.x fails with `libmkl_gf_lp64.so: cannot open shared object file`. Small direct runs (mpi 2-4,
+  omp 1) on the login node `frontend` are OK for the tutorials; slurm partition `debug` (2h) for short test jobs.
+  The user's production RunRules: `scheduler='slurm', partition='all12h', memory='125000', ntasks_per_node=32,
+  cpus_per_task=1, omp_num_threads=1`, `YamboCalculator(rr, executable='yambo_nl', activate_BeeOND=True)`.
 - Tests: `python -m pytest tests` (fixtures in `tests/conftest.py`). Tests that need the executables are marked
   `@pytest.mark.requires_qe` / `@pytest.mark.requires_yambo` and are skipped when `pw.x`/`yambo` are not in PATH, so
   the same suite runs on both machines. `Reference_data/nl_results` (~1.3 GB) is not in git: the tests that use it
@@ -49,8 +56,9 @@ features of the class, no exhaustive tour), writes its files in a `<Class>_tutor
 `.gitignore`), and avoids `obj.method?` cells (use a markdown pointer instead). The old run folders
 `QeCalculator_test/` and `Si_gs_convergence/` were deleted from the cluster copy on 2026-09-30.
 
-Tutorial status: Tutorial_PwInput rewritten (shorter) and executed on ismhpc. Still to review and run: all the
-others. Analysis_BandStructure still uses the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`).
+Tutorial status: Tutorial_PwInput and Tutorial_QeCalculator rewritten (shorter) and executed on ismhpc
+(QeCalculator: direct runs with mpi=2 on the login node + one real slurm job on `debug`). Still to review and run:
+all the others. Analysis_BandStructure still uses the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`).
 
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
