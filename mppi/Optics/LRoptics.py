@@ -44,7 +44,7 @@ def Linear_Response(time, pol,efield, pol_ref=None, damp_type="LORENTZIAN", eta=
     """
     Compute the linear response of the system to an external delta-shaped field from the polarization in the time domain.
     The function subtract the reference polarization (if provided) and applies a damping function, if eta is not zero.
-    The FT is computed throughthe numpy.fft.rfft function assuming  that the time array is uniformly sampled.
+    The FT is computed through the numpy.fft.rfft function assuming  that the time array is uniformly sampled.
 
     Args:
         time (:py:class:`numpy.ndarray`) : array with the time values
