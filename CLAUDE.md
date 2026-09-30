@@ -21,10 +21,31 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
 - Git (GitHub `origin`, branches `master` and `devel`) is the only sync channel between machines. Commit and push
   from one machine, pull on the other. Claude's local memory is per-machine: anything that must survive goes in this
   file.
+- **Cluster `ismhpc`** (host in `~/.ssh/config`, jump through `narro`): CentOS 7 / glibc 2.17, so VS Code Remote-SSH
+  does NOT work there. Claude runs on the laptop and drives the cluster with
+  `ssh -o BatchMode=yes -o ClearAllForwardings=yes ismhpc '...'` (ClearAllForwardings avoids the LocalForward 4444
+  clash). There: repo `~/Applications/MPPI` (pip editable install, it is the copy the user's notebooks use), miniconda
+  python 3.13, `pw.x` (qe-7.0) and `yambo` (Lumen fork 2.1.0) in PATH, slurm. Edits are made on the laptop, pushed,
+  then `git pull` on the cluster (the cluster never commits).
 - Tests: `python -m pytest tests` (fixtures in `tests/conftest.py`). Tests that need the executables are marked
   `@pytest.mark.requires_qe` / `@pytest.mark.requires_yambo` and are skipped when `pw.x`/`yambo` are not in PATH, so
   the same suite runs on both machines. `Reference_data/nl_results` (~1.3 GB) is not in git: the tests that use it
   are skipped when it is missing. Every bug fix gets a test.
+
+## Re-running the tutorial notebooks on the cluster
+1. `rsync -a --delete --exclude Reference_data --exclude .ipynb_checkpoints --exclude "*.run.ipynb"
+   ~/Applications/MPPI/sphinx_source/tutorials/ ~/mppi_nb_runs/` (run in a copy: the notebooks write files).
+   Notebooks that read `Reference_data` need it: symlink it into `~/mppi_nb_runs` instead of excluding it.
+2. `cd ~/mppi_nb_runs && jupyter nbconvert --to notebook --execute --ExecutePreprocessor.kernel_name=python3
+   <nb>.ipynb --output <nb>.run.ipynb`. Light notebooks can run on the login node; the ones that run pw.x/yambo
+   must use `RunRules(scheduler='slurm')` or be executed inside a slurm job.
+3. Compare the outputs with the saved ones, fix, then `scp` the `.run.ipynb` back over the notebook in the laptop
+   repo. Before committing, strip the `iopub.*`/`shell.execute_reply` cell metadata and restore the outputs of
+   the `obj.method?` help cells (nbconvert does not capture the pager and leaves them empty).
+
+Tutorial status (after fix/bugs): Tutorial_PwInput OK (fixed the stale `build_kpath` import, now
+`mppi.Calculators.Tools.build_pw_kpath`). Still to run: all the others. Analysis_BandStructure also uses
+`build_kpath`.
 
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
@@ -50,6 +71,8 @@ Runnable on the laptop (done on branch `fix/bugs`, covered by `tests/`):
 - [x] `Xn_frequency_mixing.check_harmonic_reliability` used the stale `ifreq`; debug prints removed
 - [x] `Utils.file_parser` ignored its `skip` argument
 - [x] `YamboInput.read_file`: undefined `filename` + `exit()` → raises IOError
+- [x] `PwInput`/`PhInput` namelists: quoted values were truncated (`prefix = 'ecut:100,k:9'` → `'ecut`). Now
+      `parse_namelist_variables` reads quoted strings as a whole, skips `!` comments; namelist names case insensitive
 - [x] `PwInput`: raises ValueError instead of `exit()`; parses if_pos flags (stored as a 3rd element of the atom and
       written back), `K_POINTS gamma` and `K_POINTS type` without braces; files closed
 - [x] `PwParser`: also catches FileNotFoundError/ParseError; lsda reads nbnd_up+nbnd_dw (with a warning: the gap and
