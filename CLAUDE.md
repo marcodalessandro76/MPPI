@@ -43,9 +43,14 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
    repo. Before committing, strip the `iopub.*`/`shell.execute_reply` cell metadata and restore the outputs of
    the `obj.method?` help cells (nbconvert does not capture the pager and leaves them empty).
 
-Tutorial status (after fix/bugs): Tutorial_PwInput OK (fixed the stale `build_kpath` import, now
-`mppi.Calculators.Tools.build_pw_kpath`). Still to run: all the others. Analysis_BandStructure also uses
-`build_kpath`.
+The user wants clean runs from zero: start from an empty `~/mppi_nb_runs` (`rm -rf` it first), never reuse the
+outputs of old runs. Each tutorial starts with a cell printing the execution date, is kept short (show the main
+features of the class, no exhaustive tour), writes its files in a `<Class>_tutorial/` folder (add it to
+`.gitignore`), and avoids `obj.method?` cells (use a markdown pointer instead). The old run folders
+`QeCalculator_test/` and `Si_gs_convergence/` were deleted from the cluster copy on 2026-09-30.
+
+Tutorial status: Tutorial_PwInput rewritten (shorter) and executed on ismhpc. Still to review and run: all the
+others. Analysis_BandStructure still uses the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`).
 
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
