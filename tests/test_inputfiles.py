@@ -94,10 +94,9 @@ def test_yamboinput_missing_file(tmp_path):
         I.YamboInput(folder=str(tmp_path),filename='missing.in')
 
 @pytest.mark.requires_yambo
-def test_yamboinput_generation(ref_dir, tmp_path):
-    # to be validated on a machine with yambo: the SAVE folder contains only the ns.db1 database
-    import shutil
-    os.makedirs(tmp_path/'SAVE')
-    shutil.copy(os.path.join(ref_dir,'dftParsers_results','WSe2_12x12x3_100bands','ns.db1'),tmp_path/'SAVE')
+def test_yamboinput_generation(tmp_path):
+    # yambo writes the input file also without a SAVE folder (and then stops with an error).
+    # A SAVE with only the ns.db1 database makes yambo crash
     inp = I.YamboInput('yambo -x -V rl',folder=str(tmp_path))
     assert 'HF_and_locXC' in inp['arguments']
+    assert 'EXXRLvcs' in inp['variables']
