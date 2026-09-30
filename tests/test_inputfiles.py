@@ -19,6 +19,21 @@ def test_pwinput_roundtrip(io_dir, tmp_path):
     for key in inp.namelist + inp.cards:
         assert inp2[key] == inp[key]
 
+def test_pwinput_from_scratch_roundtrip(tmp_path):
+    inp = I.PwInput()
+    inp.set_scf()
+    inp.set_energy_cutoff(30)
+    inp.set_lattice(ibrav=2,celldm1=10.3)
+    inp.add_atom('Si','Si.upf')
+    inp.set_atoms_number(2)
+    inp.set_atomic_positions([['Si',[0.,0.,0.]],['Si',[0.25,0.25,0.25]]])
+    inp.set_kpoints(points=[4,4,4])
+    file = str(tmp_path/'si.in')
+    inp.write(file)
+    inp2 = I.PwInput(file)
+    for key in inp.namelist + inp.cards:
+        assert inp2[key] == inp[key]
+
 def test_pwinput_quoted_values(io_dir, tmp_path):
     # quoted strings with colons and commas are read as a whole
     inp = I.PwInput(os.path.join(io_dir,'graphene_nscf.in'))

@@ -440,13 +440,13 @@ class PwInput(dict):
         """
         self['system']['nbnd'] = nbnd
 
-    def add_atom(self,atom,pseudo_name,mass = '1.0'):
+    def add_atom(self,atom,pseudo_name,mass = 1.0):
         """
         Update the self['atomic_species'] dictionary
 
         Args:
             atom (:py:class:`string`)
-            mass (:py:class:`string`) : is used only for molecular dynamics run
+            mass (:py:class:`float`) : is used only for molecular dynamics run
             pseudo_name (:py:class:`string`)
         """
         at = {atom : [mass,pseudo_name]}
@@ -466,8 +466,8 @@ class PwInput(dict):
         if nat < ntyp:
             print('Number of atoms in the cell cannot be lower than number of atomic species')
             nat = ntyp
-        self['system']['ntyp'] = str(ntyp)
-        self['system']['nat'] = str(nat)
+        self['system']['ntyp'] = ntyp
+        self['system']['nat'] = nat
 
     def set_atomic_positions(self,positions,type='alat'):
         """
