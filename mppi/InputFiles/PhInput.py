@@ -68,9 +68,8 @@ class PhInput(dict):
                 initialize the dictionary of the object
 
         """
-        f = open(file,"r")
-
-        self.file_lines = f.readlines()
+        with open(file,"r") as f:
+            self.file_lines = f.readlines()
         for group in self.namelist:
             self.store(group)
         self.read_kpoints()
@@ -106,7 +105,7 @@ class PhInput(dict):
         key of the input file
         """
         import re
-        lines = re.findall('&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
+        lines = re.findall(r'&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
         return lines
 
     def store(self,group):
@@ -116,8 +115,8 @@ class PhInput(dict):
         """
         import re
         from mppi.Utilities import Utils
-        for file_slice in self._slicefile(group):
-            for key, value in re.findall('([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
+        for file_slice in self.slicefile(group):
+            for key, value in re.findall(r'([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
                 self[group][key.strip()]=Utils.convertTonumber(value.strip())
 
     def read_kpoints(self):

@@ -1,4 +1,4 @@
-"""
+r"""
 This module collects some tools to deal with Gaussian pulses.
 This class of pulses is described by a sinusoidal function, whose frequency
 defines the `energy` :math:`E=\hbar\omega` of the pulse, times a gaussian envelope.
@@ -30,7 +30,7 @@ from mppi.Utilities import Constants as C
 
 def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_start = 0,
         envelope_only = False, THz_pulse = False, change_sign = False, verbose = True):
-    """
+    r"""
     Build a Gaussian pulse.
 
     Args:
@@ -89,7 +89,7 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
 def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, width1 = 100, width2 = 100,
                         fwhm1 = None, fwhm2 = None, t_start1 = 0, t_start2 = 600, envelope_only = False,
                         THz_pulse = False, change_sign1 = False, change_sign2 = False, verbose = True):
-    """
+    r"""
     Build a sine oscillating pulse with e double Gaussian envelope.
 
     Args:

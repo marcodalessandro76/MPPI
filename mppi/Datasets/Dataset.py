@@ -40,6 +40,29 @@ def name_from_id(id):
 
     return name
 
+def id_matches(run_id, run_name, id):
+    """
+    Check if a run of the dataset matches the id provided as input.
+    If both id and run_id are dictionaries the run matches if all the (key,value)
+    pairs of id are found in run_id. Otherwise the run matches if all the elements of the
+    name associated to id (separated by '-') are elements of the name of the run.
+    In this way, for instance, the id {'ecut':4} does not match a run with id {'ecut':40}.
+
+    Args:
+        run_id : id of the run of the dataset
+        run_name (:py:class:`str`) : name of the run of the dataset
+        id : id used to select the runs
+
+    Returns:
+        :py:class:`bool` : True if the run matches the id
+
+    """
+    if type(id) is dict and type(run_id) is dict:
+        return all(k in run_id and run_id[k] == v for k,v in id.items())
+    id_name = name_from_id(id)
+    if id_name is None or run_name is None: return False
+    return set(id_name.split('-')).issubset(run_name.split('-'))
+
 def convergence_plot(**kwargs):
     """
     Perform the convergence plot associated to the `seek_convergence` method.
@@ -261,7 +284,8 @@ class Dataset(Runner):
         """
         Retrieve the results that match some conditions that is specified through
         an `id` in the form of a string or a dictionary. Selects out of the results
-        of the objects which have in their ``name`` keyword at least the `id` provided as input.
+        of the objects whose id contains all the (key,value) pairs of the `id` provided as input
+        (see the :func:`id_matches` function).
 
         Args:
            id : string or dictionary of the retrieved id.
@@ -290,12 +314,10 @@ class Dataset(Runner):
 
         """
 
-        names = [val['name'] for val in self.runs]
-        id_name = name_from_id(id)
         fetch_indices = []
         selection_to_run = []
-        for irun,name in enumerate(names):
-            if id_name in name :
+        for irun,(run_id,run) in enumerate(zip(self.ids,self.runs)):
+            if id_matches(run_id,run.get('name'),id):
                 fetch_indices.append(irun)
                 if run_if_not_present and irun not in self.results:
                     selection_to_run.append(irun)
@@ -304,8 +326,9 @@ class Dataset(Runner):
 
         data = []
         if self.post_processing_function is not None:
+            processed = self.post_processing()
             for irun in fetch_indices:
-                r = self.post_processing()[irun]
+                r = processed[irun]
                 data.append(r if attribute is None else getattr(r, attribute))
         else:
             print('Provide a post processing function able to parse the results')

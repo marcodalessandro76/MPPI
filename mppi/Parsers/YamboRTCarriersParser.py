@@ -54,13 +54,14 @@ class YamboRTCarriersParser():
             database = Dataset(self.filename)
         except:
             raise IOError("Error opening file %s in YamboRTCarriersParser"%self.filename)
-        self.E_bare = HaToeV*np.array(database.variables['RT_carriers_E_bare'])
-        self.f_bare = np.array(database.variables['RT_carriers_f_bare'])
+        self.E_bare = HaToeV*np.array(database.variables['RT_carriers_E_bare'][:])
+        self.f_bare = np.array(database.variables['RT_carriers_f_bare'][:])
         self.kpoints = np.array(database.variables['RT_kpt'][:].T)
-        self.bands_kpts = np.array(database.variables['RT_bands_kpts'])
-        self.k_weight = np.array(database.variables['RT_k_weight'])
-        self.delta_E = HaToeV*np.array(database.variables['RT_carriers_delta_E'])
-        self.delta_f = np.array(database.variables['RT_carriers_delta_f'])
+        self.bands_kpts = np.array(database.variables['RT_bands_kpts'][:])
+        self.k_weight = np.array(database.variables['RT_k_weight'][:])
+        self.delta_E = HaToeV*np.array(database.variables['RT_carriers_delta_E'][:])
+        self.delta_f = np.array(database.variables['RT_carriers_delta_f'][:])
+        database.close()
 
     def get_info(self):
         """

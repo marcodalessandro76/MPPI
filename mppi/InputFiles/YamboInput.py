@@ -8,17 +8,16 @@ be used to modify the attribute of the input.
 
 from subprocess import Popen, PIPE
 import os, re
-from sys import exit
 
 class YamboInput(dict):
 
     #Regular expressions
-    _variaexp   = '([A-Za-z\_0-9]+(?:\_[A-Za-z]+)?)' #variables names
-    _numexp     = '([+-]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)' #number
+    _variaexp   = r'([A-Za-z\_0-9]+(?:\_[A-Za-z]+)?)' #variables names
+    _numexp     = r'([+-]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)' #number
     _spacexp    = '(?:[ \t]+)?' #space
     _stringexp  = '["\']([a-zA-Z0-9_ ]+?)["\']' #string
-    _arrayexp   = '%'+_spacexp+_variaexp+'\s+(?:\#.+)?((?:(?:\s|\.|[+-]?\d)+?\|)+)\s+([a-zA-Z]+)?' #arrays
-    _complexexp = '\('+_spacexp+_numexp+_spacexp+','+_spacexp+_numexp+_spacexp+'\)' #complex numbers
+    _arrayexp   = '%'+_spacexp+_variaexp+r'\s+(?:\#.+)?((?:(?:\s|\.|[+-]?\d)+?\|)+)\s+([a-zA-Z]+)?' #arrays
+    _complexexp = r'\('+_spacexp+_numexp+_spacexp+','+_spacexp+_numexp+_spacexp+r'\)' #complex numbers
     _runexp     = '([a-zA-Z0-9_]+)'
     # list of available runlevels to be stored in the arguments array.
     # Also the 'options' like RmTimeRev or DephCVonly were included in the _runlevels list but they have
@@ -54,15 +53,12 @@ class YamboInput(dict):
         Open filename and run parseInputFile to parse the input into the dictionary
         """
         try:
-            yambofile = open(file,'r')
+            with open(file,'r') as yambofile:
+                self.parseInputFile(yambofile.read())
         except IOError:
-            print('Could not read the file %s'%filename)
-            print('ERROR: yambo did not create the input file or the file you are trying to read does not exist')
-            print('command: %s'%self['args'])
-            print('folder:  %s/'%self['folder'])
-            exit()
-        self.parseInputFile(yambofile.read())
-        yambofile.close()
+            raise IOError('Could not read the file %s. Yambo did not create the input file or the file '
+                          'you are trying to read does not exist (command: %s, folder: %s)'
+                          %(file,self['args'],self['folder']))
 
     def write(self,folder,filename,reformat=True):
         """

@@ -284,7 +284,7 @@ def file_parser(filename,skip='#',sep=None):
 
 
     """
-    lines = file_to_list(filename)
+    lines = file_to_list(filename,skip=skip)
     splitted = []
     for line in lines:
          splitted.append(floats_from_string(line,sep=sep))
@@ -498,10 +498,10 @@ def dict_merge(dest, src):
        src (dict): dict merged into dest
 
     """
-    import collections
+    from collections.abc import Mapping
     for k, v in src.items():
         if (k in dest and isinstance(dest[k], dict)
-                and isinstance(src[k], collections.Mapping)):
+                and isinstance(src[k], Mapping)):
             dict_merge(dest[k], src[k])
         else:
             dest[k] = src[k]

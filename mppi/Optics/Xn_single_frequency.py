@@ -110,8 +110,8 @@ class Xn_single_frequency():
             file (:py:class:`string`) : name of the nlndb.Nonlineardatabase database file
             verbose (:py:class:`boolean`) : define the amount of information provided on terminal
         """
-        data = YamboNLDBParser(file)
-        return cls(data,verbose)
+        data = YamboNLDBParser(file,verbose=verbose)
+        return cls(data,verbose=verbose)
     
     def get_info(self):
         """

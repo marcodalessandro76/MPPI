@@ -72,9 +72,8 @@ class PwInput(dict):
                 initialize the dictionaries of the object
 
         """
-        f = open(file,"r")
-
-        self.file_lines = f.readlines()
+        with open(file,"r") as f:
+            self.file_lines = f.readlines()
         for group in self.namelist:
             self._store(group)
 
@@ -117,7 +116,7 @@ class PwInput(dict):
         key of the input file
         """
         import re
-        lines = re.findall('&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
+        lines = re.findall(r'&%s(?:.?)+\n((?:.+\n)+?)(?:\s+)?\/'%group,"".join(self.file_lines),re.MULTILINE)
         return lines
 
     def _store(self,group):
@@ -128,7 +127,7 @@ class PwInput(dict):
         import re
         from mppi.Utilities import Utils
         for file_slice in self._slicefile(group):
-            for key, value in re.findall('([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
+            for key, value in re.findall(r'([a-zA-Z_0-9_\(\)]+)(?:\s+)?=(?:\s+)?([a-zA-Z/\'"0-9_.-]+)',file_slice):
                 self[group][key.strip()]=Utils.convertTonumber(value.strip())
 
     def _read_atomic_species(self):
@@ -155,8 +154,11 @@ class PwInput(dict):
                 self['atomic_positions']['type'] = type
                 self['atomic_positions']['values'] = []
                 for i in range(int(self['system']['nat'])):
-                    atype, x,y,z = next(lines).split()
-                    self['atomic_positions']['values'].append([atype,[float(i) for i in (x,y,z)]])
+                    atype, x, y, z, *if_pos = next(lines).split()
+                    atom = [atype,[float(i) for i in (x,y,z)]]
+                    # optional if_pos flags that fix the atomic coordinates in relax runs
+                    if len(if_pos) == 3: atom.append([int(i) for i in if_pos])
+                    self['atomic_positions']['values'].append(atom)
 
     def _read_cell_parameters(self):
         """
@@ -202,22 +204,27 @@ class PwInput(dict):
         for line in lines:
             if "K_POINTS" in line:
                 kp = self['kpoints']
-                if "automatic" in line:
+                # the type can be written as K_POINTS type, K_POINTS {type} or K_POINTS (type)
+                kp_type = line.replace('{',' ').replace('}',' ').replace('(',' ').replace(')',' ').split()
+                kp_type = kp_type[1] if len(kp_type) > 1 else 'tpiba'
+                if kp_type == 'automatic':
                     kp['type'] = 'automatic'
                     vals = list(map(float, next(lines).split()))
                     kp['values'] = (vals[0:3],vals[3:6])
+                elif kp_type == 'gamma':
+                    kp['type'] = 'gamma'
+                    kp['values'] = []
                 else:
-                    nkpoints = int(lines.__next__().split()[0])
-                    kp['type'] = line.split()[2]
+                    nkpoints = int(next(lines).split()[0])
+                    kp['type'] = kp_type
                     kp['values'] = []
                     try:
                         lines_list = list(lines)
                         for n in range(nkpoints):
                             vals = lines_list[n].split()[:4]
                             kp['values'].append( list(map(float,vals)) )
-                    except IndexError:
-                        print('wrong k-points list format')
-                        exit()
+                    except (IndexError, ValueError):
+                        raise ValueError('wrong k-points list format in the K_POINTS card')
 
     # Methods that convert the object attributes into a string with the
     # correct QuantumESPRESSO format.
@@ -241,8 +248,9 @@ class PwInput(dict):
         if self['atomic_positions'] != {}:
             line.append('ATOMIC_POSITIONS { %s }'%self['atomic_positions']['type'])
             for atom in self['atomic_positions']['values']:
-                line.append('%3s %14.10lf %14.10lf %14.10lf'%
-                (atom[0], atom[1][0], atom[1][1], atom[1][2]))
+                atom_line = '%3s %14.10lf %14.10lf %14.10lf'%(atom[0], atom[1][0], atom[1][1], atom[1][2])
+                if len(atom) > 2: atom_line += ' %d %d %d'%tuple(atom[2])
+                line.append(atom_line)
 
     def _stringify_kpoints(self,line):
         if self['kpoints'] != {}:
@@ -250,6 +258,8 @@ class PwInput(dict):
             if self['kpoints']['type'] == 'automatic':
                 line.append(("%3d"*6)%(tuple(self['kpoints']['values'][0]) +
                     tuple(self['kpoints']['values'][1])))
+            elif self['kpoints']['type'] == 'gamma':
+                pass
             else:
                 line.append( "%d" % len(self['kpoints']['values']))
                 for kpt in self['kpoints']['values']:

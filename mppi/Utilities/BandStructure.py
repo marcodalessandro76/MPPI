@@ -144,7 +144,7 @@ class BandStructure():
         return np.array(kpath)
 
     def get_high_sym_positions(self,atol=1e-4,rtol=1e-4):
-        """
+        r"""
         Compute the position of the high_sym_points along the path. The method uses
         the numpy.allclose function to establish if the coordinates of a point on the
         path matche with an high_sym_points
@@ -175,7 +175,7 @@ class BandStructure():
         positions = []
         for point in high_sym:
             for ind,k in enumerate(kpoints):
-                if np.allclose(high_sym[point],k,atol,rtol):
+                if np.allclose(high_sym[point],k,rtol=rtol,atol=atol):
                     if point == 'G': labels.append(r'$\Gamma$')
                     else : labels.append(point)
                     positions.append(kpath[ind])
