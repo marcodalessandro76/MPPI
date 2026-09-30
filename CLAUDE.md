@@ -45,24 +45,28 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   are skipped when it is missing. Every bug fix gets a test.
 
 ## Re-running the tutorial notebooks on the cluster
-1. `rsync -a --delete --exclude Reference_data --exclude .ipynb_checkpoints --exclude "*.run.ipynb"
-   ~/Applications/MPPI/sphinx_source/tutorials/ ~/mppi_nb_runs/` (run in a copy: the notebooks write files).
-   Notebooks that read `Reference_data` need it: symlink it into `~/mppi_nb_runs` instead of excluding it.
-2. `cd ~/mppi_nb_runs && jupyter nbconvert --to notebook --execute --ExecutePreprocessor.kernel_name=python3
-   <nb>.ipynb --output <nb>.run.ipynb`. Light notebooks can run on the login node; the ones that run pw.x/yambo
-   must use `RunRules(scheduler='slurm')` or be executed inside a slurm job.
-3. Compare the outputs with the saved ones, fix, then `scp` the `.run.ipynb` back over the notebook in the laptop
-   repo. Before committing, strip the `iopub.*`/`shell.execute_reply` cell metadata and restore the outputs of
-   the `obj.method?` help cells (nbconvert does not capture the pager and leaves them empty).
+The notebooks are executed IN PLACE in `~/Applications/MPPI/sphinx_source/tutorials` on ismhpc: their results
+(`<Class>_tutorial/` folders, ignored by git via `*_tutorial/`) stay there because later tutorials (e.g. Yambo)
+reuse them. Results never go to git or to the laptop.
+1. Write/modify the notebook on the laptop (in the scratchpad, NOT in the laptop repo) and `scp` it into the
+   cluster `tutorials/` folder. Before running, `rm -rf` that tutorial's `<Class>_tutorial/` folder (clean run).
+2. `cd ~/Applications/MPPI/sphinx_source/tutorials && jupyter nbconvert --to notebook --execute --inplace
+   --ExecutePreprocessor.kernel_name=python3 --NotebookClient.record_timing=False <nb>.ipynb`.
+   Light notebooks run on the login node (direct runs with mpi 2-4, omp 1 are OK); slurm runs use the production
+   RunRules above.
+3. The executed notebooks stay modified and uncommitted on the cluster until the end of the review. MPPI code
+   changes still go laptop → commit/push → `git pull` on the cluster (the pull works as long as the laptop commits
+   do not touch those notebooks, so do NOT commit notebooks from the laptop meanwhile).
+4. At the end of the review: commit the notebooks on the cluster, push, `git pull` on the laptop.
 
-The user wants clean runs from zero: start from an empty `~/mppi_nb_runs` (`rm -rf` it first), never reuse the
-outputs of old runs. Each tutorial starts with a cell printing the execution date, is kept short (show the main
-features of the class, no exhaustive tour), writes its files in a `<Class>_tutorial/` folder (add it to
-`.gitignore`), and avoids `obj.method?` cells (use a markdown pointer instead). The old run folders
-`QeCalculator_test/` and `Si_gs_convergence/` were deleted from the cluster copy on 2026-09-30.
+The user wants clean runs from zero, never reusing the outputs of old runs. Each tutorial starts with a cell
+printing the execution date, is kept short (show the main features of the class, no exhaustive tour), writes its
+files in a `<Class>_tutorial/` folder, and avoids `obj.method?` cells (nbconvert does not capture the pager: use a
+markdown pointer instead). The old run folders `QeCalculator_test/` and `Si_gs_convergence/` were deleted from the
+cluster copy on 2026-09-30.
 
 Tutorial status: Tutorial_PwInput and Tutorial_QeCalculator rewritten (shorter) and executed on ismhpc
-(QeCalculator: direct runs with mpi=2 on the login node + one real slurm job on `debug`). Still to review and run:
+(QeCalculator: direct runs with mpi=2 on the login node + one slurm job on all12h with BeeOND). Still to review and run:
 all the others. Analysis_BandStructure still uses the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`).
 
 ## Conventions

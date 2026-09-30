@@ -5,5 +5,4 @@ __pycache__/
 sphinx_build/
 .pytest_cache/
 # folders written by the tutorial notebooks
-sphinx_source/tutorials/PwInput_tutorial/
-sphinx_source/tutorials/QeCalculator_tutorial/
+sphinx_source/tutorials/*_tutorial/
