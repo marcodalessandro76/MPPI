@@ -65,9 +65,17 @@ files in a `<Class>_tutorial/` folder, and avoids `obj.method?` cells (nbconvert
 markdown pointer instead). The old run folders `QeCalculator_test/` and `Si_gs_convergence/` were deleted from the
 cluster copy on 2026-09-30.
 
-Tutorial status: Tutorial_PwInput, Tutorial_QeCalculator and Tutorial_PwParser (parses the QeCalculator_tutorial results) rewritten (shorter) and executed on ismhpc
-(QeCalculator: direct runs with mpi=2 on the login node + one slurm job on all12h with BeeOND). Still to review and run:
-all the others. Analysis_BandStructure still uses the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`).
+Tutorial status (session of 2026-09-30, all on branch `fix/bugs`):
+- DONE, rewritten (shorter) and executed on ismhpc, committed with their outputs: Tutorial_PwInput,
+  Tutorial_QeCalculator (direct runs with mpi=2 on the login node + one slurm job on all12h with BeeOND),
+  Tutorial_PwParser (parses the `QeCalculator_tutorial/` results, which stay on the cluster).
+- **NEXT (where to restart): the Yambo tutorials**, starting from Tutorial_YamboInput, then Tutorial_YamboCalculator
+  and Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (e.g. the nscf
+  in `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
+- Still to review and run after Yambo: Tutorial_Datasets (open multiprocessing bugs, see the checklist),
+  Tutorial_YamboNLDBParser, Analysis_* notebooks, Model_TLS_optical_absorption. Analysis_BandStructure still uses
+  the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`) and produces the graphene (metal) results.
+- When the review ends: open the PR `fix/bugs` → `master`.
 
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
