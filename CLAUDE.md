@@ -101,7 +101,11 @@ Tutorial status (all on branch `fix/bugs`):
 - Analysis_BandStructure rewritten and executed (2026-10-01) in `BandStructure_tutorial`: GaAs, GaAs with
   spin-orbit (rel pseudos, 16 bands), graphene (smearing, G-M-K-G), GaAs-SO with ypp BOLTZ (works, the old
   'interpolation error' issue is gone). Path L-G-X-W-K-G from the corrected Constants.high_sym_fcc.
-- **NEXT**: Tutorial_YamboNLDBParser, the other Analysis_* notebooks and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+- Analysis_Dos rewritten and executed (2026-10-01) in `Dos_tutorial`: Si nscf 12x12x12, DOS normalization
+  (2 states per band, electrons up to the gap), lorentzian vs gaussian, set_gap, JDOS from get_transitions,
+  generic levels and rescale.
+- **NEXT**: Tutorial_YamboNLDBParser, Analysis_Electron-phonon, Analysis_FourierTransform, Analysis_Optics and
+  Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
   `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs

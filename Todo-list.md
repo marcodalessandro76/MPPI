@@ -13,8 +13,6 @@
 - Add the spin to the Dos class and add a from_Yambo method in the Dos class, this requires that the weights of the
   k points are computed by the YamboDftParser.
 
-- Complete the Analysis_Dos notebook.
-
 - Complete the PwParser and YamboDftParser classes with add the expansion of the k points and the computation of the weigths.
   We can use the attribute weights in the PwParser for a check of the results.
 
