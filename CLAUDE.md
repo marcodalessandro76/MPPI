@@ -92,7 +92,7 @@ Tutorial status (all on branch `fix/bugs`):
   skip, clean_restart replicas), GW ppa, ypp bands, a Yambo Dataset (HF gap vs EXXRLvcs with PP.yambo_get_gap)
   and a slurm run with the production RunRules and BeeOND. HF direct gap of Si at Gamma: 7.9501 eV.
 - Tutorial_YamboParser rewritten and executed (2026-10-01): parses the `Yambo_tutorial` results (GW ppa with
-  ExtendOut, HF, ypp bands) and `Reference_data/rt_results` (RT o- files, ndb.RT_carriers). GW direct gap of Si
+  ExtendOut, HF; no band structures: they belong to Analysis_BandStructure) and `Reference_data/rt_results` (RT o- files, ndb.RT_carriers). GW direct gap of Si
   at Gamma 3.32 eV (DFT 2.57). Notes: the yambo vector alat of a fcc cell is alat/2, so the `rescale=True`
   lattice of YamboDftParser differs by 2 from the PwParser one (equal in a.u.); in ypp bands do NOT set the
   `BANDS_path` labels (ypp then uses its own high-symmetry points, wrong for this cell): use `BANDS_kpts`. Use
