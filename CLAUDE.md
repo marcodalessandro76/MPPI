@@ -77,7 +77,8 @@ Tutorial status (all on branch `fix/bugs`):
   (2026-10-01, QE only: ecut dataset, post-processing, fetch_results, seek_convergence on k points, a slurm dataset)
   — executed in place on the cluster, NOT committed yet. The old Yambo HF dataset part of Tutorial_Datasets was
   dropped: show a Yambo dataset in the Yambo tutorials.
-- Tutorial_YamboInput rewritten and executed (2026-10-01): run_dir `YamboInput_tutorial` built with
+- Tutorial_YamboInput rewritten and executed (2026-10-01): run_dir `Yambo_tutorial` (SHARED by all the Yambo
+  tutorials, they use the same SAVE from `QeCalculator_tutorial/out_nscf`) built with
   `Tools.init_yambo_dir(yambo_dir, input_dir)` (the current API; the MoS2 notebooks use the older
   `make_p2y(source_dir)` + `init_yambo_run_dir`, removed in March 2023). YamboInput.py was rewritten (line based
   parser, readable writer) and checked against 14 yambo/ypp/yambo_nl/yambo_rt inputs (tests/data/yambo_inputs).
