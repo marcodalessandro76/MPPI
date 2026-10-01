@@ -25,6 +25,7 @@
   "words": [
     "abinitio",
     "abspath",
+    "alat",
     "allclose",
     "attaccalite",
     "autodoc",
@@ -32,6 +33,7 @@
     "autoreload",
     "beeond",
     "bizstyle",
+    "boltztrap",
     "celldm",
     "celldms",
     "classmethods",
@@ -162,6 +164,7 @@
     "rfft",
     "rfftfreq",
     "rlat",
+    "rlu",
     "roptics",
     "rtol",
     "runlevel",

@@ -151,8 +151,9 @@ Runnable on the laptop (done on branch `fix/bugs`, covered by `tests/`):
 - [x] numpy 2: `np.array(ncVariable)` → `np.array(ncVariable[:])` (DeprecationWarning); invalid escape sequences
       in regexes and LaTeX docstrings (SyntaxWarning in py3.12+) fixed with r-prefixes
 - [ ] `MergeQPndb.merge_qp` does not close its input Datasets (do it together with the YamboQPParser work)
-- [ ] `Constants.high_sym_fcc['K'] = [0,1,1]` is equivalent to X (the K point is (3/4,3/4,0)); the path X→(0,1,1)→Γ
-      used in Analysis_BandStructure passes through K anyway. Ask the user before changing it, notebooks depend on it
+- [x] `Constants.high_sym_fcc` was inconsistent (K=(0,1,1) equivalent to X, W not on the face of X). Fixed on
+      2026-10-01 (user approved): X=(0,1,0), W=(0,1,1/2), K=(0,3/4,3/4), U=(1/4,1,1/4), L=(1/2,1/2,1/2), the same
+      points of high_sym_fcc_crystal (which was already correct; U added)
 - [ ] Physics to check with the user: difference-frequency field not conjugated in `Xn_frequency_mixing.eval_Ew`;
       dephasing 12/damp vs 6/damp in the two Xn classes; missing `dt` and t0 phase in `LRoptics`
 - [ ] `NLanalysisYamboPy.py`: many latent NameErrors; decide whether to fix it or remove it

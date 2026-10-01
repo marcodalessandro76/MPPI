@@ -85,20 +85,26 @@ The Boltzmann constant in eV/K
 """
 
 high_sym_fcc = {'G':[0.,0.,0.],
-                'X':[0.,0.,1.],
-                'L':[0.5,0.5,0.5],
-                'K':[0.,1.,1.],
-                'W':[1.0,0.5,0.]}
+                'X':[0.,1.,0.],
+                'W':[0.,1.,0.5],
+                'K':[0.,0.75,0.75],
+                'U':[0.25,1.,0.25],
+                'L':[0.5,0.5,0.5]}
 """
-High symmetry points of the fcc lattice (expressed in cartesian coordinates in units of 2pi/alat)
+High symmetry points of the fcc lattice (expressed in cartesian coordinates in units of 2pi/alat). The points
+X, W, K and U belong to the same face of the Brillouin zone, so for instance L-G-X-W-K-G is a path of
+the standard band structure plots.
 """
 
 high_sym_fcc_crystal = {
                 'G':[0.,0.,0.],
                 'X':[0.,0.5,0.5],
-                'L':[0.5,0.5,0.5],
+                'W':[1./4.,3./4.,1./2.],
                 'K':[3./8.,3./4.,3./8.],
-                'W':[1./4.,3./4.,1./2.]}
+                'U':[0.,5./8.,3./8.],
+                'L':[0.5,0.5,0.5]}
 """
-High symmetry points of the fcc lattice (expressed in crystal coordinates)
+High symmetry points of the fcc lattice (expressed in crystal coordinates, i.e. in the basis of the reciprocal
+lattice vectors of the QuantumESPRESSO fcc lattice, ibrav=2). X, W, K and U are the same points of the
+high_sym_fcc dictionary, while L is an equivalent point.
 """
