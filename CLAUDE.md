@@ -117,7 +117,8 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
   `mppi.Calculators.Tools.init_yambo_dir`) and the nonexistent `set_GbndRange`/`set_BndsRnXp`.
 - Still to review and run after Yambo: Tutorial_YamboNLDBParser, Analysis_* notebooks,
   Model_TLS_optical_absorption.
-- Work directly on `master` (version 1.3). The branches v1.0, v1.1, v1.2 keep the old versions.
+- Work on `master` (version 1.3). The branches v1.0, v1.1, v1.2 keep the old versions. Do NOT delete the branch
+  `fix/bugs`: the user keeps it for future rounds of fixes like this one (to be merged again into master).
 
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
