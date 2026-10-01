@@ -49,7 +49,7 @@ reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_col
 def make_dict(columns,suffix,extendOut):
     """
     Create a dictionary from the columns array. If the suffix is found in the
-    ref dictionary, and if the number of columns matchs the numnber of elements in the reference key,
+    ref dictionary, and if the number of columns matchs the number of elements in the reference key,
     attribute to the keys the associated names, otherwise associate string value 'col'+str(ind), where
     ind is the column index starting from one. The choice of the ref dictionary depends on the value
     of the ``extendOut`` variable.
@@ -86,7 +86,7 @@ def parseYamboOutput(file,suffix,extendOut):
 
 class YamboOutputParser(dict):
     """
-    Class that performs the parsing of a Yambo o- file(s). The class ineriths from :py:class:`dict`
+    Class that performs the parsing of a Yambo o- file(s). The class inherits from :py:class:`dict`
     and the instance of the class is a dictionary with the data. The keys correspond to the extension
     of the parsed files.
 
@@ -153,7 +153,7 @@ class YamboOutputParser(dict):
     def get_energy(self,k,bnd,verbose=False):
         """
         Compute the energy (in eV) of the selected state with k and bnd indexes.
-        The method is implemented for the 'hf' and 'qp' runleves. In the first case
+        The method is implemented for the 'hf' and 'qp' runlevels. In the first case
         it seeks for the 'Ehf' variable while in the former it looks for the 'E' variable
         (written only with the extendOut option enabled!).
         In the other cases a warning is created.

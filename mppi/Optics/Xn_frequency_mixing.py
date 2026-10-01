@@ -1,5 +1,5 @@
 """
-This module defines the tools to extract the non-linear optical properties of the system from the real-time polarization induced by the sum of two monocromatic external fields,
+This module defines the tools to extract the non-linear optical properties of the system from the real-time polarization induced by the sum of two monochromatic external fields,
 that represent the pump and the probe in a typical pump-probe experiment. 
 The module can be loaded in the notebook as follows
 
@@ -104,7 +104,7 @@ def estimate_time_window(Omegas, safety_factor=8):
 
 class Xn_frequency_mixing():
     """
-    Class to extract the non-linear susceptibility from the polarization induced by the sum of two monocromatic external fields, that 
+    Class to extract the non-linear susceptibility from the polarization induced by the sum of two monochromatic external fields, that 
     represent the pump and the probe in a typical pump-probe experiment. 
 
     Args:

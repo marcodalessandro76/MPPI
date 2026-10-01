@@ -93,7 +93,7 @@ class Dataset(Runner):
 
     Parameters:
         label (:py:class:`str`): the label of the dataset, it can be useful for instance if more
-            than one istance of the class is present
+            than one instance of the class is present
         run_dir (:py:class:`str`): path of the directory where the runs will be performed. This argument
             can be overwritten by including a run_dir keyword in the :meth:`append_run` method of the class.
             In this way the various elements of the dataset can be run in different folders
@@ -304,7 +304,7 @@ class Dataset(Runner):
            >>> study.append_run(id={'ecut': 40, 'k' : 6}, input = ..., runner = )
            >>> study.append_run(id={'ecut': 50, 'k' : 6}, input = ..., runner = )
            >>> #append other runs if needed
-           >>> #set a post processing function that perform a parsing of the rsesults
+           >>> #set a post processing function that perform a parsing of the results
            >>> #and contains 'energy' as an attribute of the results object
            >>> #run the calculations (optional if run_if_not_present=True)
            >>> study.run()

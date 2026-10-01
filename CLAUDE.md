@@ -80,6 +80,9 @@ Tutorial status (session of 2026-09-30, all on branch `fix/bugs`):
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
   `verbose` flags.
+- Spell check: `cspell.json` (VS Code Code Spell Checker) checks only comments and docstrings of the python code
+  (also in notebook code cells), never the code. Add new technical terms (Yambo/QE variables...) to its `words`
+  list, and write comments/docstrings without typos.
 - Keep the public API backward compatible (the user's notebooks and scripts on the clusters depend on it). Flag it
   explicitly when a change breaks it.
 

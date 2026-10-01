@@ -91,7 +91,7 @@ class BandStructure():
     @classmethod
     def from_Ypp(cls, results, high_sym_points = None, suffix = 'bands_interpolated'):
         """
-        Initialize the BandStructure class from the data dictionay of the result of a Ypp postprocessing.
+        Initialize the BandStructure class from the data dictionary of the result of a Ypp postprocessing.
         The class make usage of the YamboParser of this package.
 
         Args:
@@ -129,10 +129,10 @@ class BandStructure():
 
     def get_kpath(self):
         """
-        Compute the curvilinear ascissa along the path.
+        Compute the curvilinear abscissa along the path.
 
         Returns:
-            :py:class:`array` : values of the curvilinear ascissa along the path
+            :py:class:`array` : values of the curvilinear abscissa along the path
         """
         import numpy as np
         kpoints = self.kpoints

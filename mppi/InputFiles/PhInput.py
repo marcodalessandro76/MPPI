@@ -12,7 +12,7 @@ class PhInput(dict):
     """
     Class to generate an manipulate the QuantumESPRESSO ph.x input files.
     Can be initialized either reading from a file or starting from scratch.
-    Actually the parser of th kpoints has not yet been implented.
+    Actually the parser of th kpoints has not yet been implemented.
 
 
     Note that the default parameters for the init of the class set the ``qplot=True``
@@ -25,7 +25,7 @@ class PhInput(dict):
         xq(1,nqs)  xq(2,nqs)  xq(3,nqs)  nq(nqs) \n
 
     where nqs are the number of points, xq(j,i) is the j-th coordinate of the i-th point,
-    in units of 2pi/a0 (a0 = lattice parameter), and nq(i) is the weigth of the i-th point
+    in units of 2pi/a0 (a0 = lattice parameter), and nq(i) is the weight of the i-th point
 
     """
 
@@ -39,7 +39,7 @@ class PhInput(dict):
         to the object dictionary.
 
         Args:
-            file (:py:class:`string`) : name of an exsistent input file, used to
+            file (:py:class:`string`) : name of an existent input file, used to
                 initialize the dictionaries of the object
             **kwargs : keyword arguments used to initialize the dictionaries of the
                 object
@@ -64,7 +64,7 @@ class PhInput(dict):
         Read the arguments and variables from the input file.
 
         Args:
-            file (:py:class:`string`) : name of an exsistent input file, used to
+            file (:py:class:`string`) : name of an existent input file, used to
                 initialize the dictionary of the object
 
         """
@@ -119,7 +119,7 @@ class PhInput(dict):
 
     def read_kpoints(self):
         """
-        Read the kpoints from theinput file and attribute the associated variables
+        Read the kpoints from the input file and attribute the associated variables
         in the dictionary....to be implemented
         """
         print('The parser of the phonon kpoints has not been implemented!')
@@ -145,7 +145,7 @@ class PhInput(dict):
 
         Args:
             klist (:py:class:`list`) : list with the coordinates and the weights of the kpoints
-            kweigth (:py:class:`list`) : array with the weigth of each kpoint. If is None
+            kweight (:py:class:`list`) : array with the weight of each kpoint. If is None
                 a uniform weight equal to 1 is attributed to each kpoint
 
         """

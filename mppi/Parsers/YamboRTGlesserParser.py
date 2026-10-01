@@ -112,7 +112,7 @@ class YamboRTGlesserParser():
         .. math::
             \\rho_{b1,b2,k}(t) = -iG^<_{b2,b1,k}(t)
 
-        The real and complex parts of the ``dG`` array are recasted to produce the
+        The real and complex parts of the ``dG`` array are recast to produce the
         complex structure of the density matrix. Note that the band indices are transposed,
         since in this way we are able to reproduce the correct expectation of on observable
         using the relation :math:`<O> = Tr(\\rho O)`.

@@ -75,7 +75,7 @@ class PwInput(dict):
         is provided it is parsed and the 'file' key is added to the object dictionary.
 
         Args:
-            file (:py:class:`string`) : name of an exsistent input file, used to
+            file (:py:class:`string`) : name of an existent input file, used to
                 initialize the dictionaries of the object
             **kwargs : keyword arguments used to initialize the dictionaries of the
                 object
@@ -102,7 +102,7 @@ class PwInput(dict):
         only : ATOMIC_SPECIES, ATOMIC_POSITIONS, K_POINTS, CELL_PARAMETERS
 
         Args:
-            file (:py:class:`string`) : name of an exsistent input file, used
+            file (:py:class:`string`) : name of an existent input file, used
                 initialize the dictionaries of the object
 
         """
@@ -343,7 +343,7 @@ class PwInput(dict):
         location can be found from an arbitrary folder.
 
         Args:
-            pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseduopotentials
+            pseudo_dir (:py:class:'string') : (relative) path of the folder with the pseudopotentials
 
         Note:
             If the folder tree contains blank spaces, QuantumESPRESSO cannot be able to find the pseudo, in this
@@ -522,7 +522,7 @@ class PwInput(dict):
             points (:py:class:`list`) : number of kpoints in the x,y,z directions. Used only if
                        the type variable is set to `automatic`
             shift (:py:class:`list`) : shifts in the x,y,z directions. Used only if the
-                       type varible is set to `automatic`
+                       type variable is set to `automatic`
             klist (:py:class:`list`) : list with the structure:
                        [[k1x,k1y,k1z,w1],[k2x,k2y,k2z,w2],....]
                        Used if type variable is not se to `automatic`

@@ -9,7 +9,7 @@ import numpy as np
 
 class YamboRTCarriersParser():
     """
-    Class to manage information about the real time distrubtion of carriers from the
+    Class to manage information about the real time distribution of carriers from the
     ``ndb.RT_carriers`` database created by `yambo_rt`.
 
     Args:
@@ -83,8 +83,8 @@ class YamboRTCarriersParser():
 
         Args:
             dE (:py:class:`float`) : energy step in eV
-            eta (:py:class:`float`) : magnitude of the broading parameter (in the same units used for the values array)
-            broad_kind (:py:class:`string`) : type of broading function used (lorentzian, gaussian)
+            eta (:py:class:`float`) : magnitude of the broadening parameter (in the same units used for the values array)
+            broad_kind (:py:class:`string`) : type of broadening function used (lorentzian, gaussian)
 
         Returns:
             :py:class:`Dos` : Instance of the ``Dos`` class. The object is an array of dos, one for

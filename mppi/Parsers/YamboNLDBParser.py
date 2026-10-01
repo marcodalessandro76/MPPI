@@ -137,7 +137,7 @@ class YamboNLDBParser(object):
                 self.N_ext_fields=self.N_ext_fields+1
 
         #
-        # Read polarization and currect files 
+        # Read polarization and current files 
         #
         self.Polarization=[]
         self.Current     =[]

@@ -80,7 +80,7 @@ def pulseParametersFromTheta(mu12, theta, width = 100, fwhm = None, THz_pulse = 
         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
 
     Returns:
-        :py:class:`dict` : a dictionay with the (generally complex) Rabi coupling,
+        :py:class:`dict` : a dictionary with the (generally complex) Rabi coupling,
             the field amplitude (in V/m) and the field intensity (in kW/cm^2)
 
     """

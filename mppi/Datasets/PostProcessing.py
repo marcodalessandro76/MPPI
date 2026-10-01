@@ -81,7 +81,7 @@ def yambo_get_gap(dataset):
     """
     Extract the value of the gap from the results dictionary of the dataset.
     The function requires that the parameters k_full and band_full are defined as
-    kwargs in the dataset, and the optional paremeters k_empty and band_empty can
+    kwargs in the dataset, and the optional parameters k_empty and band_empty can
     be provided in the same way.
 
     Args:

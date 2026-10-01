@@ -178,8 +178,8 @@ def distance_point_to_segment(point,start,end):
         end (:py:class:`np.array`) : cartesian coordinates of the end point of the segment
 
     Returns :
-        :py:class:`tuple` : the tuple (distance,ascissa_path) with the value of the distance
-        and the value of the curvilinear ascissa on the line associated to the line element closest
+        :py:class:`tuple` : the tuple (distance,abscissa_path) with the value of the distance
+        and the value of the curvilinear abscissa on the line associated to the line element closest
         to the `point`
 
     """
@@ -190,13 +190,13 @@ def distance_point_to_segment(point,start,end):
     proj_vec = dot_prod*line_unit # projection of the point_vec in the direction of the segment
     if dot_prod < 0:
         distance = np.linalg.norm(point-start)
-        ascissa_path = 0.
-        return distance,ascissa_path
+        abscissa_path = 0.
+        return distance,abscissa_path
     if np.linalg.norm(proj_vec) > np.linalg.norm(line_vec):
         distance = np.linalg.norm(point-end)
-        ascissa_path = np.linalg.norm(line_vec)
-        return distance,ascissa_path
+        abscissa_path = np.linalg.norm(line_vec)
+        return distance,abscissa_path
     else:
         distance = np.linalg.norm(proj_vec-point_vec)
-        ascissa_path = np.linalg.norm(proj_vec)
-        return distance,ascissa_path
+        abscissa_path = np.linalg.norm(proj_vec)
+        return distance,abscissa_path

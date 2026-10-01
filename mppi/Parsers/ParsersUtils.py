@@ -29,7 +29,7 @@ from mppi.Utilities.Constants import HaToeV
 #
 #     return full_kpts
 #
-# def car_red(car,lat): -> it is implented here as convert_to_crystal
+# def car_red(car,lat): -> it is implemented here as convert_to_crystal
 #     """
 #     Convert cartesian coordinates to reduced
 #     """

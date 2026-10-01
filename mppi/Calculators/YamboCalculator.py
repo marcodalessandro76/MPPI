@@ -33,7 +33,7 @@ def get_output_files(path):
     Scan the path with the output files and build a dictionary in which the
     keys are type of output (hf,qp,carriers,...) and the values are the names
     of the file for each type. If the path contains several replica of the output
-    files (due to the fact the Yambo has been exectuted many times without cleaning
+    files (due to the fact the Yambo has been executed many times without cleaning
     the output folder) the function identifies the files associated to the last run.
 
     Args:
@@ -61,8 +61,8 @@ def get_output_files(path):
 def get_report(path):
     """
     Look for the name of the r-* file(s) produced by the execution of the code.
-    If multiple istances of the report are found, the function selects the one
-    assciated to the last computation.
+    If multiple instances of the report are found, the function selects the one
+    associated to the last computation.
 
     Args:
         path (:py:class:`string`) : folder with the r-* and the o-* files
@@ -87,11 +87,11 @@ def get_db_files(dbsPath):
     Look for the files of tht type ndb.* in the dbsPath. Note that the first element of dbsPath
     is the folder where Yambo writes the ndb database. If a ndb is found in this folder its
     (eventual) replica in the other folders of dbsPath are not considered (this behavior protects
-    under erroneuos identification of the correct databas that can happen, for instance, if a ndb
+    under erroneous identification of the correct database that can happen, for instance, if a ndb
     given as input is not compliant with the actual computation so that Yambo has to compute it).
 
     Args:
-        dbstPath (:py:class:`list`) : list of folders in which the ndb databases created by Yambo
+        dbsPath (:py:class:`list`) : list of folders in which the ndb databases created by Yambo
             are sought
 
     Return:
@@ -146,11 +146,11 @@ def build_results_dict(run_dir, outputPath, dbsPath, verbose = True):
 
 class YamboCalculator(Runner):
     """
-    Perform a Yambo calculation. The parameters used to define the parellelization
+    Perform a Yambo calculation. The parameters used to define the parallelization
     strategy are provided in the `runRules` object.
 
     Parameters:
-       runRulues (:class:`RunRules`) : instance of the :class:`RunRules` class
+       runRules (:class:`RunRules`) : instance of the :class:`RunRules` class
        executable (:py:class:`string`) : set the executable (yambo, ypp, yambo_rt, ...) of the Yambo package
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking that the
             report file built by yambo exists and contains the string `game_over`, defined as a data member of this class
@@ -158,7 +158,7 @@ class YamboCalculator(Runner):
        dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
             for submitting the job, but the computations are not run
        wait_end_run (:py:class:`bool`) : with this option disabled the run method does not wait the end of the run.
-            This option may be useful for interacting with the code in particular in _asincronous_ computation managed
+            This option may be useful for interacting with the code in particular in _asynchronous_ computation managed
             by the slurm scheduler
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
             The value of the ``BeeOND_dir`` is written as a data member of the class and can be modified if needed
@@ -222,7 +222,7 @@ class YamboCalculator(Runner):
 
         Note:
             If the run_dir and/or the SAVE folder do not exist an alert is
-            written but the execution of the run method proceedes.
+            written but the execution of the run method proceeds.
 
         """
         run_dir = self.run_options.get('run_dir', '.')
@@ -397,7 +397,7 @@ class YamboCalculator(Runner):
                 time.sleep(delay)
             if verbose: print('computation %s ended'%name)
         else:
-            if verbose: print('The wait_end_run is False or the dry_run option is active. The calculator proceedes to the postprocessing')
+            if verbose: print('The wait_end_run is False or the dry_run option is active. The calculator proceeds to the postprocessing')
 
     def build_slurm_script(self):
         """
@@ -496,7 +496,7 @@ class YamboCalculator(Runner):
         Check the status of the running job.
 
         Args:
-            job : reference to the actual job. job is an istance of Popen for `direct` scheduler
+            job : reference to the actual job. job is an instance of Popen for `direct` scheduler
                 or a string for `slurm` scheduler
 
         Return:

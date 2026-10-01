@@ -32,7 +32,7 @@ class YamboInput(dict):
 
     def __init__(self,args='',folder='.',filename='yambo.in'):
         """
-        Initalize the class
+        Initialize the class
         """
         dict.__init__(self,args=args,folder=folder,filename=filename)
 

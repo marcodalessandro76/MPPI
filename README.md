@@ -24,7 +24,7 @@ The package is composed by several module each of which contains one ore more cl
 To install the package you can clone this repository in a local folder, e.g. `/home/username/Applications/MPPI`.
 Then move inside the folder and install the package using the pip or the python tools,
 
-    python3 setupy install
+    python3 setup.py install
 
 you can add the --user option, so that the package is installed in the local folder for the python libraries.
 

@@ -37,8 +37,8 @@ def build_histogram(values,weights=None,norm=1.0,minVal=None,maxVal=None,
         minVal (:py:class:`float`) : values lower than this parameter are not included in the histogram
         maxVal (:py:class:`float`) : values higher than this parameter are not included in the histogram
         step (:py:class:`float`) : size of the bin (in the same units used for the values array)
-        eta (:py:class:`float`) : magnitude of the broading parameter (in the same units used for the values array)
-        broad_kind (:py:class:`string`) : type of broading function used (lorentzian, gaussian).
+        eta (:py:class:`float`) : magnitude of the broadening parameter (in the same units used for the values array)
+        broad_kind (:py:class:`string`) : type of broadening function used (lorentzian, gaussian).
             A function with the signature f(eta,x0,x) is also accepted
 
     Return:
@@ -65,7 +65,7 @@ def build_histogram(values,weights=None,norm=1.0,minVal=None,maxVal=None,
     elif broad_kind == 'lorentzian' : broad_func = lorentzian
     elif broad_kind == 'gaussian' : broad_func = gaussian
     else :
-        print('unknown type of broading function. Accepted choices are lorentzian and gaussian')
+        print('unknown type of broadening function. Accepted choices are lorentzian and gaussian')
         return None
 
     x = np.arange(minVal,maxVal,step)
@@ -88,7 +88,7 @@ def convert_PwData(evals,weights):
 
     Return:
         (tuple) : tuple containing:
-            (:py:class:`numpy.array`) : one-dimensioanal array with the energies
+            (:py:class:`numpy.array`) : one-dimensional array with the energies
             (:py:class:`numpy.array`) : one-dimensional array with the associated weights
 
     """
@@ -103,7 +103,7 @@ class Dos():
     x axis sampling.
 
     Attributes:
-        dos (:py:class:`list`): list with the tuple (energies,histrogram) for each dos appended to the class
+        dos (:py:class:`list`): list with the tuple (energies,histogram) for each dos appended to the class
         labels (:py:class:`list`): list with the labels of the appended dos
 
     Args:
@@ -115,8 +115,8 @@ class Dos():
         minVal (float) : values lower than this parameter are not included in the histogram
         maxVal (float) : values higher than this parameter are not included in the histogram
         step (float) : size of the bin (in the same units used for the values array)
-        eta (float) : magnitude of the broading parameter (in the same units used for the values array)
-        broad_kind (string) : type of broading function used (lorentzian, gaussian)
+        eta (float) : magnitude of the broadening parameter (in the same units used for the values array)
+        broad_kind (string) : type of broadening function used (lorentzian, gaussian)
 
     """
 
@@ -144,8 +144,8 @@ class Dos():
             minVal (float) : values lower than this parameter are not included in the histogram
             maxVal (float) : values higher than this parameter are not included in the histogram
             step (float) : size of the bin (in the same units used for the values array)
-            eta (float) : magnitude of the broading parameter (in the same units used for the values array)
-            broad_kind (string) : type of broading function used (lorentzian, gaussian)
+            eta (float) : magnitude of the broadening parameter (in the same units used for the values array)
+            broad_kind (string) : type of broadening function used (lorentzian, gaussian)
 
         """
         from mppi import Parsers as P
@@ -169,8 +169,8 @@ class Dos():
             minVal (:py:class:`float`) : values lower than this parameter are not included in the histogram
             maxVal (:py:class:`float`) : values higher than this parameter are not included in the histogram
             step (:py:class:`float`) : size of the bin (in the same units used for the values array)
-            eta (:py:class:`float`) : magnitude of the broading parameter (in the same units used for the values array)
-            broad_kind (:py:class:`string`) : type of broading function used (lorentzian, gaussian)
+            eta (:py:class:`float`) : magnitude of the broadening parameter (in the same units used for the values array)
+            broad_kind (:py:class:`string`) : type of broadening function used (lorentzian, gaussian)
             label (:py:class:`string`) : label associated to the dos
 
         """
@@ -195,8 +195,8 @@ class Dos():
             minVal (float) : values lower than this parameter are not included in the histogram
             maxVal (float) : values higher than this parameter are not included in the histogram
             step (float) : size of the bin (in the same units used for the values array)
-            eta (float) : magnitude of the broading parameter (in the same units used for the values array)
-            broad_kind (string) : type of broading function used (lorentzian, gaussian)
+            eta (float) : magnitude of the broadening parameter (in the same units used for the values array)
+            broad_kind (string) : type of broadening function used (lorentzian, gaussian)
 
         """
         from mppi import Parsers as P
@@ -221,8 +221,8 @@ class Dos():
             minVal (float) : values lower than this parameter are not included in the histogram
             maxVal (float) : values higher than this parameter are not included in the histogram
             step (float) : size of the bin (in the same units used for the values array)
-            eta (float) : magnitude of the broading parameter (in the same units used for the values array)
-            broad_kind (string) : type of broading function used (lorentzian, gaussian)
+            eta (float) : magnitude of the broadening parameter (in the same units used for the values array)
+            broad_kind (string) : type of broadening function used (lorentzian, gaussian)
 
         """
         energies, weights = convert_PwData(evals,weights)

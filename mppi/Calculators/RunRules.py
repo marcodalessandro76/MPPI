@@ -1,5 +1,5 @@
 """
-This module manages the parameters used to define the mpi and omp parellelization strategy.
+This module manages the parameters used to define the mpi and omp parallelization strategy.
 """
 import os
 
@@ -137,7 +137,7 @@ class RunRules(dict):
         gres_gpu (:py:class:`int`) : value of the --gres=gpu slurm variable
         memory (:py:class:`string`) : slurm mem variable
         time (:py:class:`string`) : slurm time variable, format 'HH:MM:SS'
-        partition (:py:class:`string`) : slurm parition variable
+        partition (:py:class:`string`) : slurm partition variable
         account (:py:class:`string`) : slurm account variable
         qos (:py:class:`string`) : slurm qos variable
         omp_places (:py:class:`string`) : the OMP_PLACES option, can be `cores` or `socket`
@@ -145,7 +145,7 @@ class RunRules(dict):
         map_by (:py:class:`string`) : the mpi unit for the --map-by option of mpirun
         pe (:py:class:`int`) : number of `processing elements` in the --map-by:unit:PE=n option of mpirun
         rank_by (:py:class:`string`) : the unit for the --rank-by option of mpirun
-        pre_processing (:py:class:`string`) : name of the file with pre-processing actions peformed by
+        pre_processing (:py:class:`string`) : name of the file with pre-processing actions performed by
             the script before running the computation. For instance, it can be used to load the module
             needed by the running applications. With the `slurm` scheduler the lines of the file are included
             in the slurm script, with the `direct` scheduler the file is sourced (with bash) before the run command

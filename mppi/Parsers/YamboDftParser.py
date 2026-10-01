@@ -226,7 +226,7 @@ class YamboDftParser():
     #     with the corresponding index in the irreducible brillouin zone
     #     """
     #
-    #     #check if the kpoints were already exapnded
+    #     #check if the kpoints were already expanded
     #     kpoints_indexes  = []
     #     kpoints_full     = []
     #     symmetry_indexes = []
@@ -236,7 +236,7 @@ class YamboDftParser():
     #
     #     #expand using symmetries
     #     for nk,k in enumerate(self.car_kpoints):
-    #         #if the index in not in the dicitonary add a list
+    #         #if the index in not in the dictionary add a list
     #         if nk not in kpoints_full_i:
     #             kpoints_full_i[nk] = []
     #

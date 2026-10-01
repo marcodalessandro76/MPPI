@@ -39,7 +39,7 @@ class PwParser():
         evals : array of the ks energies for each kpoint (in Hartree)
         lsda : True if collinear spin is activated
         noncolin : True if noncollinear spin calculation is activated
-        spinorbit : True if spin-orbit couping is present
+        spinorbit : True if spin-orbit coupling is present
         spin_degen : 1 if lsda or non collinear spin is activated, 2 otherwise
 
     """
