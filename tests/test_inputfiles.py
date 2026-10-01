@@ -46,7 +46,7 @@ def test_pwinput_quoted_values(io_dir, tmp_path):
     assert inp.get_prefix() == 'my run'
     assert inp.get_outdir() == './out dir'
     assert inp['control']['pseudo_dir'] == '"../pseudos"'
-    assert inp['system'] == {'force_symmorphic':'.false.','ibrav':2,'celldm(1)':10.3,'nat':2,'ntyp':1,'ecutwfc':30}
+    assert inp['system'] == {'force_symmorphic':'.true.','ibrav':2,'celldm(1)':10.3,'nat':2,'ntyp':1,'ecutwfc':30}
 
 PW_TEMPLATE = """&control
     calculation = 'relax'
@@ -129,3 +129,12 @@ def test_yamboinput_generation(tmp_path):
     inp = I.YamboInput('yambo -x -V rl',folder=str(tmp_path))
     assert 'HF_and_locXC' in inp['arguments']
     assert 'EXXRLvcs' in inp['variables']
+
+def test_pwinput_force_symmorphic_default():
+    # yambo requires force_symmorphic = .true., it is the default of the class and of the set methods
+    inp = I.PwInput()
+    assert inp['system']['force_symmorphic'] == '.true.'
+    for method in (inp.set_scf, lambda: inp.set_nscf(8), lambda: inp.set_bands(8)):
+        inp['system']['force_symmorphic'] = '.false.'
+        method()
+        assert inp['system']['force_symmorphic'] == '.true.'

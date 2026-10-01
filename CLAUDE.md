@@ -27,6 +27,9 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   clash). There: repo `~/Applications/MPPI` (pip editable install, it is the copy the user's notebooks use), miniconda
   python 3.13, `pw.x` (qe-7.0) and `yambo` (Lumen fork 2.1.0) in PATH, slurm. Edits are made on the laptop, pushed,
   then `git pull` on the cluster (the cluster never commits).
+  `export OMPI_MCA_btl=^openib` is set in `~/.bashrc` and in `yambo_module`: it only hides the Open MPI
+  "error initializing an OpenFabrics device" warning (openib is never used for IB: btl_openib_allow_ib=false,
+  the PML is UCX). Yambo `reformat=True` (header in the inputs) must stay the default.
   Environments: the user's `pw.x` needs Intel MPI + MKL, yambo needs OpenMPI, so they cannot share one shell env.
   The user keeps module files in `~/module_script/` (`qe_module`, `yambo_module`) and passes them as
   `RunRules(pre_processing=...)`: included in slurm scripts and (since fix/bugs) sourced before `direct` runs,
@@ -79,7 +82,8 @@ Tutorial status (all on branch `fix/bugs`):
   `make_p2y(source_dir)` + `init_yambo_run_dir`, removed in March 2023). YamboInput.py was rewritten (line based
   parser, readable writer) and checked against 14 yambo/ypp/yambo_nl/yambo_rt inputs (tests/data/yambo_inputs).
   With `reformat=True` yambo keeps only the variables of the `-V` verbosity of args.
-- IMPORTANT for every Yambo tutorial: the nscf used for p2y must be run with `force_symmorphic=True`. With
+- IMPORTANT for every Yambo tutorial: the nscf used for p2y must be run with `force_symmorphic=True` (since
+  2026-10-01 it is the default of PwInput and of set_scf/set_nscf/set_bands, it was False before). With
   non-symmorphic symmetries in the SAVE this Lumen yambo silently activates no runlevel (generated inputs contain
   only setup variables, runs end with a report named `r-..._ypp`). Tutorial_QeCalculator now does so.
   The new p2y always exits with MPI_ABORT after writing the wavefunctions, but the SAVE works.

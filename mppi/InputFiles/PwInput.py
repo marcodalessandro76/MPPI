@@ -62,7 +62,7 @@ class PwInput(dict):
                    'prefix':"'pwscf'",
                    'outdir':"'./'"},
                'system':{
-                    'force_symmorphic':fortran_bool(False)},
+                    'force_symmorphic':fortran_bool(True)},
                 'electrons':{
                     'diago_full_acc':fortran_bool(False)}
                }
@@ -372,14 +372,15 @@ class PwInput(dict):
             self['system']['degauss'] = degauss/(0.5*1e3*HaToeV)
 
     def set_scf(self,conv_thr=1e-8,diago_full_acc=False,
-                force_symmorphic=False,verbosity='high'):
+                force_symmorphic=True,verbosity='high'):
         """
         Set the variables for a scf calculation.
 
         Args:
             conv_thr (:py:class:`string`) : the convergence threshold value
             diago_full_acc (:py:class:`bool`)
-            force_symmorphic (:py:class:`bool`)
+            force_symmorphic (:py:class:`bool`) : if True (the default) only the symmorphic symmetries are
+                used. Yambo requires that the computations are performed with this option
             verbosity (:py:class:`string`)
 
         """
@@ -390,7 +391,7 @@ class PwInput(dict):
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
     def set_nscf(self,nbnd,conv_thr=1e-8,diago_full_acc=False,
-                force_symmorphic=False,verbosity='high'):
+                force_symmorphic=True,verbosity='high'):
         """
         Set the variables for a nscf calculation
 
@@ -398,7 +399,8 @@ class PwInput(dict):
             nbnd (:py:class:`int`) : number of bands
             conv_thr (:py:class:`float`) : the convergence threshold value
             diago_full_acc (:py:class:`bool`)
-            force_symmorphic (:py:class:`bool`)
+            force_symmorphic (:py:class:`bool`) : if True (the default) only the symmorphic symmetries are
+                used. Yambo requires that the computations are performed with this option
             verbosity (:py:class:`string`)
 
         """
@@ -410,7 +412,7 @@ class PwInput(dict):
         self['system']['force_symmorphic'] = fortran_bool(force_symmorphic)
 
     def set_bands(self,nbnd,conv_thr=1e-8,diago_full_acc=False,
-                 force_symmorphic=False,verbosity='high'):
+                 force_symmorphic=True,verbosity='high'):
         """
         Set the variables for a bands calculation
 
@@ -418,7 +420,8 @@ class PwInput(dict):
             nbnd (:py:class:`int`) : number of bands
             conv_thr (:py:class:`float`) : the convergence threshold value
             diago_full_acc (:py:class:`bool`)
-            force_symmorphic (:py:class:`bool`)
+            force_symmorphic (:py:class:`bool`) : if True (the default) only the symmorphic symmetries are
+                used. Yambo requires that the computations are performed with this option
             verbosity (:py:class:`bool`)
 
         """
