@@ -1,0 +1,43 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+dipoles                          # [R] Oscillator strenghts (or dipoles)
+infver                           # [R] Input file variables verbosity
+StdoHash=  40                    # [IO] Live-timing Hashes
+Nelectro= 8.000000               # Electrons number
+NelCond= 0.000000                # Number of electrons in conduction (Quasi-Fermi distribution)
+ElecTemp= 0.000000         eV    # Electronic Temperature
+BoseTemp=-1.000000         eV    # Bosonic Temperature
+OccTresh= 0.100000E-4            # Occupation treshold (metallic bands)
+NLogCPUs=0                       # [PARALLEL] Live-timing CPU`s (0 for all)
+DBsIOoff= "none"                 # [IO] Space-separated list of DB with NO I/O. DB=(DIP,X,HF,COLLs,J,GF,CARRIERs,OBS,W,SC,BS,ALL)
+DBsFRAGpm= "none"                # [IO] Space-separated list of +DB to FRAG and -DB to NOT FRAG. DB=(DIP,X,W,HF,COLLS,K,BS,QINDX,RT,ELP
+MEM_tresh=  51200          Kb    # [MEMORY] Treshold on traced memory allocations/deallocations
+#DegFix                        # Force the code to impose the energy levels to respect their degeneracy
+PAR_def_mode= "balanced"         # [PARALLEL] Default distribution mode ("balanced"/"memory"/"workload"/"KQmemory")
+DIP_CPU= ""                      # [PARALLEL] CPUs for each role
+DIP_ROLEs= ""                    # [PARALLEL] CPUs roles (k,c,v)
+DIP_Threads=0                    # [OPENMP/X] Number of threads for dipoles
+BZINDX_CPU= ""                   # [PARALLEL] CPUs for each role
+BZINDX_ROLEs= ""                 # [PARALLEL] CPUs roles (k)
+% DipBands
+  1 |  8 |                           # [DIP] Bands range for dipoles
+%
+#DipBandsALL                   # [DIP] Compute all bands range, not only valence and conduction
+DipApproach= "G-space v"         # [DIP] [G-space v/R-space x/Covariant/Shifted grids/derk]
+DipComputed= ""                  # [DIP] [default R P V; extra P2 Spin Orb]
+#DipPDirect                    # [DIP] Directly compute <v> also when using other approaches for dipoles
+ShiftedPaths= ""                 # [DIP] Shifted grids paths (separated by a space)
+DipoleEtresh= 0.100000E-4  eV    # [DIP] Treshold in the definition of R=P/deltaE

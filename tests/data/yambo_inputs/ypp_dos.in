@@ -1,0 +1,21 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+electrons                        # [R] Electronic properties
+density                          # [R] Density
+Format= "g"                      # Output format [(c)ube/(g)nuplot/(x)crysden;(k)-space]
+Direction= "1"                   # [rlu] [1/2/3] for 1d or [12/13/23] for 2d [123] for 3D
+FFTGvecs= 1139             RL    # [FFT] Plane-waves
+#NormToOne                     # Normalize to one the maximum value of the plot

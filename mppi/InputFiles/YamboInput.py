@@ -6,47 +6,146 @@ the input object inherit from dict, so all the standard methods for python dicti
 be used to modify the attribute of the input.
 """
 
-from subprocess import Popen, PIPE
+from subprocess import run
 import os, re
 
-class YamboInput(dict):
+# regular expressions used to parse the lines of a yambo input file
+_comment_exp = re.compile(r'''("[^"]*"|'[^']*')|#.*''')
+_runlevel_exp = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
+_number_exp = re.compile(r'[+-]?(\d+\.?\d*|\.\d+)([eEdD][+-]?\d+)?')
+_complex_exp = re.compile(r'\(\s*(\S+)\s*,\s*(\S+)\s*\)\s*(.*)')
 
-    #Regular expressions
-    _variaexp   = r'([A-Za-z\_0-9]+(?:\_[A-Za-z]+)?)' #variables names
-    _numexp     = r'([+-]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)' #number
-    _spacexp    = '(?:[ \t]+)?' #space
-    _stringexp  = '["\']([a-zA-Z0-9_ ]+?)["\']' #string
-    _arrayexp   = '%'+_spacexp+_variaexp+r'\s+(?:\#.+)?((?:(?:\s|\.|[+-]?\d)+?\|)+)\s+([a-zA-Z]+)?' #arrays
-    _complexexp = r'\('+_spacexp+_numexp+_spacexp+','+_spacexp+_numexp+_spacexp+r'\)' #complex numbers
-    _runexp     = '([a-zA-Z0-9_]+)'
-    # list of available runlevels to be stored in the arguments array.
-    # Also the 'options' like RmTimeRev or DephCVonly were included in the _runlevels list but they have
-    # been removed since otherwise it seems that these values are always included in the arguments list
-    # after the parsing of the input file.
-    _runlevels  = ['mpa','rim_cut','rim_w','RIM_W','chi','em1s','bse','optics','bsk','bss','em1d','gw0','HF_and_locXC','setup',
-                   'ppa','cohsex','kernel','life','collisions','electrons','bnds','negf','el_ph_scatt','el_el_scatt','excitons',
-                   'wavefunction','fixsyms','QPDBs', 'QPDB_merge','RealTime','RT_X','RToccDos',
-                   'RToccBnd','RToccEner','RToccTime','RTlifeBnd','amplitude','bzgrids','Random_Grid',
-                   'gkkp','el_ph_corr','WRbsWF','Select_energy', 'RTDBs','photolum','kpts_map',
-                   'RTtime','RToccupations','RTfitbands','TDplots','RTfields','nloptics']
+def strip_comment(line):
+    """
+    Remove the comment (introduced by #) from a line of the input file, preserving
+    the # characters inside quoted strings.
+    """
+    return _comment_exp.sub(lambda m: m.group(1) or '', line).strip()
+
+def convert_value(token):
+    """
+    Convert a token of the input file into an int, a float or a string (without quotes).
+    """
+    token = token.strip()
+    if token[:1] in ('"',"'"):
+        return token.strip('"\'')
+    if _number_exp.fullmatch(token):
+        if re.fullmatch(r'[+-]?\d+',token):
+            return int(token)
+        return float(token.replace('d','e').replace('D','e'))
+    return token
+
+def parse_scalar(rhs):
+    """
+    Parse the right hand side of a `name = value [units]` line.
+
+    Returns:
+        the string value (for quoted strings) or the list [value,units] (for numbers and complex numbers)
+
+    """
+    rhs = rhs.strip()
+    if rhs[:1] in ('"',"'"):
+        return rhs[1:rhs.find(rhs[0],1)]
+    complex_match = _complex_exp.fullmatch(rhs)
+    if complex_match:
+        real, imag, units = complex_match.groups()
+        return [complex(float(real),float(imag)),units.strip()]
+    value, _, units = rhs.partition(' ')
+    return [convert_value(value),units.strip()]
+
+def parse_array_row(row):
+    """
+    Parse a row of an array block, with the structure `v1 | v2 | ... | [units]`.
+
+    Returns:
+        :py:class:`tuple` : the list of the values of the row and the units (empty string if not given)
+
+    """
+    fields = row.split('|')
+    values = [convert_value(v) for v in fields[:-1]]
+    return values, fields[-1].strip()
+
+def format_number(value):
+    """
+    Format a number of the input file. Floats are written with the shortest representation
+    that preserves their value.
+    """
+    if isinstance(value,complex):
+        return '( %s , %s )'%(format_number(value.real),format_number(value.imag))
+    if isinstance(value,str):
+        return '"%s"'%value
+    return str(value)
+
+def format_scalar(name, value, units):
+    """
+    Format a scalar variable as `name= value units`.
+    """
+    return ('%s= %s %s'%(name,format_number(value),units)).rstrip()
+
+def format_array(name, values, units):
+    """
+    Format an array variable as a yambo array block. values can be a list (a single row) or a
+    list of lists (a matrix). The units are written at the end of the last row.
+    """
+    rows = values if len(values) > 0 and isinstance(values[0],list) else [values]
+    lines = ['%% %s'%name]
+    for row in rows:
+        if len(row) > 0:
+            lines.append(' | '.join(format_number(v) for v in row) + ' |')
+    if units != '' and len(lines) > 1:
+        lines[-1] += ' ' + units
+    lines.append('%')
+    return '\n'.join(lines)
+
+def format_variable(name, value):
+    """
+    Convert a variable of the input object into the yambo syntax. The variable can be
+    a string, a list [value,units] (where value is a number, a complex number or a list) or a
+    list of strings (an array of strings without units).
+    """
+    if isinstance(value,str):
+        return '%s= "%s"'%(name,value)
+    if isinstance(value,(list,tuple)) and len(value) == 2 and isinstance(value[1],str) \
+        and not isinstance(value[0],str):
+        val, units = value
+        if isinstance(val,(list,tuple)):
+            return format_array(name,list(val),units)
+        return format_scalar(name,val,units)
+    if isinstance(value,(list,tuple)) and all(isinstance(v,str) for v in value):
+        return format_array(name,list(value),'')
+    raise ValueError('Unknown type %s for variable: %s'%(type(value),name))
+
+class YamboInput(dict):
+    """
+    Class to create and manipulate the input files of yambo (and of the other executables of the
+    package, like ypp, yambo_rt, yambo_nl, ...).
+
+    The object is a dictionary with the keys:
+
+    * `args`, `folder`, `filename` : the command used to generate the input, the folder and the name of
+      the input file
+    * `arguments` : list with the active runlevels and flags (e.g. ['HF_and_locXC'])
+    * `variables` : dictionary with the variables. A string variable is stored as a string, while
+      numbers, complex numbers and arrays are stored as a list [value,units], for instance
+      `'EXXRLvcs' : [5985,'RL']` and `'QPkrange' : [[1,32,1,8],'']`. An array with more rows is stored
+      as a list of lists
+
+    Args:
+        args (:py:class:`string`) : command line used to generate the input (e.g. 'yambo -x -V rl').
+            If not empty yambo is executed in the folder (that must contain the SAVE folder) to write the
+            input file. If empty an existing input file is read
+        folder (:py:class:`string`) : folder of the input file
+        filename (:py:class:`string`) : name of the input file
+
+    """
 
     def __init__(self,args='',folder='.',filename='yambo.in'):
-        """
-        Initialize the class
-        """
         dict.__init__(self,args=args,folder=folder,filename=filename)
-
-        if args != '': # if args is not empty call yambo to generate the filename input file
-            workdir = os.getcwd()
-            os.chdir(folder)
-            os.system('rm -f %s'%filename)
-            args+= ' -F %s'%filename # add -F filename so yambo generates filename with the chosen args
-            yambo = Popen(args, stdout=PIPE, stderr=PIPE, stdin=PIPE, shell=True)
-            yambo.wait()
-            os.chdir(workdir)
-            self.read_file(os.path.join(folder,filename))
-        else: # otherwise directly read the filename input file
-            self.read_file(os.path.join(folder,filename))
+        if args != '': # call yambo to generate the input file with the chosen args
+            file = os.path.join(folder,filename)
+            if os.path.isfile(file): os.remove(file)
+            run('%s -F %s'%(args,filename),shell=True,cwd=folder,capture_output=True)
+        self.read_file(os.path.join(folder,filename))
 
     def read_file(self,file):
         """
@@ -66,114 +165,64 @@ class YamboInput(dict):
         the reformat variable is True run yambo to recover the original format of
         the yambo input.
         """
-        f = open(os.path.join(folder,filename),'w')
-        f.write(self.convert_string())
-        f.close()
+        with open(os.path.join(folder,filename),'w') as f:
+            f.write(self.convert_string())
         if self['args'] != '' and reformat:
-            action = 'cd %s; %s -F %s'%(folder,self['args'],filename)
-            os.system(action)
+            run('%s -F %s'%(self['args'],filename),shell=True,cwd=folder,capture_output=True)
 
     def parseInputFile(self,file):
         """
-        Read the arguments and variables from the input file
+        Read the arguments and variables from the content of an input file. The lines are
+        classified as:
+
+        * array blocks, that start with `% name` and end with a line with `%`
+        * variables, with the structure `name = value [units]`
+        * runlevels and flags, given as a single word
+
+        Comments (introduced by #) are ignored.
+
+        Args:
+            file (:py:class:`string`) : the content of the input file
+
         """
         arguments = []
         variables = {}
-
-        var_real     = re.findall(self._variaexp + self._spacexp + '='+ self._spacexp +
-                                  self._numexp + self._spacexp + '([A-Za-z]+)?',file)
-        var_string   = re.findall(self._variaexp + self._spacexp + '='+ self._spacexp + self._stringexp, file)
-        var_array    = re.findall(self._arrayexp,file)
-        var_complex  = re.findall(self._variaexp + self._spacexp + '='+ self._spacexp +
-                                  self._complexexp + self._spacexp + '([A-Za-z]+)?', file)
-        var_runlevel = re.findall(self._runexp + self._spacexp, file)
-
-        def clean(a):
-            """
-            clean the variables according to the type of data
-            """
-            a = a.strip()
-            if a.replace('.','',1).isdigit():
-                if "." in a: return float(a)
-                else:        return int(a)
-            return a
-
-        # Determination of the arguments
-        for key in self._runlevels:
-            if key in var_runlevel:
-                arguments.append(key)
-
-        #float variables
-        for var in var_real:
-            name, value, unit = var
-            variables[name] = [float(value),unit]
-
-        #string variables
-        for var in var_string:
-            name, string = var
-            variables[name] = string
-
-        #complex variables
-        for var in var_complex:
-            name, real, imag, unit = var
-            variables[name] = [complex(float(real),float(imag)),unit]
-
-        #array variables
-        for var in var_array:
-            name, array, unit = var
-            array = [clean(val) for val in array.split('|')[:-1]]
-            variables[name] = [array,unit]
-
+        lines = iter(file.splitlines())
+        for line in lines:
+            line = strip_comment(line)
+            if line == '':
+                continue
+            if line.startswith('%'):
+                name = line[1:].strip()
+                rows, units = [], ''
+                for row in lines:
+                    row = strip_comment(row)
+                    if row == '%': break
+                    if row == '': continue
+                    values, row_units = parse_array_row(row)
+                    rows.append(values)
+                    units = row_units or units
+                values = rows[0] if len(rows) == 1 else rows
+                variables[name] = [values,units]
+            elif '=' in line:
+                name, rhs = line.split('=',1)
+                variables[name.strip()] = parse_scalar(rhs)
+            elif _runlevel_exp.fullmatch(line):
+                arguments.append(line)
         self['arguments'] = arguments
         self['variables'] = variables
 
     def convert_string(self):
         """
-        Convert the input object into a string
+        Convert the input object into a string with the syntax of the yambo input files
         """
-        s  = ""
-        s += "\n".join(self['arguments'])+'\n'
-
-        for key,value in self['variables'].items():
-            if type(value)==bytes or type(value)==str:
-                s+= "%s = %10s\n"%(key,"'%s'"%value)
-                continue
-            if type(value[0])==float:
-                val, unit = value
-                if val > 1e-6:
-                    s+="%s = %lf %s\n"%(key,val,unit)
-                else:
-                    s+="%s = %e %s\n"%(key,val,unit)
-                continue
-            if type(value[0])==int:
-                val, unit = value
-                s+="%s = %d %s\n"%(key,val,unit)
-                continue
-            if type(value[0])==list:
-                array, unit = value
-                if type(array[0])==list:
-                    s+='%% %s\n'%key
-                    for l in array:
-                        s+="%s \n"%(" | ".join(map(str,l))+' | ')
-                    s+='%s'%unit
-                    s+='%\n'
-                else:
-                    s+="%% %s\n %s %s \n%%\n"%(key," | ".join(map(str,array))+' | ',unit)
-                continue
-            if type(value[0])==str:
-                array = value
-                s+="%% %s\n %s \n%%\n"%(key," | ".join(map(lambda x: "'%s'"%x.replace("'","").replace("\"",""),array))+' | ')
-                continue
-            if type(value[0])==complex:
-                value, unit = value
-                s+="%s = (%lf,%lf) %s\n"%(key,value.real,value.imag,unit)
-                continue
-            raise ValueError( "Unknown type %s for variable: %s" %( type(value), key) )
-        return s
+        lines = list(self['arguments'])
+        lines += [format_variable(name,value) for name,value in self['variables'].items()]
+        return '\n'.join(lines) + '\n'
 
     # Set methods useful for Yambo inputs
 
-    def set_array_variables(inp,units='',**kwargs):
+    def set_array_variables(self,units='',**kwargs):
         """
         Add to the `variables` key of the input dictionary
         the elements kwargs[key] = [kwargs[value],units] for all the
@@ -186,9 +235,9 @@ class YamboInput(dict):
 
         """
         for name,value in kwargs.items():
-            inp['variables'][name] = [value,units]
+            self['variables'][name] = [value,units]
 
-    def set_scalar_variables(inp,**kwargs):
+    def set_scalar_variables(self,**kwargs):
         """
         Add to the `variables` key of the input dictionary
         the elements kwargs[key] = kwargs[value] for all the
@@ -199,17 +248,18 @@ class YamboInput(dict):
 
         """
         for name,value in kwargs.items():
-            inp['variables'][name] = value
+            self['variables'][name] = value
 
     def set_extendOut(self):
         """
         Activate the ExtendOut option to print all the variable in the output file.
         """
-        self['arguments'].append('ExtendOut')
+        if 'ExtendOut' not in self['arguments']:
+            self['arguments'].append('ExtendOut')
 
     def set_kRange(self,first_k,last_k):
         """
-        Set the the kpoint interval in the variable QPkpoint.
+        Set the the kpoint interval in the variable QPkrange.
         """
         bands = self['variables']['QPkrange'][0][2:4]
         kpoint_bands = [first_k,last_k] + bands
@@ -217,7 +267,7 @@ class YamboInput(dict):
 
     def set_bandRange(self,first_band,last_band):
         """
-        Set the the band interval in the variable QPkpoint.
+        Set the the band interval in the variable QPkrange.
         """
         kpoint = self['variables']['QPkrange'][0][0:2]
         kpoint_bands = kpoint + [first_band,last_band]
@@ -292,7 +342,8 @@ class YamboInput(dict):
         """
         Remove the time reversal symmetry
         """
-        self['arguments'].append('RmTimeRev')
+        if 'RmTimeRev' not in self['arguments']:
+            self['arguments'].append('RmTimeRev')
 
     def set_ypp_extFields(self, Efield1 = [1.,0.,0.], Efield2 = None):
         """

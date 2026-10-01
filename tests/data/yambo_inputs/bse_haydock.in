@@ -1,0 +1,47 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+optics                           # [R] Linear Response optical properties
+bss                              # [R] BSE solver
+bse                              # [R][BSE] Bethe Salpeter Equation.
+dipoles                          # [R] Oscillator strenghts (or dipoles)
+BSKmod= "SEX"                    # [BSE] IP/Hartree/HF/ALDA/SEX/BSfxc
+BSEmod= "resonant"               # [BSE] resonant/retarded/coupling
+BSEdiskIO= "medium"              # [BSE] high(restart always) |medium(restart only corr.) |low(writes at the end)|none
+BSSmod= "h"                      # [BSS] (h)aydock/(d)iago/(o)ld-diago/(s)lepc/(i)nversion/(c)hase
+BSENGexx=  5985            RL    # [BSK] Exchange components
+BSENGBlk=-1                RL    # [BSK] Screened interaction block size [if -1 uses all the G-vectors of W_{G,Gp}]
+#WehCpl                        # [BSK] eh interaction included also in coupling
+EXCTemp= 0.000000          eV    # Excitonic Temperature (for luminescence spectra and EXCPH)
+% BSEQptR
+ 1 | 1 |                             # [BSK] Transferred momenta range
+%
+% BSEBands
+  1 |  8 |                           # [BSK] Bands range
+%
+#NoDiagSC                      # New setup for non-diagonal supercells
+% BEnRange
+  0.00000 | 10.00000 |         eV    # [BSS] Energy range
+%
+% BDmRange
+ 0.100000 | 0.100000 |         eV    # [BSS] Damping range
+%
+BEnSteps= 100                    # [BSS] Energy steps
+% BLongDir
+ 1.000000 | 0.000000 | 0.000000 |        # [BSS] [cc] Electric Field versor
+%
+BSEprop= "abs"                   # [BSS] Can be any among abs/jdos/kerr/asymm/anHAll/magn/dich/photolum/esrt/MEspin/MEorb
+BSEdips= "none"                  # [BSS] Can be "trace/none" or "xy/xz/yz" to define off-diagonal rotation plane
+BSHayTrs=-0.020000               # [BSS] Relative [o/o] Haydock threshold. Strict(>0)/Average(<0)

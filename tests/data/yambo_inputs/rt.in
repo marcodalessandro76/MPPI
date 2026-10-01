@@ -1,0 +1,121 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+negf                             # [R] NEQ Real-time dynamics
+StdoHash=  40                    # [IO] Live-timing Hashes
+Nelectro= 8.000000               # Electrons number
+NelCond= 0.000000                # Number of electrons in conduction (Quasi-Fermi distribution)
+ElecTemp= 0.000000         eV    # Electronic Temperature
+BoseTemp=-1.000000         eV    # Bosonic Temperature
+OccTresh= 0.100000E-4            # Occupation treshold (metallic bands)
+NLogCPUs=0                       # [PARALLEL] Live-timing CPU`s (0 for all)
+DBsIOoff= "none"                 # [IO] Space-separated list of DB with NO I/O. DB=(DIP,X,HF,COLLs,J,GF,CARRIERs,OBS,W,SC,BS,ALL)
+DBsFRAGpm= "none"                # [IO] Space-separated list of +DB to FRAG and -DB to NOT FRAG. DB=(DIP,X,W,HF,COLLS,K,BS,QINDX,RT,ELP
+MEM_tresh=  51200          Kb    # [MEMORY] Treshold on traced memory allocations/deallocations
+#DegFix                        # Force the code to impose the energy levels to respect their degeneracy
+PAR_def_mode= "balanced"         # [PARALLEL] Default distribution mode ("balanced"/"memory"/"workload"/"KQmemory")
+BZINDX_CPU= ""                   # [PARALLEL] CPUs for each role
+BZINDX_ROLEs= ""                 # [PARALLEL] CPUs roles (k)
+RT_CPU= ""                       # [PARALLEL] CPUs for each role
+RT_ROLEs= ""                     # [PARALLEL] CPUs roles (k,b,q,qp)
+RT_Threads=0                     # [OPENMP/RT] Number of threads for real-time
+HXC_Potential= "IP"              # [SC] SC HXC Potential
+FFTGvecs= 1139             RL    # [FFT] Plane-waves
+COLLCut= 0.000000                # [SC,RT] Cutoff on the collisions, 0=full 1=none (default =0.0005)
+HARRLvcs=  5985            RL    # [HA] Hartree     RL components
+GfnQPdb= "none"                  # [EXTQP G] Database action
+GfnQP_INTERP_NN= 1               # [EXTQP G] Interpolation neighbours (NN mode)
+GfnQP_INTERP_shells= 20.00000    # [EXTQP G] Interpolation shells (BOLTZ mode)
+GfnQP_DbGd_INTERP_mode= "NN"     # [EXTQP G] Interpolation DbGd mode
+% GfnQP_E
+ 0.000000 | 1.000000 | 1.000000 |        # [EXTQP G] E parameters  (c/v) eV|adim|adim
+%
+GfnQP_Z= ( 1.000000 , 0.000000 )         # [EXTQP G] Z factor  (c/v)
+GfnQP_Wv_E= 0.000000       eV    # [EXTQP G] W Energy reference  (valence)
+% GfnQP_Wv
+ 0.000000 | 0.000000 | 0.000000 |        # [EXTQP G] W parameters  (valence) eV| 1|eV^-1
+%
+GfnQP_Wv_dos= 0.000000     eV    # [EXTQP G] W dos pre-factor  (valence)
+GfnQP_Wc_E= 0.000000       eV    # [EXTQP G] W Energy reference  (conduction)
+% GfnQP_Wc
+ 0.000000 | 0.000000 | 0.000000 |        # [EXTQP G] W parameters  (conduction) eV| 1 |eV^-1
+%
+GfnQP_Wc_dos= 0.000000     eV    # [EXTQP G] W dos pre-factor  (conduction)
+GfnRTdb= "none"                  # [EXTRT G] Database
+GfnRT_N= 1                       # [EXTRT G] Interpolation neighbours
+#RTskipImposeN                 # [RT] Conservation of N, dN  imposed by hand on-the-fly
+#InducedField                  # [RT] Include induced field in coupling and current
+Gauge= "length"                  # [BSE/X] Gauge (length|velocity)
+#VelGaugeCorr                  # [RT] Correct the non local term of the pseudo with the vector potential
+#RTgradk                       # [RT] Compute the term grad_k(rho).E
+#RTUpdateSOC                   # [RT] Update the SOC interaction
+#RTUpdateE                     # [RT] Update the Enery levels on-the-fly
+#SaveGhistory                  # [RT] Save the history of the green function
+#RTEqScatt                     # [RT] Include Gamma0f0 term in scattering
+#RTImpForMet                   # [RT] Impose structure optimized for metals
+#RTzeroTempRef                 # [RT] Use zero temperature Fermi districution as reference
+#RTskipPHabs                   # [RT] Skip e-p Lifetimes due to phonon absorption
+#RTEvalEnergy                  # [RT] Energy variation computed on the fly
+#RTEvalEntropy                 # [RT] Entropy variation computed on the fly
+dTupdateTime= 0.000000     fs    # [RT] Initial Time for deltaT update (active only if non-zero)
+dTupdateTimeSet=-0.024189  fs    # [RT] Time for manual deltaT update
+dTupdateJump= 0.000000     fs    # [RT] Time betweem two deltaT updates
+dTupdateTresh= 0.100000          # [RT][o/o] Treshold of deltaT updates
+dT_MAX=-1.000000           fs    # [RT] Maximum value for the time-dependent dT
+dT_SET= 0.000000                 # [RT] Prefactor for manual dT update
+% RTBands
+  1 |  8 |                           # [RT] Bands
+%
+Integrator= "RK2"                # [RT] Integrator. Use keywords space separated  ( "EULER/EXPn/INV" "SIMPLE/RK2/RK4/HEUN" "RWA")
+GrKind= "HS"                     # [RT] G-ret kind: Lorentzian (QP)/ Hyperbolic QP_secant (HS)
+% RTehEny
+ 0.000000 | 0.000000 |         eV    # [RT] Electron-hole energy range
+%
+ScattTresh=-1.000000       eV    # [RT] Treshold on the eh energy to compute the scattering
+RADLifeTime= 0.000000      fs    # [RT] Radiative life-time (if negative RADLifeTime=Phase_LifeTime)
+RADmagnific= 1.000000            # [RT] Radiative life-time magnification
+PhLifeTime= 0.000000       fs    # [RT] Constant Dephasing Time
+#DephCVonly                    # [RT] Dephase only in the CV channel
+DephEThresh= 0.272114E-3   eV    # [RT] Threshold on the energy difference between two states to dephase them
+% DephTRange
+-0.024189 |-0.024189 |         fs    # [RT] Time range in which Dephasing is applied
+%
+RTstep= 10.00000           as    # [RT] Real Time step length
+NETime= 1.000000           ps    # [RT] Simulation Time
+DipoleEtresh= 0.100000E-4  eV    # [DIP] Treshold in the definition of R=P/deltaE
+#SPINprojected                 # [DIP] Project the spin dipoles in the c/v channels
+% IOtime
+ 2.000000 | 5.000000 | 0.100000 |  fs    # [RT] Time between two consecutive I/O (CARRIERs - GF/WF - OUTPUT)
+%
+% IOCachetime
+ 0.000000 | 2.000000 |         fs    # [RT] Time between two consecutive (caching - I/O) of OBSERVABLES
+%
+Field1_Freq= 0.000000      eV    # [RT Field1] Frequency
+Field1_Int= 0.000000       kWLm2 # [RT Field1] Intensity
+Field1_Width= 0.000000     fs    # [RT Field1] Width
+Field1_Chirp= 0.000000     fs    # [RT Field1] Width
+Field1_FWHM= 0.000000      fs    # [RT Field1] Full Width at Half Maximum (overwrite width if set)
+Field1_kind= "none"              # [RT Field1] Kind(SIN|COS|RES|ANTIRES|GAUSS|DELTA|QSSIN)
+Field1_pol= "none"               # [RT Field1] Pol(linear|circular)
+% Field1_Dir
+ 1.000000 | 0.000000 | 0.000000 |        # [RT Field1] Versor
+%
+% Field1_Dir_circ
+ 0.000000 | 1.000000 | 0.000000 |        # [RT Field1] Versor_circ
+%
+Field1_Tstart= 0.000000    fs    # [RT Field1] Initial Time
+%DephMatrix                      # [RT] Dephasing Matrix (bnd1 | bnd2 | kpt | dephasing(fs) |)
+1|1|1|-1.000000|
+%

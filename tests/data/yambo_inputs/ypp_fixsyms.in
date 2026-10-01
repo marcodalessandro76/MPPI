@@ -1,0 +1,35 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+ElecTemp= 0.000000         eV    # Electronic Temperature
+BoseTemp=-1.000000         eV    # Bosonic Temperature
+StdoHash=  40                    # [IO] Live-timing Hashes
+fixsyms                          # [R] Remove symmetries not consistent with an external perturbation
+infver                           # [R] Input file variables verbosity
+% Efield1
+ 0.000000 | 0.000000 | 0.000000 |        # First external Electric Field
+%
+% Efield2
+ 0.000000 | 0.000000 | 0.000000 |        # Additional external Electric Field
+%
+BField= 0.000000           T     # [MAG] Magnetic field modulus
+Bpsi= 0.000000             deg   # [MAG] Magnetic field psi angle [degree]
+Btheta= 0.000000           deg   # [MAG] Magnetic field theta angle [degree]
+GvecsCut= 1                RL    # Max number of G-vectors in the new wave-function
+#KeepKGrid                     # Do not expand the k-grid
+#RmAllSymm                     # Remove all symmetries
+#RmNoSymmo                     # Remove non-symmorphic symmetries
+#RmTimeRev                     # Remove Time Reversal
+#RmSpaceInv                    # Remove Spatial Inversion
