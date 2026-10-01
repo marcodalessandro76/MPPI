@@ -88,7 +88,10 @@ Tutorial status (all on branch `fix/bugs`):
   non-symmorphic symmetries in the SAVE this Lumen yambo silently activates no runlevel (generated inputs contain
   only setup variables, runs end with a report named `r-..._ypp`). Tutorial_QeCalculator now does so.
   The new p2y always exits with MPI_ABORT after writing the wavefunctions, but the SAVE works.
-- **NEXT: Tutorial_YamboCalculator**, then Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+- Tutorial_YamboCalculator rewritten and executed (2026-10-01) in `Yambo_tutorial`: HF direct runs (name/jobname,
+  skip, clean_restart replicas), GW ppa, ypp bands, a Yambo Dataset (HF gap vs EXXRLvcs with PP.yambo_get_gap)
+  and a slurm run with the production RunRules and BeeOND. HF direct gap of Si at Gamma: 7.9501 eV.
+- **NEXT: Tutorial_YamboParser** (it can parse the results in `Yambo_tutorial`). They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
   `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs
