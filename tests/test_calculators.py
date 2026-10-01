@@ -1,6 +1,7 @@
 import os
 from mppi import Calculators as C
-from mppi.Calculators.RunRules import direct_command, build_slurm_header, mpi_command
+import pytest
+from mppi.Calculators.RunRules import direct_command, build_slurm_header, mpi_command, environment_info
 
 def test_runrules_direct():
     rr = C.RunRules(mpi=2,omp_num_threads=1)
@@ -12,7 +13,8 @@ def test_direct_command_pre_processing(tmp_path):
     env = tmp_path/'env.sh'
     env.write_text('module load qe\n')
     rr = C.RunRules(mpi=2,pre_processing=str(env))
-    assert direct_command(rr,'run','pw.x') == 'source %s ; cd run ; pw.x'%os.path.abspath(str(env))
+    # the output of the pre_processing file (e.g. module list) is discarded
+    assert direct_command(rr,'run','pw.x') == 'source %s > /dev/null 2>&1 ; cd run ; pw.x'%os.path.abspath(str(env))
 
 def test_slurm_header_pre_processing(tmp_path):
     env = tmp_path/'env.sh'
@@ -23,3 +25,15 @@ def test_slurm_header_pre_processing(tmp_path):
     assert '#SBATCH --job-name=job_test' in lines
     assert 'module purge' in lines and 'module load qe' in lines
     assert mpi_command(rr) == 'mpirun -np 4'
+
+@pytest.mark.skipif(not os.path.isfile('/bin/bash'),reason='needs /bin/bash')
+def test_environment_info(tmp_path):
+    env = tmp_path/'env.sh'
+    env.write_text('echo this output is discarded\nexport PATH=%s:$PATH\n'%tmp_path)
+    exe = tmp_path/'my_code.x'
+    exe.write_text('#!/bin/bash\n')
+    exe.chmod(0o755)
+    info = environment_info(C.RunRules(mpi=2,pre_processing=str(env)),'my_code.x')
+    assert 'pre_processing : %s'%env in info
+    assert 'executable : %s'%exe in info
+    assert 'discarded' not in info

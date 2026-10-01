@@ -77,7 +77,8 @@ def direct_command(pars, run_dir, run_command):
     """
     Define the command executed by the `direct` scheduler. If the `pre_processing` file is
     provided it is sourced before running the computation, for instance to load the modules
-    needed by the executable.
+    needed by the executable. The output of the `pre_processing` file (e.g. the one of a
+    `module list` command) is discarded, use :func:`environment_info` to inspect the environment.
 
     Args:
         pars (:py:class:`dict`) : dictionary with the structure of an instance of
@@ -92,8 +93,34 @@ def direct_command(pars, run_dir, run_command):
     comm_str = 'cd %s ; %s'%(run_dir,run_command)
     pre_processing = pars.get('pre_processing')
     if pre_processing is not None:
-        comm_str = 'source %s ; %s'%(os.path.abspath(pre_processing),comm_str)
+        comm_str = 'source %s > /dev/null 2>&1 ; %s'%(os.path.abspath(pre_processing),comm_str)
     return comm_str
+
+def environment_info(pars, executable):
+    """
+    Describe the environment in which the computations are performed: the modules loaded
+    (if the `module` command is available) and the path of the executable, after sourcing the
+    `pre_processing` file (if provided).
+
+    Args:
+        pars (:py:class:`dict`) : dictionary with the structure of an instance of
+            the :class:`RunRules`
+        executable (:py:class:`string`) : name of the executable
+
+    Return:
+        :py:class:`string` : the description of the environment
+
+    """
+    from subprocess import run
+    pre_processing = pars.get('pre_processing')
+    comm_str = ''
+    if pre_processing is not None:
+        comm_str += 'source %s > /dev/null 2>&1 ; '%os.path.abspath(pre_processing)
+    comm_str += 'type module > /dev/null 2>&1 && module list 2>&1 ; '
+    comm_str += 'echo "executable : $(which %s 2>&1)"'%executable
+    out = run(comm_str, shell = True, executable = '/bin/bash', capture_output = True, text = True)
+    info = 'pre_processing : %s\n'%pre_processing
+    return info + out.stdout + out.stderr
 
 def mpi_command(pars):
     """

@@ -6,7 +6,7 @@ or by the slurm scheduler.
 
 from .Runner import Runner
 from mppi.Calculators.Tools import find_string_file
-from mppi.Calculators.RunRules import build_slurm_header, mpi_command, direct_command
+from mppi.Calculators.RunRules import build_slurm_header, mpi_command, direct_command, environment_info
 import os
 
 def type_identifier(file):
@@ -463,6 +463,14 @@ class YamboCalculator(Runner):
         f.close()
 
         return job
+
+    def show_environment(self):
+        """
+        Print the environment in which the computations are performed: the modules loaded after
+        sourcing the `pre_processing` file of the RunRules (if provided) and the path of the executable.
+
+        """
+        print(environment_info(self._global_options,self._global_options['executable']))
 
     def run_command(self):
         """
