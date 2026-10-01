@@ -29,7 +29,9 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   then `git pull` on the cluster (the cluster never commits).
   Environments: the user's `pw.x` needs Intel MPI + MKL, yambo needs OpenMPI, so they cannot share one shell env.
   The user keeps module files in `~/module_script/` (`qe_module`, `yambo_module`) and passes them as
-  `RunRules(pre_processing=...)`: included in slurm scripts and (since fix/bugs) sourced before `direct` runs.
+  `RunRules(pre_processing=...)`: included in slurm scripts and (since fix/bugs) sourced before `direct` runs,
+  with its output discarded (the module files end with `module list`: the user does not want it printed at every
+  run). `code.show_environment()` prints the loaded modules and the executable on request.
   Without them pw.x fails with `libmkl_gf_lp64.so: cannot open shared object file`. Small direct runs (mpi 2-4,
   omp 1) on the login node `frontend` are OK for the tutorials; slurm partition `debug` (2h) for short test jobs.
   The user's production RunRules (use them for the slurm runs of the tutorials; ntasks_per_node*cpus_per_task = 32
@@ -75,9 +77,12 @@ Tutorial status (all on branch `fix/bugs`):
 - **NEXT: the Yambo tutorials**, starting from Tutorial_YamboInput, then Tutorial_YamboCalculator and
   Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
-  BLOCKED on 2026-10-01: the Lumen yambo/p2y rebuilt on 2026-09-30 aborted with "HDF5 headers 1.12.2, library
-  1.14.6" (lumen-libs rebuilt with HDF5 1.14.6); the user is recompiling yambo. Test `p2y` + `yambo` (setup) in a
-  temp dir before running the notebooks. The old Tutorial_YamboInput uses the removed `U.build_SAVE` (now
+  Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
+  `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs
+  `module load cmake-3.26.3` (system cmake is 2.8.12); when a library build fails yambo still writes its
+  `*.stamp` files in `gpl-gcc_10.2/lib/<lib>/`, so remove them (and the extracted source dir) before rebuilding.
+  The home quota is 19.5 GB (it filled up once during the build). The user wants to give instructions before the
+  first yambo tests: ask before running p2y/yambo. The old Tutorial_YamboInput uses the removed `U.build_SAVE` (now
   `mppi.Calculators.Tools.init_yambo_dir`) and the nonexistent `set_GbndRange`/`set_BndsRnXp`.
 - Still to review and run after Yambo: Tutorial_YamboNLDBParser, Analysis_* notebooks,
   Model_TLS_optical_absorption. Analysis_BandStructure still uses
