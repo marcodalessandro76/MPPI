@@ -44,6 +44,16 @@ def test_dataset_run_multiprocessing():
     study.set_postprocessing_function(lambda dataset: dataset.results)
     assert study.fetch_results(id={'x':3}) == [9]
 
+def test_pw_postprocessing_failed_run(ref_dir, tmp_path):
+    import os
+    from mppi.Datasets import PostProcessing as PP
+    study = Dataset(verbose=False)
+    study.results = {0:os.path.join(ref_dir,'random_grids','data-file-schema.xml'),
+                     1:str(tmp_path/'missing.xml')}
+    energy = PP.pw_get_energy(study)
+    assert energy[1] is None and isinstance(energy[0],float)
+    assert PP.pw_get_gap(study)[1] is None
+
 def test_parallel_loop():
     import math
     import numpy as np
