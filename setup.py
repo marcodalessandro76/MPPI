@@ -10,7 +10,7 @@ URL = 'https://github.com/marcodalessandro76/MPPI'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
 REQUIRES_PYTHON = '>=3.0'
-VERSION = '1.2'
+VERSION = '1.3'
 REQUIRED = ['numpy','matplotlib','scipy','nbsphinx','netCDF4']
 #-----------------------------------------------
 

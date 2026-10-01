@@ -32,7 +32,7 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   the PML is UCX). Yambo `reformat=True` (header in the inputs) must stay the default.
   Environments: the user's `pw.x` needs Intel MPI + MKL, yambo needs OpenMPI, so they cannot share one shell env.
   The user keeps module files in `~/module_script/` (`qe_module`, `yambo_module`) and passes them as
-  `RunRules(pre_processing=...)`: included in slurm scripts and (since fix/bugs) sourced before `direct` runs,
+  `RunRules(pre_processing=...)`: included in slurm scripts and (since v1.3) sourced before `direct` runs,
   with its output discarded (the module files end with `module list`: the user does not want it printed at every
   run). `code.show_environment()` prints the loaded modules and the executable on request.
   Without them pw.x fails with `libmkl_gf_lp64.so: cannot open shared object file`. Small direct runs (mpi 2-4,
@@ -70,7 +70,8 @@ files in a `<Class>_tutorial/` folder, and avoids `obj.method?` cells (nbconvert
 markdown pointer instead). The old run folders `QeCalculator_test/` and `Si_gs_convergence/` were deleted from the
 cluster copy on 2026-09-30.
 
-Tutorial status (all on branch `fix/bugs`):
+Tutorial status (on `master`, version 1.3; the work started on the branch `fix/bugs`, merged in master on
+2026-10-01; the previous master is saved in the branch `v1.2`):
 - DONE, rewritten (shorter) and executed on ismhpc: Tutorial_PwInput, Tutorial_QeCalculator (direct runs with
   mpi=2 on the login node + one slurm job on all12h with BeeOND), Tutorial_PwParser (parses the
   `QeCalculator_tutorial/` results, which stay on the cluster) — committed on 2026-09-30. Tutorial_Datasets
@@ -116,7 +117,7 @@ Tutorial status (all on branch `fix/bugs`):
   `mppi.Calculators.Tools.init_yambo_dir`) and the nonexistent `set_GbndRange`/`set_BndsRnXp`.
 - Still to review and run after Yambo: Tutorial_YamboNLDBParser, Analysis_* notebooks,
   Model_TLS_optical_absorption.
-- When the review ends: open the PR `fix/bugs` → `master`.
+- Work directly on `master` (version 1.3). The branches v1.0, v1.1, v1.2 keep the old versions.
 
 ## Conventions
 - Match the existing style: classes that inherit from `dict`, Sphinx-style docstrings with `:py:class:` types,
@@ -131,7 +132,7 @@ Tutorial status (all on branch `fix/bugs`):
 Found in the analysis of 2026-09-30. Tick an item once it is fixed AND tested. "verified" = reproduced by running
 the code; the other items come from reading it.
 
-Runnable on the laptop (done on branch `fix/bugs`, covered by `tests/`):
+Runnable on the laptop (done in v1.3, covered by `tests/`):
 - [x] `PhInput.store` calls `self._slicefile`, but the method is `slicefile` → parsing any file fails
 - [x] `Dataset.fetch_results` matched ids by substring (`{'ecut':4}` selected `ecut_40`). Now uses `id_matches`:
       dict ids are compared as (key,value) subsets, other ids by '-'-separated tokens of the name. Post-processing is
