@@ -9,9 +9,13 @@ post-processing in QuantumESPRESSO and Yambo'
 URL = 'https://github.com/marcodalessandro76/MPPI'
 EMAIL = 'marco.dalessandro@ism.cnr.it'
 AUTHOR = "Marco D'Alessandro"
-REQUIRES_PYTHON = '>=3.0'
+REQUIRES_PYTHON = '>=3.8' # f-strings and subprocess.run(capture_output=...) are used
 VERSION = '1.3'
-REQUIRED = ['numpy','matplotlib','scipy','nbsphinx','netCDF4']
+REQUIRED = ['numpy>=1.20','scipy>=1.6','matplotlib>=3.3','netCDF4>=1.5']
+EXTRAS = {
+    'docs' : ['sphinx','sphinx_rtd_theme','nbsphinx','ipykernel'], # to build the documentation
+    'test' : ['pytest']                                             # to run the test suite
+}
 #-----------------------------------------------
 
 here = path.abspath(path.dirname(__file__))
@@ -31,13 +35,15 @@ setup(
     author_email=EMAIL,
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Physics',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3'
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3 :: Only'
     ],
     keywords='python system-interface post-processing QuantumESPRESSO Yambo',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires=REQUIRES_PYTHON,
-    install_requires=REQUIRED
+    install_requires=REQUIRED,
+    extras_require=EXTRAS
 )

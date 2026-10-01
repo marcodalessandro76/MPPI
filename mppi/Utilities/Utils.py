@@ -13,8 +13,8 @@ def damp_ft(ft, time, t_initial, damp_type="LORENTZIAN", eta=0.1,time_units='fs'
     Apply a damping to a function in the time domain to avoid spurious oscillations in the spectrum.
     The damping function is applied as a multiplicative factor to the function in the time domain and it is defined as
 
-    - LORENTZIAN : exp(-|t-t_initial|*eta/hbar) 
-    - GAUSSIAN : exp(-(t-t_initial)**2*(eta/hbar)**2
+    - LORENTZIAN : ``exp(-|t-t_initial|*eta/hbar)``
+    - GAUSSIAN : ``exp(-(t-t_initial)**2*(eta/hbar)**2)``
     
     where eta has the dimension of energy and is expressed in eV, and hbar is the reduced Planck constant
  
@@ -279,7 +279,7 @@ def file_parser(filename,skip='#',sep=None):
         sep (:py:class:`string`) : Delimiter at which splits occur. If `None` the string is splitted at whitespaces
 
     Return:
-        :py:class:`array' : array with the floats extracted from the file sorted in columns. So columns[0] contains
+        :py:class:`array` : array with the floats extracted from the file sorted in columns. So columns[0] contains
             the first column of the file and so on
 
 

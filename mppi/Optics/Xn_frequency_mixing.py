@@ -20,7 +20,8 @@ from mppi.Parsers import YamboNLDBParser
 
 def generate_frequencies(omega1, omega2,max_order_E1=1,max_order_E2=3,include_pure_E1=True,include_pure_E2=True,include_mixing=True,tol=1e-8):
     """
-    Generate positive frequencies as a dictionary:
+    Generate positive frequencies as a dictionary::
+
         (n, m) -> Omega = |n*omega1 + m*omega2|
 
     Only positive frequencies are kept. The rationale behind the choice of producing positive frequencies only is that the
@@ -322,7 +323,8 @@ class Xn_frequency_mixing():
     def eval_Pw(self,plot=False,plot_dir=0):
         """
         Compute the polarization in the frequency domain at the (multiples) of the frequencies of the external fields according to the value of the 
-        'X_order' variable. Pw at the harmonic omega is computed as 
+        'X_order' variable. Pw at the harmonic omega is computed as::
+
             P(omega) = 1j*A(omega)/2.0*exp(-1j*phi(omega))
 
         For each cartesian direction Pw is a dict with the keys of the generate_frequencies function.  

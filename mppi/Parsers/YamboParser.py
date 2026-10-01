@@ -67,7 +67,7 @@ class YamboParser():
             run_dir (:py:class:`string`) : `run_dir` folder of the calculation
             outputPath (:py:class:`string`) : folder with the 'o-' files
             dbsPath (:py:class:`list`) : list of folders with the ndb databases. If this argument is set to
-                `None' the databases are sought in the outputPath
+                ``None`` the databases are sought in the outputPath
             verbose (:py:class:`boolean`) : determine the amount of information provided on terminal
             extendOut (:py:class:`boolean`) : Determine which dictionary is used as reference for the
                             names of the variables in the :class:`YamboOutputParser`
