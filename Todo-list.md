@@ -4,9 +4,6 @@
 - Check the compilation of the ReadTheDocs documentation. The are problems for the rendering of the inline math equations
   in the TLS notebook.
 
-- In the computation of the ypp bands in the Analysis_BandStructure tutorial an interpolation error is produced if the BOLTZ
-  interpolation is used.
-
 
 ## TODO
 

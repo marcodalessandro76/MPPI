@@ -98,7 +98,10 @@ Tutorial status (all on branch `fix/bugs`):
   `BANDS_path` labels (ypp then uses its own high-symmetry points, wrong for this cell): use `BANDS_kpts`. Use
   `INTERP_mode='BOLTZ'` for smooth bands (the default NN gives step-like bands; the `GfnQP_*INTERP*` variables
   only act on the interpolation of QP corrections from a database, they do not change the DFT bands).
-- **NEXT**: Tutorial_YamboNLDBParser, then the Analysis_* notebooks and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+- Analysis_BandStructure rewritten and executed (2026-10-01) in `BandStructure_tutorial`: GaAs, GaAs with
+  spin-orbit (rel pseudos, 16 bands), graphene (smearing, G-M-K-G), GaAs-SO with ypp BOLTZ (works, the old
+  'interpolation error' issue is gone). Path L-G-X-W-K-G from the corrected Constants.high_sym_fcc.
+- **NEXT**: Tutorial_YamboNLDBParser, the other Analysis_* notebooks and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
   `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs
@@ -108,8 +111,7 @@ Tutorial status (all on branch `fix/bugs`):
   first yambo tests: ask before running p2y/yambo. The old Tutorial_YamboInput uses the removed `U.build_SAVE` (now
   `mppi.Calculators.Tools.init_yambo_dir`) and the nonexistent `set_GbndRange`/`set_BndsRnXp`.
 - Still to review and run after Yambo: Tutorial_YamboNLDBParser, Analysis_* notebooks,
-  Model_TLS_optical_absorption. Analysis_BandStructure still uses
-  the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`) and produces the graphene (metal) results.
+  Model_TLS_optical_absorption.
 - When the review ends: open the PR `fix/bugs` → `master`.
 
 ## Conventions
