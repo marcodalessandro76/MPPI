@@ -91,7 +91,12 @@ Tutorial status (all on branch `fix/bugs`):
 - Tutorial_YamboCalculator rewritten and executed (2026-10-01) in `Yambo_tutorial`: HF direct runs (name/jobname,
   skip, clean_restart replicas), GW ppa, ypp bands, a Yambo Dataset (HF gap vs EXXRLvcs with PP.yambo_get_gap)
   and a slurm run with the production RunRules and BeeOND. HF direct gap of Si at Gamma: 7.9501 eV.
-- **NEXT: Tutorial_YamboParser** (it can parse the results in `Yambo_tutorial`). They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+- Tutorial_YamboParser rewritten and executed (2026-10-01): parses the `Yambo_tutorial` results (GW ppa with
+  ExtendOut, HF, ypp bands) and `Reference_data/rt_results` (RT o- files, ndb.RT_carriers). GW direct gap of Si
+  at Gamma 3.32 eV (DFT 2.57). Notes: the yambo vector alat of a fcc cell is alat/2, so the `rescale=True`
+  lattice of YamboDftParser differs by 2 from the PwParser one (equal in a.u.); in ypp bands do NOT set the
+  `BANDS_path` labels (ypp then uses its own high-symmetry points, wrong for this cell): use `BANDS_kpts`.
+- **NEXT**: Tutorial_YamboNLDBParser, then the Analysis_* notebooks and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
   `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs
