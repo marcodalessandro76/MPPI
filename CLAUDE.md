@@ -65,15 +65,22 @@ files in a `<Class>_tutorial/` folder, and avoids `obj.method?` cells (nbconvert
 markdown pointer instead). The old run folders `QeCalculator_test/` and `Si_gs_convergence/` were deleted from the
 cluster copy on 2026-09-30.
 
-Tutorial status (session of 2026-09-30, all on branch `fix/bugs`):
-- DONE, rewritten (shorter) and executed on ismhpc, committed with their outputs: Tutorial_PwInput,
-  Tutorial_QeCalculator (direct runs with mpi=2 on the login node + one slurm job on all12h with BeeOND),
-  Tutorial_PwParser (parses the `QeCalculator_tutorial/` results, which stay on the cluster).
-- **NEXT (where to restart): the Yambo tutorials**, starting from Tutorial_YamboInput, then Tutorial_YamboCalculator
-  and Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (e.g. the nscf
-  in `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
-- Still to review and run after Yambo: Tutorial_Datasets (open multiprocessing bugs, see the checklist),
-  Tutorial_YamboNLDBParser, Analysis_* notebooks, Model_TLS_optical_absorption. Analysis_BandStructure still uses
+Tutorial status (all on branch `fix/bugs`):
+- DONE, rewritten (shorter) and executed on ismhpc: Tutorial_PwInput, Tutorial_QeCalculator (direct runs with
+  mpi=2 on the login node + one slurm job on all12h with BeeOND), Tutorial_PwParser (parses the
+  `QeCalculator_tutorial/` results, which stay on the cluster) — committed on 2026-09-30. Tutorial_Datasets
+  (2026-10-01, QE only: ecut dataset, post-processing, fetch_results, seek_convergence on k points, a slurm dataset)
+  — executed in place on the cluster, NOT committed yet. The old Yambo HF dataset part of Tutorial_Datasets was
+  dropped: show a Yambo dataset in the Yambo tutorials.
+- **NEXT: the Yambo tutorials**, starting from Tutorial_YamboInput, then Tutorial_YamboCalculator and
+  Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+  `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
+  BLOCKED on 2026-10-01: the Lumen yambo/p2y rebuilt on 2026-09-30 aborted with "HDF5 headers 1.12.2, library
+  1.14.6" (lumen-libs rebuilt with HDF5 1.14.6); the user is recompiling yambo. Test `p2y` + `yambo` (setup) in a
+  temp dir before running the notebooks. The old Tutorial_YamboInput uses the removed `U.build_SAVE` (now
+  `mppi.Calculators.Tools.init_yambo_dir`) and the nonexistent `set_GbndRange`/`set_BndsRnXp`.
+- Still to review and run after Yambo: Tutorial_YamboNLDBParser, Analysis_* notebooks,
+  Model_TLS_optical_absorption. Analysis_BandStructure still uses
   the old `build_kpath` (now `mppi.Calculators.Tools.build_pw_kpath`) and produces the graphene (metal) results.
 - When the review ends: open the PR `fix/bugs` → `master`.
 
@@ -123,8 +130,11 @@ Runnable on the laptop (done on branch `fix/bugs`, covered by `tests/`):
 - [ ] `NLanalysisYamboPy.py`: many latent NameErrors; decide whether to fix it or remove it
 
 Need the cluster (QE/Yambo/slurm):
-- [ ] `Dataset.run_the_calculations` and `Utilities.Parallel.loop` use nested functions with multiprocessing →
-      they fail under `spawn` (Windows/macOS, and the Linux default from Python 3.14)
+- [x] `Dataset.run_the_calculations` and `Utilities.Parallel.loop` used nested functions with multiprocessing →
+      failed under `spawn`. Now module-level `calculator_run`/`func_loop`; a failing run returns None; results
+      collected before join. Tested with spawn (laptop) and fork (cluster). Note: the `verbose` (and the other
+      global options) of a Dataset are passed to the runs, so they override the verbose of the calculator
+- [x] `PostProcessing.pw_get_energy`/`pw_get_gap` crashed on a failed run → None
 - [ ] slurm `run_ended`: waits forever if the job dies before `JOB_DONE`; IndexError on an empty .out; no
       squeue/sacct check
 - [ ] `run_job`: `job` is undefined for an unknown scheduler; `os.system('rm ...')` breaks on paths with spaces
