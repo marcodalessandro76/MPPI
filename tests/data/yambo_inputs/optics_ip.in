@@ -1,0 +1,37 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+optics                           # [R] Linear Response optical properties
+kernel                           # [R] Kernel
+chi                              # [R][CHI] Dyson equation for Chi.
+dipoles                          # [R] Oscillator strenghts (or dipoles)
+Chimod= "HARTREE"                # [X] IP/Hartree/ALDA/LRC/PF/BSfxc
+NGsBlkXd= 1                RL    # [Xd] Response block size
+% QpntsRXd
+   1 |  32 |                         # [Xd] Transferred momenta
+%
+% BndsRnXd
+  1 |  8 |                           # [Xd] Polarization function bands
+%
+% EnRngeXd
+  0.00000 | 10.00000 |         eV    # [Xd] Energy range
+%
+% DmRngeXd
+ 0.100000 | 0.100000 |         eV    # [Xd] Damping range
+%
+ETStpsXd= 100                    # [Xd] Total Energy steps
+% LongDrXd
+ 1.000000 | 0.000000 | 0.000000 |        # [Xd] [cc] Electric Field
+%

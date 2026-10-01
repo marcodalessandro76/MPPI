@@ -1,0 +1,140 @@
+import os
+import pytest
+from mppi import InputFiles as I
+
+def test_pwinput_parse(io_dir):
+    inp = I.PwInput(os.path.join(io_dir,'si_scf.in'))
+    assert inp.get_prefix() == 'si_scf'
+    assert inp['system']['ecutwfc'] == 40
+    assert inp['atomic_species']['Si'][1] == 'Si.pbe-mt_fhi.UPF'
+    assert inp['atomic_positions']['type'] == 'crystal'
+    assert inp['atomic_positions']['values'][1] == ['Si',[-0.125,-0.125,-0.125]]
+    assert inp['kpoints'] == {'type':'automatic','values':([4.,4.,4.],[0.,0.,0.])}
+
+def test_pwinput_roundtrip(io_dir, tmp_path):
+    inp = I.PwInput(os.path.join(io_dir,'si_scf.in'))
+    out = str(tmp_path/'si.in')
+    inp.write(out)
+    inp2 = I.PwInput(out)
+    for key in inp.namelist + inp.cards:
+        assert inp2[key] == inp[key]
+
+def test_pwinput_from_scratch_roundtrip(tmp_path):
+    inp = I.PwInput()
+    inp.set_scf()
+    inp.set_energy_cutoff(30)
+    inp.set_lattice(ibrav=2,celldm1=10.3)
+    inp.add_atom('Si','Si.upf')
+    inp.set_atoms_number(2)
+    inp.set_atomic_positions([['Si',[0.,0.,0.]],['Si',[0.25,0.25,0.25]]])
+    inp.set_kpoints(points=[4,4,4])
+    file = str(tmp_path/'si.in')
+    inp.write(file)
+    inp2 = I.PwInput(file)
+    for key in inp.namelist + inp.cards:
+        assert inp2[key] == inp[key]
+
+def test_pwinput_quoted_values(io_dir, tmp_path):
+    # quoted strings with colons and commas are read as a whole
+    inp = I.PwInput(os.path.join(io_dir,'graphene_nscf.in'))
+    assert inp.get_prefix() == 'ecut:100,k:9'
+    file = tmp_path/'test.in'
+    file.write_text("&CONTROL\n  prefix = 'my run', outdir='./out dir' ! comment with = sign\n"
+                    "  pseudo_dir = \"../pseudos\"\n/\n&SYSTEM\n ibrav=2, celldm(1)=10.3, nat=2 ntyp=1\n"
+                    " ecutwfc = 30 ! ecutrho = 120\n/\n")
+    inp = I.PwInput(str(file))
+    assert inp.get_prefix() == 'my run'
+    assert inp.get_outdir() == './out dir'
+    assert inp['control']['pseudo_dir'] == '"../pseudos"'
+    assert inp['system'] == {'force_symmorphic':'.true.','ibrav':2,'celldm(1)':10.3,'nat':2,'ntyp':1,'ecutwfc':30}
+
+PW_TEMPLATE = """&control
+    calculation = 'relax'
+/
+&system
+    ibrav = 2
+    celldm(1) = 10.3
+    nat = 2
+    ntyp = 1
+    ecutwfc = 30
+/
+&electrons
+/
+ATOMIC_SPECIES
+  Si   28.086    Si.upf
+ATOMIC_POSITIONS crystal
+ Si 0.0 0.0 0.0 0 0 0
+ Si 0.25 0.25 0.25
+{kpoints}
+"""
+
+def test_pwinput_if_pos(tmp_path):
+    file = tmp_path/'relax.in'
+    file.write_text(PW_TEMPLATE.format(kpoints='K_POINTS gamma'))
+    inp = I.PwInput(str(file))
+    assert inp['atomic_positions']['values'][0] == ['Si',[0.,0.,0.],[0,0,0]]
+    assert inp['atomic_positions']['values'][1] == ['Si',[0.25,0.25,0.25]]
+    assert inp['kpoints'] == {'type':'gamma','values':[]}
+    # the if_pos flags and the gamma card are preserved in the written input
+    string = inp.convert_string()
+    assert string.splitlines()[-3].split()[-3:] == ['0','0','0']
+    assert string.splitlines()[-1].strip() == 'K_POINTS { gamma }'
+
+def test_pwinput_kpoints_list(tmp_path):
+    file = tmp_path/'bands.in'
+    file.write_text(PW_TEMPLATE.format(kpoints='K_POINTS tpiba_b\n2\n0 0 0 10\n0 0 1 0'))
+    inp = I.PwInput(str(file))
+    assert inp['kpoints'] == {'type':'tpiba_b','values':[[0.,0.,0.,10.],[0.,0.,1.,0.]]}
+
+def test_pwinput_wrong_kpoints(tmp_path):
+    file = tmp_path/'bands.in'
+    file.write_text(PW_TEMPLATE.format(kpoints='K_POINTS tpiba_b\n3\n0 0 0 10'))
+    with pytest.raises(ValueError):
+        I.PwInput(str(file))
+
+def test_phinput_parse(tmp_path):
+    inp = I.PhInput(prefix='si',outdir='out')
+    inp.set_kpoints([[0.,0.,0.,1]])
+    file = str(tmp_path/'ph.in')
+    inp.write(file)
+    inp2 = I.PhInput(file)
+    assert inp2.get_prefix() == 'si'
+    assert inp2.get_outdir() == 'out'
+    assert inp2['inputph']['tr2_ph'] == 1e-12
+
+YAMBO_INPUT = """HF_and_locXC
+EXXRLvcs= 20 Ry
+%QPkrange
+ 1| 1| 4| 5|
+%
+"""
+
+def test_yamboinput_from_file(tmp_path):
+    (tmp_path/'yambo.in').write_text(YAMBO_INPUT)
+    inp = I.YamboInput(folder=str(tmp_path))
+    assert inp['arguments'] == ['HF_and_locXC']
+    assert inp['variables']['EXXRLvcs'] == [20.,'Ry']
+    assert inp['variables']['QPkrange'] == [[1,1,4,5],'']
+    inp.set_bandRange(3,6)
+    assert inp['variables']['QPkrange'] == [[1,1,3,6],'']
+
+def test_yamboinput_missing_file(tmp_path):
+    with pytest.raises(IOError):
+        I.YamboInput(folder=str(tmp_path),filename='missing.in')
+
+@pytest.mark.requires_yambo
+def test_yamboinput_generation(tmp_path):
+    # yambo writes the input file also without a SAVE folder (and then stops with an error).
+    # A SAVE with only the ns.db1 database makes yambo crash
+    inp = I.YamboInput('yambo -x -V rl',folder=str(tmp_path))
+    assert 'HF_and_locXC' in inp['arguments']
+    assert 'EXXRLvcs' in inp['variables']
+
+def test_pwinput_force_symmorphic_default():
+    # yambo requires force_symmorphic = .true., it is the default of the class and of the set methods
+    inp = I.PwInput()
+    assert inp['system']['force_symmorphic'] == '.true.'
+    for method in (inp.set_scf, lambda: inp.set_nscf(8), lambda: inp.set_bands(8)):
+        inp['system']['force_symmorphic'] = '.false.'
+        method()
+        assert inp['system']['force_symmorphic'] == '.true.'

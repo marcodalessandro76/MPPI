@@ -7,10 +7,24 @@ import multiprocessing as mp, time as tm
 import numpy as np
 from datetime import timedelta
 
+def func_loop(func,pars_subset,task,output,*args,**kwargs):
+    """
+    Evaluate the function func for all the values inside a single task.
+    Add the dictionary with the results of the task to the queue of the multiprocess.
+    The function is defined at module level so that it can be used with all the start
+    methods of multiprocessing.
+
+    """
+    results = []
+    for p in pars_subset:
+        results.append(func(p,*args,**kwargs))
+    output.put({task:np.array(results)})
+
 def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
     """
     Perform a parallel loop over the values of the pars array and compute the
-    values of the function func, using ntasks parallel processes
+    values of the function func, using ntasks parallel processes. With the `spawn` start
+    method of multiprocessing (default on Windows and macOS) func must be defined at module level.
 
     Args:
         func (function) : a function that returns a value for each element of pars
@@ -20,17 +34,6 @@ def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
         args, kwargs : arguments and keyword arguments passed to func
 
      """
-    def func_loop(func,pars_subset,task,output,*args,**kwargs):
-        """
-        Evaluate the function func for all the values inside a single task.
-        Add the dictionary with the results of the task to the queue of the multiprocess
-
-        """
-        results = []
-        for p in pars_subset:
-            results.append(func(p,*args,**kwargs))
-        output.put({task:np.array(results)})
-
     pars_split = np.array_split(pars,ntasks)
     if verbose : print('Run a parallel loop with %s tasks...'%ntasks)
     t0 = tm.time()
@@ -41,6 +44,8 @@ def loop(func, pars, *args, ntasks = 4, verbose = True, **kwargs):
     results_dict = {}
     for p in tasks:
         results_dict.update(output.get())
+    for p in tasks:
+        p.join()
     results = np.concatenate([results_dict[i] for i in range(ntasks)])
     if verbose :
         deltaTime = int(tm.time()-t0)

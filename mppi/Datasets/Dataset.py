@@ -40,6 +40,50 @@ def name_from_id(id):
 
     return name
 
+def calculator_run(calculator, run, irun, queue):
+    """
+    Perform a run of the dataset and put the dictionary {irun : result} in the queue. The function
+    is executed in a separate process by :meth:`Dataset.run_the_calculations` (it is defined at module level
+    so that it can be used with all the start methods of multiprocessing). If the run raises an exception
+    the error is printed and the result is None.
+
+    Args:
+        calculator (:class:`Runner`) : the calculator that performs the run
+        run (:py:class:`dict`) : the parameters of the run
+        irun (:py:class:`int`) : index of the run in the dataset
+        queue (:py:class:`multiprocessing.Queue`) : queue that collects the results
+
+    """
+    try:
+        result = calculator.run(**run)
+    except Exception as e:
+        print('Run %s failed with the error: %r'%(irun,e))
+        result = None
+    queue.put({irun : result})
+
+def id_matches(run_id, run_name, id):
+    """
+    Check if a run of the dataset matches the id provided as input.
+    If both id and run_id are dictionaries the run matches if all the (key,value)
+    pairs of id are found in run_id. Otherwise the run matches if all the elements of the
+    name associated to id (separated by '-') are elements of the name of the run.
+    In this way, for instance, the id {'ecut':4} does not match a run with id {'ecut':40}.
+
+    Args:
+        run_id : id of the run of the dataset
+        run_name (:py:class:`str`) : name of the run of the dataset
+        id : id used to select the runs
+
+    Returns:
+        :py:class:`bool` : True if the run matches the id
+
+    """
+    if type(id) is dict and type(run_id) is dict:
+        return all(k in run_id and run_id[k] == v for k,v in id.items())
+    id_name = name_from_id(id)
+    if id_name is None or run_name is None: return False
+    return set(id_name.split('-')).issubset(run_name.split('-'))
+
 def convergence_plot(**kwargs):
     """
     Perform the convergence plot associated to the `seek_convergence` method.
@@ -55,10 +99,10 @@ def convergence_plot(**kwargs):
     plt.title('Convergence plot for dataset '+kwargs['label'],size=14)
     ax = plt.gca()
     ax.grid(color='grey', linestyle='--',linewidth=0.5)
-    ax.set_xticklabels(iruns, rotation=45)
     ax.tick_params(axis='both', which='major', labelsize=14)
     plt.plot(iruns,values)
     plt.scatter(iruns,values,color='red')
+    plt.xticks(rotation=45)
     if id_conv is not None:
         id_conv = name_from_id(id_conv)
         id_last = name_from_id(ids[-1])
@@ -70,7 +114,7 @@ class Dataset(Runner):
 
     Parameters:
         label (:py:class:`str`): the label of the dataset, it can be useful for instance if more
-            than one istance of the class is present
+            than one instance of the class is present
         run_dir (:py:class:`str`): path of the directory where the runs will be performed. This argument
             can be overwritten by including a run_dir keyword in the :meth:`append_run` method of the class.
             In this way the various elements of the dataset can be run in different folders
@@ -188,16 +232,8 @@ class Dataset(Runner):
             selection (:py:class:`list`) : if not None only the runs in the list are computed
 
         """
-        import multiprocessing, time
-        delay = 1 # in seconds
+        import multiprocessing
         verbose = self.global_options().get('verbose')
-
-        def calculator_run(runs,calculators,iruns,queue):
-            for calc in calculators: #identify the calculator associated to the present run
-                if irun in calc['iruns']:
-                    break
-            result = calc['calc'].run(**runs[irun]) #run and append the dictionary with the result to the queue
-            queue.put({irun : result})
 
         if selection is None:
             selection = [ind for ind in range(len(self.ids))]
@@ -206,18 +242,34 @@ class Dataset(Runner):
         for task in task_groups:
             queue = multiprocessing.Queue()
             task_job = []
-            task_alive = True
             if verbose: print('Run the task %s '%task)
             for irun in task:
-                p = multiprocessing.Process(target=calculator_run, args=(self.runs,self.calculators,irun,queue,))
+                p = multiprocessing.Process(target=calculator_run,
+                        args=(self.get_calculator(irun),self.runs[irun],irun,queue,))
                 task_job.append(p)
                 p.start()
-            while task_alive: #wait the end of the task
-                task_alive = any([job.is_alive() for job in task_job])
-                time.sleep(delay)
-            while queue.qsize() != 0: #add the result to self.results
+            # collect the results before joining the processes, otherwise a process that puts a large
+            # object in the queue cannot terminate
+            for job in task_job:
                 self.results.update(queue.get())
+            for job in task_job:
+                job.join()
             if verbose: print('Task %s ended \n '%task)
+
+    def get_calculator(self, irun):
+        """
+        Return the calculator associated to a run of the dataset.
+
+        Args:
+            irun (:py:class:`int`) : index of the run
+
+        Returns:
+            :class:`Runner` : the calculator that performs the run
+
+        """
+        for calc in self.calculators:
+            if irun in calc['iruns']:
+                return calc['calc']
 
     def build_taskgroups(self,selection):
         """
@@ -261,7 +313,8 @@ class Dataset(Runner):
         """
         Retrieve the results that match some conditions that is specified through
         an `id` in the form of a string or a dictionary. Selects out of the results
-        of the objects which have in their ``name`` keyword at least the `id` provided as input.
+        of the objects whose id contains all the (key,value) pairs of the `id` provided as input
+        (see the :func:`id_matches` function).
 
         Args:
            id : string or dictionary of the retrieved id.
@@ -280,7 +333,7 @@ class Dataset(Runner):
            >>> study.append_run(id={'ecut': 40, 'k' : 6}, input = ..., runner = )
            >>> study.append_run(id={'ecut': 50, 'k' : 6}, input = ..., runner = )
            >>> #append other runs if needed
-           >>> #set a post processing function that perform a parsing of the rsesults
+           >>> #set a post processing function that perform a parsing of the results
            >>> #and contains 'energy' as an attribute of the results object
            >>> #run the calculations (optional if run_if_not_present=True)
            >>> study.run()
@@ -290,12 +343,10 @@ class Dataset(Runner):
 
         """
 
-        names = [val['name'] for val in self.runs]
-        id_name = name_from_id(id)
         fetch_indices = []
         selection_to_run = []
-        for irun,name in enumerate(names):
-            if id_name in name :
+        for irun,(run_id,run) in enumerate(zip(self.ids,self.runs)):
+            if id_matches(run_id,run.get('name'),id):
                 fetch_indices.append(irun)
                 if run_if_not_present and irun not in self.results:
                     selection_to_run.append(irun)
@@ -304,8 +355,9 @@ class Dataset(Runner):
 
         data = []
         if self.post_processing_function is not None:
+            processed = self.post_processing()
             for irun in fetch_indices:
-                r = self.post_processing()[irun]
+                r = processed[irun]
                 data.append(r if attribute is None else getattr(r, attribute))
         else:
             print('Provide a post processing function able to parse the results')

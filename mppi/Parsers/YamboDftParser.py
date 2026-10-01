@@ -173,8 +173,9 @@ class YamboDftParser():
     def get_lattice(self, rescale = False):
         """
         Compute the lattice vectors. If rescale = True the vectors are expressed in units
-        of the lattice constant. We use the first component of the lattice constant, which corresponds
-        to the `alat` or `celldm1` variable of the class :class:`PwParser`
+        of the lattice constant. We use the first component of the (vector) lattice constant of Yambo. Note that
+        it can differ from the `alat` of the :class:`PwParser` (for a fcc cell it is alat/2), in this case
+        the rescaled vectors of the two classes differ by a factor, while the vectors in a.u. are equal
 
         Args:
             rescale (:py:class:`bool`)  : if True express the lattice vectors in units alat
@@ -191,8 +192,9 @@ class YamboDftParser():
         Compute the reciprocal lattice vectors. If rescale = False the vectors are normalized
         so that np.dot(a_i,b_j) = 2*np.pi*delta_ij, where a_i is a basis vector of the direct
         lattice. If rescale = True the reciprocal lattice vectors are expressed in units of
-        2*np.pi/alat. We use the first component of the lattice constant, which corresponds
-        to the `alat` or `celldm1` variable of the class :class:`PwParser`
+        2*np.pi/alat. We use the first component of the (vector) lattice constant of Yambo. Note that
+        it can differ from the `alat` of the :class:`PwParser` (for a fcc cell it is alat/2), in this case
+        the rescaled vectors of the two classes differ by a factor, while the vectors in a.u. are equal
 
         Args:
             rescale (:py:class:`bool`)  : if True express the reciprocal vectors in units of 2*np.pi/alat
@@ -226,7 +228,7 @@ class YamboDftParser():
     #     with the corresponding index in the irreducible brillouin zone
     #     """
     #
-    #     #check if the kpoints were already exapnded
+    #     #check if the kpoints were already expanded
     #     kpoints_indexes  = []
     #     kpoints_full     = []
     #     symmetry_indexes = []
@@ -236,7 +238,7 @@ class YamboDftParser():
     #
     #     #expand using symmetries
     #     for nk,k in enumerate(self.car_kpoints):
-    #         #if the index in not in the dicitonary add a list
+    #         #if the index in not in the dictionary add a list
     #         if nk not in kpoints_full_i:
     #             kpoints_full_i[nk] = []
     #

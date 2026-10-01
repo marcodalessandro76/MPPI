@@ -29,7 +29,7 @@ from mppi.Utilities.Constants import HaToeV
 #
 #     return full_kpts
 #
-# def car_red(car,lat): -> it is implented here as convert_to_crystal
+# def car_red(car,lat): -> it is implemented here as convert_to_crystal
 #     """
 #     Convert cartesian coordinates to reduced
 #     """
@@ -93,8 +93,8 @@ def get_variable_from_db(ndb_file,var_name):
         :py:class:`numpy.ndarray`  : array with the values of the variable
     """
     from netCDF4 import Dataset as Ds
-    db = Ds(ndb_file)
-    var = np.array(db.variables[var_name])
+    with Ds(ndb_file) as db:
+        var = np.array(db.variables[var_name][:])
     return var
 
 def compute_transitions(bands,in_list,fin_list):

@@ -9,7 +9,7 @@ import numpy as np
 
 class YamboRTCarriersParser():
     """
-    Class to manage information about the real time distrubtion of carriers from the
+    Class to manage information about the real time distribution of carriers from the
     ``ndb.RT_carriers`` database created by `yambo_rt`.
 
     Args:
@@ -54,13 +54,14 @@ class YamboRTCarriersParser():
             database = Dataset(self.filename)
         except:
             raise IOError("Error opening file %s in YamboRTCarriersParser"%self.filename)
-        self.E_bare = HaToeV*np.array(database.variables['RT_carriers_E_bare'])
-        self.f_bare = np.array(database.variables['RT_carriers_f_bare'])
+        self.E_bare = HaToeV*np.array(database.variables['RT_carriers_E_bare'][:])
+        self.f_bare = np.array(database.variables['RT_carriers_f_bare'][:])
         self.kpoints = np.array(database.variables['RT_kpt'][:].T)
-        self.bands_kpts = np.array(database.variables['RT_bands_kpts'])
-        self.k_weight = np.array(database.variables['RT_k_weight'])
-        self.delta_E = HaToeV*np.array(database.variables['RT_carriers_delta_E'])
-        self.delta_f = np.array(database.variables['RT_carriers_delta_f'])
+        self.bands_kpts = np.array(database.variables['RT_bands_kpts'][:])
+        self.k_weight = np.array(database.variables['RT_k_weight'][:])
+        self.delta_E = HaToeV*np.array(database.variables['RT_carriers_delta_E'][:])
+        self.delta_f = np.array(database.variables['RT_carriers_delta_f'][:])
+        database.close()
 
     def get_info(self):
         """
@@ -82,8 +83,8 @@ class YamboRTCarriersParser():
 
         Args:
             dE (:py:class:`float`) : energy step in eV
-            eta (:py:class:`float`) : magnitude of the broading parameter (in the same units used for the values array)
-            broad_kind (:py:class:`string`) : type of broading function used (lorentzian, gaussian)
+            eta (:py:class:`float`) : magnitude of the broadening parameter (in the same units used for the values array)
+            broad_kind (:py:class:`string`) : type of broadening function used (lorentzian, gaussian)
 
         Returns:
             :py:class:`Dos` : Instance of the ``Dos`` class. The object is an array of dos, one for

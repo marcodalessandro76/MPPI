@@ -51,6 +51,7 @@ class YamboQPParser():
         self.QP_E = np.array(database.variables['QP_E'][:])
         self.QP_Eo = np.array(database.variables['QP_Eo'][:])
         self.QP_Z = np.array(database.variables['QP_Z'][:])
+        database.close()
         #print(database['PARS'])
         #print(list(map(int,database['PARS'][:])))
 

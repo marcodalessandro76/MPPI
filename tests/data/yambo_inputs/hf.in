@@ -1,0 +1,23 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+HF_and_locXC                     # [R] Hartree-Fock
+infver                           # [R] Input file variables verbosity
+FFTGvecs= 1139             RL    # [FFT] Plane-waves
+EXXRLvcs=  5985            RL    # [XX] Exchange    RL components
+VXCRLvcs=  5985            RL    # [XC] XCpotential RL components
+%QPkrange                        # [GW] QP generalized Kpoint/Band indices
+1|32|1|8|
+%

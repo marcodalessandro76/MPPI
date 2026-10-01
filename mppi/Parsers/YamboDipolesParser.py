@@ -73,6 +73,7 @@ class YamboDipolesParser():
         except KeyError:
             if verbose: print('Spin dipoles not found in the ndb.dipoles')
             self.dip_spin = np.array([0])
+        database.close()
 
     def get_info(self):
         """
@@ -80,7 +81,7 @@ class YamboDipolesParser():
         """
         print('YamboDipolesParser variables structure')
         print('dip_ir shape',self.dip_ir.shape)
-        print('dip_p shape',self.dip_v.shape)
+        print('dip_p shape',self.dip_p.shape)
         print('dip_v shape',self.dip_v.shape)
         print('dip_spin shape',self.dip_spin.shape)
 

@@ -39,7 +39,7 @@ class PwParser():
         evals : array of the ks energies for each kpoint (in Hartree)
         lsda : True if collinear spin is activated
         noncolin : True if noncollinear spin calculation is activated
-        spinorbit : True if spin-orbit couping is present
+        spinorbit : True if spin-orbit coupling is present
         spin_degen : 1 if lsda or non collinear spin is activated, 2 otherwise
 
     """
@@ -47,9 +47,10 @@ class PwParser():
     def __init__(self,file,verbose=True):
         self.file = file
         if verbose: print('Parse file : %s'%self.file)
+        from xml.etree.ElementTree import ParseError
         try:
             self.parseXML(self.file)
-        except TypeError: #FileNotFoundError or TypeError:
+        except (FileNotFoundError, TypeError, ParseError):
             if verbose: print('Failed to read %s'%self.file)
             self.data = None
 
@@ -86,7 +87,7 @@ class PwParser():
             atype_string = atypes[i].get('name')
             atype_mass = atypes[i].findall('mass')[0].text
             atype_pseudo = atypes[i].findall('pseudo_file')[0].text
-            self.atomic_species[atype_string]=[atype_mass,atype_pseudo]
+            self.atomic_species[atype_string]=[float(atype_mass),atype_pseudo]
 
         #lattice properties
         self.alat = float(self.data.find("output/atomic_structure").get('alat'))
@@ -107,11 +108,19 @@ class PwParser():
 
         #number of kpoints and bands
         self.nkpoints = int(self.data.find('output/band_structure/nks').text)
-        self.nbands = int(self.data.find('output/band_structure/nbnd').text)
 
         #spin related properties and spin-orbit coupling
         lsda = self.data.find('output/band_structure/lsda').text
         self.lsda = True if lsda == 'true' else False
+        if self.lsda:
+            # the eigenvalues of each kpoint contain the nbnd_up bands followed by the nbnd_dw ones
+            nbnd_up = int(self.data.find('output/band_structure/nbnd_up').text)
+            nbnd_dw = int(self.data.find('output/band_structure/nbnd_dw').text)
+            self.nbands = nbnd_up + nbnd_dw
+            print('Warning: lsda computation. The evals contain the up and down bands in sequence, the methods that compute'
+                  ' the gap and the transitions are not implemented for this case')
+        else:
+            self.nbands = int(self.data.find('output/band_structure/nbnd').text)
         noncolin = self.data.find('output/band_structure/noncolin').text
         self.noncolin = True if noncolin == 'true' else False
         spinorbit = self.data.find('output/band_structure/spinorbit').text

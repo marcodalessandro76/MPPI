@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.ipynb_checkpoints/
+sphinx_build/
+.pytest_cache/
+# folders written by the tutorial notebooks
+sphinx_source/tutorials/*_tutorial/

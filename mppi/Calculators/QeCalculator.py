@@ -6,16 +6,16 @@ or by the slurm scheduler.
 
 from .Runner import Runner
 from mppi.Calculators.Tools import find_string_file
-from mppi.Calculators.RunRules import build_slurm_header, mpi_command
+from mppi.Calculators.RunRules import build_slurm_header, mpi_command, direct_command, environment_info
 import os
 
 class QeCalculator(Runner):
     """
-    Perform a QuantumESPRESSO calculation. The parameters used to define the parellelization
+    Perform a QuantumESPRESSO calculation. The parameters used to define the parallelization
     strategy are provided in the `runRules` object.
 
     Parameters:
-       runRulues (:class:`RunRules`) : instance of the :class:`RunRules` class
+       runRules (:class:`RunRules`) : instance of the :class:`RunRules` class
        executable (:py:class:`string`) : set the executable (pw.x, ph.x, ..) of the QuantumESPRESSO package
        skip (:py:class:`bool`) : if True evaluate if the computation can be skipped. This is done by checking if the log
             file of the run contains the string `job_done`, defined as a data member of this class
@@ -23,7 +23,7 @@ class QeCalculator(Runner):
        dry_run (:py:class:`bool`) : with this option enabled the calculator setup the calculations and write the script
             for submitting the job, but the computations are not run
        wait_end_run (:py:class:`bool`) : with this option disabled the run method does not wait the end of the run.
-            This option may be useful for interacting with the code in particular in _asincronous_ computation managed
+            This option may be useful for interacting with the code in particular in _asynchronous_ computation managed
             by the slurm scheduler
        activate_BeeOND (:py:class:`bool`) :  if True set I/O of the run in the BeeOND_dir created by the slurm scheduler.
             With this options enabled the ``out_dir`` of the run is set in the ``BeenOND_dir`` folder and the input wavefunction
@@ -148,7 +148,7 @@ class QeCalculator(Runner):
         """
         The method evaluates if the computation has to be performed.  If ``skip`` is
         False the run is always performed, instead if ``skip`` is True the method
-        checks if the log file exsists and contains the string `job_done`
+        checks if the log file exists and contains the string `job_done`
         defined as a member of the class.
         The method adds the key `is_to_run` to ``the run_options`` of the class.
 
@@ -190,8 +190,8 @@ class QeCalculator(Runner):
             # Set the OMP_NUM_THREADS variable in the environment
             os.environ['OMP_NUM_THREADS'] = str(self.run_options['omp_num_threads'])
             if not dry_run:
-                comm_str = 'cd %s ; %s'%(run_dir,self.run_command())
-                job = Popen(comm_str, shell = True)
+                comm_str = direct_command(self.run_options,run_dir,self.run_command())
+                job = Popen(comm_str, shell = True, executable = '/bin/bash')
             else:
                 job = None
                 if verbose: print('Dry_run option active. Computation not performed')
@@ -234,7 +234,7 @@ class QeCalculator(Runner):
                 time.sleep(delay)
             if verbose: print('computation %s ended'%name)
         else:
-            if verbose: print('The wait_end_run is False or the dry_run option is active. The calculator proceedes to the postprocessing')
+            if verbose: print('The wait_end_run is False or the dry_run option is active. The calculator proceeds to the postprocessing')
 
     def build_slurm_script(self):
         """
@@ -308,6 +308,14 @@ class QeCalculator(Runner):
 
         return job
 
+    def show_environment(self):
+        """
+        Print the environment in which the computations are performed: the modules loaded after
+        sourcing the `pre_processing` file of the RunRules (if provided) and the path of the executable.
+
+        """
+        print(environment_info(self._global_options,self._global_options['executable']))
+
     def run_command(self):
         """
         Define the run command used to run the computation.
@@ -335,7 +343,7 @@ class QeCalculator(Runner):
         Check the status of the running job.
 
         Args:
-            job : reference to the actual job. job is an istance of Popen for `direct` scheduler
+            job : reference to the actual job. job is an instance of Popen for `direct` scheduler
                 or a string for `slurm` scheduler
 
         Return:
@@ -424,12 +432,12 @@ class QeCalculator(Runner):
 
     def copy_source_dir(self):
         """
-        Copy the source_dir (if provided) in the out_dir and atttibute to the copied folder
+        Copy the source_dir (if provided) in the out_dir and attribute to the copied folder
         the name $prefix.save. The operation is performed only if a folder with the target name
         of the source_dir is not found in the out_dir
 
         Args:
-            source_dir: the name of the source_dir (tipically it is the .save folder
+            source_dir: the name of the source_dir (typically it is the .save folder
             of the scf calculation that contains the wave-functions of the ground state).
 
         """

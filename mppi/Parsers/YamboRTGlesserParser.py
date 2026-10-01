@@ -5,14 +5,14 @@ from netCDF4 import Dataset
 import numpy as np
 
 def buildBlochVectors(dm):
-    """
+    r"""
     Build the Bloch vectors :math:`u_i(t,k)` (for each time step and for each k point) associated to the
     2x2 density matrix provided as input. Bloch vectors are computed according to the relation
 
     .. math::
-        u_1(t,k) = 2Re(\\rho_{0,1,k}(t)) \, , \\
-        u_2(t,k) = -2Im(\\rho_{0,1,k}(t)) \, , \\
-        u_3(t,k) = \\rho_{0,0,k}(t) - \\rho_{1,1,k}(t)
+        u_1(t,k) = 2Re(\rho_{0,1,k}(t)) \, , \\
+        u_2(t,k) = -2Im(\rho_{0,1,k}(t)) \, , \\
+        u_3(t,k) = \rho_{0,0,k}(t) - \rho_{1,1,k}(t)
 
     The Bloch vectors are rescaled by the value of the trace of the density matrix (for each time and k point).
     If one trace vanishes the vector associated to the same time and k is set to zero.
@@ -74,7 +74,8 @@ class YamboRTGlesserParser():
             database = Dataset(self.filename)
         except:
             raise IOError("Error opening file %s in YamboRTGlesserParser"%self.filename)
-        self.Gless = np.array(database.variables['dG_lesser'])
+        self.Gless = np.array(database.variables['dG_lesser'][:])
+        database.close()
 
     def get_info(self):
         """
@@ -111,7 +112,7 @@ class YamboRTGlesserParser():
         .. math::
             \\rho_{b1,b2,k}(t) = -iG^<_{b2,b1,k}(t)
 
-        The real and complex parts of the ``dG`` array are recasted to produce the
+        The real and complex parts of the ``dG`` array are recast to produce the
         complex structure of the density matrix. Note that the band indices are transposed,
         since in this way we are able to reproduce the correct expectation of on observable
         using the relation :math:`<O> = Tr(\\rho O)`.

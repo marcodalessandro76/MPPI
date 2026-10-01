@@ -1,0 +1,33 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+electrons                        # [R] Electronic properties
+bnds                             # [R] Bands
+PROJECT_mode= "none"             # Instruct ypp how to project the DOS. ATOM, LINE, PLANE.
+INTERP_mode= "NN"                # Interpolation mode (NN=nearest point, BOLTZ=boltztrap aproach)
+INTERP_Shell_Fac= 20.00000       # The bigger it is a higher number of shells is used
+INTERP_NofNN= 1                  # Number of Nearest sites in the NN method
+OutputAlat= 0.000000             # [a.u.] Lattice constant used for "alat" ouput format
+cooIn= "rlu"                     # Points coordinates (in) cc/rlu/iku/alat
+cooOut= "rlu"                    # Points coordinates (out) cc/rlu/iku/alat
+% BANDS_bands
+  1 |  8 |                           # Number of bands
+%
+CIRCUIT_E_DB_path= "none"        # SAVE obtained from the QE `bands` run (alternative to %BANDS_kpts)
+BANDS_path= ""                   # High-Symmetry points labels (G,M,K,L...) also using composed positions (0.5xY+0.5xL).
+BANDS_steps= 10                  # Number of divisions
+#BANDS_built_in                # Print the bands of the generating points of the circuit using the nearest internal point
+%BANDS_kpts                      # K points of the bands circuit
+%

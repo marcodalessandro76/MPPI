@@ -4,9 +4,6 @@
 - Check the compilation of the ReadTheDocs documentation. The are problems for the rendering of the inline math equations
   in the TLS notebook.
 
-- In the computation of the ypp bands in the Analysis_BandStructure tutorial an interpolation error is produced if the BOLTZ
-  interpolation is used.
-
 
 ## TODO
 
@@ -15,8 +12,6 @@
 
 - Add the spin to the Dos class and add a from_Yambo method in the Dos class, this requires that the weights of the
   k points are computed by the YamboDftParser.
-
-- Complete the Analysis_Dos notebook.
 
 - Complete the PwParser and YamboDftParser classes with add the expansion of the k points and the computation of the weigths.
   We can use the attribute weights in the PwParser for a check of the results.

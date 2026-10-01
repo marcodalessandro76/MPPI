@@ -1,0 +1,61 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+rim_cut                          # [R] Coulomb potential
+HF_and_locXC                     # [R] Hartree-Fock
+infver                           # [R] Input file variables verbosity
+StdoHash=  40                    # [IO] Live-timing Hashes
+Nelectro= 8.000000               # Electrons number
+NelCond= 0.000000                # Number of electrons in conduction (Quasi-Fermi distribution)
+ElecTemp= 0.000000         eV    # Electronic Temperature
+BoseTemp=-1.000000         eV    # Bosonic Temperature
+OccTresh= 0.100000E-4            # Occupation treshold (metallic bands)
+NLogCPUs=0                       # [PARALLEL] Live-timing CPU`s (0 for all)
+DBsIOoff= "none"                 # [IO] Space-separated list of DB with NO I/O. DB=(DIP,X,HF,COLLs,J,GF,CARRIERs,OBS,W,SC,BS,ALL)
+DBsFRAGpm= "none"                # [IO] Space-separated list of +DB to FRAG and -DB to NOT FRAG. DB=(DIP,X,W,HF,COLLS,K,BS,QINDX,RT,ELP
+MEM_tresh=  51200          Kb    # [MEMORY] Treshold on traced memory allocations/deallocations
+#DegFix                        # Force the code to impose the energy levels to respect their degeneracy
+FFTGvecs= 1139             RL    # [FFT] Plane-waves
+#WFbuffIO                      # [IO] Wave-functions buffered I/O
+PAR_def_mode= "balanced"         # [PARALLEL] Default distribution mode ("balanced"/"memory"/"workload"/"KQmemory")
+SX_CPU= ""                       # [PARALLEL] CPUs for each role
+SX_ROLEs= ""                     # [PARALLEL] CPUs roles (q,g,qp,b)
+SX_Threads=0                     # [OPENMP/HF] Number of threads for the X self-energy
+BZINDX_CPU= ""                   # [PARALLEL] CPUs for each role
+BZINDX_ROLEs= ""                 # [PARALLEL] CPUs roles (k)
+RandQpts=0                       # [RIM] Number of random q-points in the BZ
+RandGvec= 1                RL    # [RIM] Coulomb interaction RS components
+#QpgFull                       # [F RIM] Coulomb interaction: Full matrix
+% Em1Anys
+ 0.000000 | 0.000000 | 0.000000 |        # [RIM] X Y Z Static Inverse dielectric matrix Anysotropy
+%
+IDEm1Ref=0                       # [RIM] Dielectric matrix reference component 1(x)/2(y)/3(z)
+CUTGeo= "none"                   # [CUT] Coulomb Cutoff geometry: box/cylinder/sphere/ws/slab X/Y/Z/XY..
+% CUTBox
+ 0.000000 | 0.000000 | 0.000000 |        # [CUT] [au] Box sides
+%
+CUTRadius= 0.000000              # [CUT] [au] Sphere/Cylinder radius
+CUTwsGvec= 0.700000              # [CUT] WS cutoff: number of G to be modified
+#CUTCol_test                   # [CUT] Perform a cutoff test in R-space
+EpsEnv= 1.000000                 # [COL] Static Inverse dielectric matrix of enviroment
+EXXRLvcs=  5985            RL    # [XX] Exchange    RL components
+VXCRLvcs=  5985            RL    # [XC] XCpotential RL components
+#UseNLCC                       # [XC] If present, add NLCC contributions to the charge density
+%QPkrange                        # [GW] QP generalized Kpoint/Band indices
+1|32|1|8|
+%
+%QPerange                        # [GW] QP generalized Kpoint/Energy indices
+1|32| 0.000000|-1.000000|
+%

@@ -31,6 +31,10 @@ def fit_sum_frequencies(t, y, Omegas_dict, rcond=None):
     X = np.column_stack(X_cols)
 
     coeffs, residuals, _, _ = np.linalg.lstsq(X, y, rcond=rcond)
+    # lstsq returns an empty residuals array if the system is rank deficient or underdetermined,
+    # in this case the residual is computed explicitly
+    if residuals.size == 0:
+        residuals = np.array([np.sum((y - X @ coeffs)**2)])
     B0 = coeffs[0]
     results_dict = {}
 

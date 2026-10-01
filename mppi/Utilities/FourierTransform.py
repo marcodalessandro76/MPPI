@@ -91,7 +91,7 @@ def eval_energy_array(Nt,dt=1.,time_units='fs',verbose=True):
     """
     Compute the energy array associated to a time sampling with Nt points and time step dt.
     The energy is given by energy = h*freqs, where freqs is the array of frequencies 
-    is computedf by the np.fft.rfftfreq function.
+    is computed by the np.fft.rfftfreq function.
 
     Args:
         Nt (:py:class:`int`) : number of sampling points in the time domain

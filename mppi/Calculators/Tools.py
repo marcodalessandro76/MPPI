@@ -33,7 +33,7 @@ def find_string_file(file,string):
 
     Return:
         :py:class:`string` : return the first occurence of the line that match
-        the search. If no line is found or the file does not exsists return None
+        the search. If no line is found or the file does not exists return None
 
     """
     line = None
@@ -167,7 +167,7 @@ def build_pw_kpath(*kpoints,numstep=40):
     for computing the band structure along a path.
 
     Example:
-        >>> build_kpath(L,G,X,K,G,numstep=30)
+        >>> build_pw_kpath(L,G,X,K,G,numstep=30)
 
     Args:
         kpoints : arguments that specify the high symmetry points along the k-path
@@ -190,7 +190,7 @@ def build_pw_klist(kpoints,kweight=None):
 
     Args:
         kpoints (:py:class:`array`) : array with the coordinates of the kpoints
-        kweight (:py:class:`list`) : array with the weigth of each kpoint. If is None
+        kweight (:py:class:`list`) : array with the weight of each kpoint. If is None
             a uniform weight equal to 1 is attributed to each kpoint
 
     Returns:

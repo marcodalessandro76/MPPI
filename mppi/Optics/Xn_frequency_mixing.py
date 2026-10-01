@@ -1,5 +1,5 @@
 """
-This module defines the tools to extract the non-linear optical properties of the system from the real-time polarization induced by the sum of two monocromatic external fields,
+This module defines the tools to extract the non-linear optical properties of the system from the real-time polarization induced by the sum of two monochromatic external fields,
 that represent the pump and the probe in a typical pump-probe experiment. 
 The module can be loaded in the notebook as follows
 
@@ -104,7 +104,7 @@ def estimate_time_window(Omegas, safety_factor=8):
 
 class Xn_frequency_mixing():
     """
-    Class to extract the non-linear susceptibility from the polarization induced by the sum of two monocromatic external fields, that 
+    Class to extract the non-linear susceptibility from the polarization induced by the sum of two monochromatic external fields, that 
     represent the pump and the probe in a typical pump-probe experiment. 
 
     Args:
@@ -172,8 +172,8 @@ class Xn_frequency_mixing():
             file (:py:class:`string`) : name of the nlndb.Nonlineardatabase database file
             verbose (:py:class:`boolean`) : define the amount of information provided on terminal
         """
-        data = YamboNLDBParser(file)
-        return cls(data,verbose)
+        data = YamboNLDBParser(file,verbose=verbose)
+        return cls(data,verbose=verbose)
     
     def get_info(self):
         """
@@ -309,14 +309,12 @@ class Xn_frequency_mixing():
             time = self.time
             pol = self.pol[plot_ifreq,plot_dir]
             iTstart, _ = self.set_time_sampling(plot_ifreq)
-            print(iTstart)
-            Omegas = generate_frequencies(self.probe_freqs[ifreq], self.pump_freq, max_order_E1=self.X_order[0], max_order_E2=self.X_order[1])
+            Omegas = generate_frequencies(self.probe_freqs[plot_ifreq], self.pump_freq, max_order_E1=self.X_order[0], max_order_E2=self.X_order[1])
             omega_min = min(Omegas.values())
             Tperiod_max = 2.0*np.pi/omega_min
             results = self.perform_harmonic_analysis(plot_ifreq)[plot_dir]
             pol_fit = eval_sum_frequencies(time, results[0], results[1])
             Tmin,Tmax = time[iTstart]/C.FsToAu, np.min([time[iTstart]+5*Tperiod_max,time[-1]])/C.FsToAu
-            print('Tmin,Tmax for the plot:',iTstart,Tmin,Tmax)
             U.Plot_Array(time/C.FsToAu, pol_fit,xlim=(Tmin,Tmax), label='Harm fit',data2=pol,label2='Pol',figsize=(6,3))
             diffe = pol-pol_fit
             U.Plot_Array(time/C.FsToAu, diffe, label='Difference fit-pol',figsize=(6,3)) 

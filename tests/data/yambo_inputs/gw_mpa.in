@@ -1,0 +1,56 @@
+#                                                                     
+# $$\                                                                 
+# $$ |                                                                
+# $$ |     $$\   $$\ $$$$$$\$$$$\   $$$$$$\  $$$$$$$\                 
+# $$ |     $$ |  $$ |$$  _$$  _$$\ $$  __$$\ $$  __$$\                
+# $$ |     $$ |  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |  $$ |               
+# $$ |     $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |               
+# $$$$$$$$\\$$$$$$  |$$ | $$ | $$ |\$$$$$$$\ $$ |  $$ |               
+# \________|\______/ \__| \__| \__| \_______|\__|  \__|               
+#                                                                     
+#                   Fork Lumen 2.1.0                                  
+#                   Branch is master                                  
+#        MPI+OpenMP+SLK+SLEPC+HDF5_MPI_IO Build                       
+#               http://www.lumen-code.org                             
+#
+mpa                              # [R][Xm] Multi Pole Approximation for the Screened Interaction
+gw0                              # [R] GW approximation
+el_el_corr                       # [R] Electron-Electron Correlation
+dyson                            # [R] Dyson Equation solver
+HF_and_locXC                     # [R] Hartree-Fock
+em1d                             # [R][X] Dynamically Screened Interaction
+EXXRLvcs=  5985            RL    # [XX] Exchange    RL components
+VXCRLvcs=  5985            RL    # [XC] XCpotential RL components
+Chimod= "HARTREE"                # [X] IP/Hartree/ALDA/LRC/PF/BSfxc
+% QpntsRXm
+   1 |  32 |                         # [Xm] Transferred momenta
+%
+% BndsRnXm
+  1 |  8 |                           # [Xm] Polarization function bands
+%
+NGsBlkXm= 1                RL    # [Xm] Response block size
+% LongDrXm
+ 1.000000 | 0.000000 | 0.000000 |        # [Xm] [cc] Electric Field
+%
+EnSampXm= "2l"                   # [Xm] Frequency sampling in the complex plane ("1l" one line, "2l" two lines)
+EnGridXm= "lP"                   # [Xm] Partition along the real axis ("ho" homogeneous, "lP" linear, "qP" quadratic, "cP" cubic)
+% EnRngeXm
+  0.00000 | 10.00000 |         eV    # [Xm] Energy range
+%
+% ImRngeXm
+ 27.21138 | 27.21138 |         eV    # [Xm] Imaginary range
+%
+% DmRngeXm
+ 0.000000 | 2.721138 |         eV    # [Xm] Damping range
+%
+ETStpsXm=  4                     # [Xm] Total Energy steps
+IntSolXm= "PT"                   # [Xm] MPA interpolation solver ("LA" linear algebra, "PT" Pade-Thiele)
+#mpERdb                        # [Xm] Write to disk MPA poles and residues
+% GbndRnge
+  1 |  8 |                           # [GW] G[W] bands range
+%
+GTermKind= "none"                # [GW] GW terminator ("none","BG" Bruneval-Gonze,"BRS" Berger-Reining-Sottile)
+DysSolver= "n"                   # [GW] Dyson Equation solver ("n","s","g","q")
+%QPkrange                        # [GW] QP generalized Kpoint/Band indices
+1|32|1|8|
+%

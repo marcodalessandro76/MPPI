@@ -1,4 +1,4 @@
-"""
+r"""
 This module collects some tools to deal with Gaussian pulses.
 This class of pulses is described by a sinusoidal function, whose frequency
 defines the `energy` :math:`E=\hbar\omega` of the pulse, times a gaussian envelope.
@@ -30,7 +30,7 @@ from mppi.Utilities import Constants as C
 
 def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_start = 0,
         envelope_only = False, THz_pulse = False, change_sign = False, verbose = True):
-    """
+    r"""
     Build a Gaussian pulse.
 
     Args:
@@ -42,7 +42,7 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
         fwhm (:py:class:`float`) : if not None set the FWHM of the pulse (in fs). The width
             is set to :math:`fwhm/(2\sqrt{2ln(2)})`
         t_start (:py:class:`float`) : time shift for the origin of the pulse (in fs)
-        envelope_only (:py:class:`bool`) : if True the sinusodial oscillating factor
+        envelope_only (:py:class:`bool`) : if True the sinusoidal oscillating factor
             is not considered
         THz_pulse (:py:class:`bool`) : if True expresses the energy in meV and the
             time variable and the width parameter in ps
@@ -89,7 +89,7 @@ def gaussianPulse(time, energy = 1.5, amplitude = 1, width = 100, fwhm = None,t_
 def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, width1 = 100, width2 = 100,
                         fwhm1 = None, fwhm2 = None, t_start1 = 0, t_start2 = 600, envelope_only = False,
                         THz_pulse = False, change_sign1 = False, change_sign2 = False, verbose = True):
-    """
+    r"""
     Build a sine oscillating pulse with e double Gaussian envelope.
 
     Args:
@@ -106,7 +106,7 @@ def doubleGaussianPulse(time, energy = 1.5, amplitude1 = 1, amplitude2 = 1, widt
             is set to :math:`fwhm2/(2\sqrt{2ln(2)})`
         t_start1 (:py:class:`float`) : time shift for the origin of the first pulse (in fs)
         t_start2 (:py:class:`float`) : time shift for the origin of the second pulse (in fs)
-        envelope_only (:py:class:`bool`) : if True the sinusodial oscillating factor
+        envelope_only (:py:class:`bool`) : if True the sinusoidal oscillating factor
             is not considered
         THz_pulse (:py:class:`bool`) : if True expresses the energy in meV and the
             time variable and the width parameter in ps

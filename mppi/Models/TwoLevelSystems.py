@@ -18,7 +18,7 @@ from scipy.integrate import odeint
 
 def pulseParametersFromIntensity(mu12, intensity, width = 100, fwhm = None,
         THz_pulse = False, verbose = True):
-    """
+    r"""
     Compute the Rabi coupling frequency and the `area` of the Gaussian pulse in function of
     the values of the transition dipole :math:`\mu_{12}` and of the field intensity.
 
@@ -65,7 +65,7 @@ def pulseParametersFromIntensity(mu12, intensity, width = 100, fwhm = None,
     return dict(Omega0=Omega0,amplitude=amplitude_vm,theta=theta)
 
 def pulseParametersFromTheta(mu12, theta, width = 100, fwhm = None, THz_pulse = False, verbose=True):
-    """
+    r"""
     Compute the field intensity and the Rabi coupling that correspond to the `area` of the Gaussian
     pulse given as input.
 
@@ -80,7 +80,7 @@ def pulseParametersFromTheta(mu12, theta, width = 100, fwhm = None, THz_pulse = 
         verbose (:py:class:`bool`) : sets the amount of information provided on terminal
 
     Returns:
-        :py:class:`dict` : a dictionay with the (generally complex) Rabi coupling,
+        :py:class:`dict` : a dictionary with the (generally complex) Rabi coupling,
             the field amplitude (in V/m) and the field intensity (in kW/cm^2)
 
     """

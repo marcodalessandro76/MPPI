@@ -30,13 +30,13 @@ def pw_get_energy(dataset):
 
     Returns:
         :py:class:`dict` : dictionary with the energy (in Hartree) for all the (computed) runs
-            of the dataset
+            of the dataset. The energy is None for the runs whose xml file cannot be parsed
     """
     from mppi import Parsers as P
     energy = {}
     for run,data in dataset.results.items():
         results = P.PwParser(data,verbose=False)
-        energy[run] = results.get_energy(convert_eV = False)
+        energy[run] = results.get_energy(convert_eV = False) if results.data is not None else None
     return energy
 
 def pw_get_gap(dataset):
@@ -49,13 +49,15 @@ def pw_get_gap(dataset):
     Returns:
         :py:class:`dict` : dictionary with the gap (in eV) for all the (computed) runs
             of the dataset. Information on the nature of the gap (direct or indirect) are
-            written on terminal
+            written on terminal. The gap is None for the runs whose xml file cannot be parsed
     """
     from mppi import Parsers as P
     gap = {}
     for run,data in dataset.results.items():
         results = P.PwParser(data,verbose=False)
-        if results.get_gap() is not None:
+        if results.data is None:
+            gap[run] = None
+        elif results.get_gap() is not None:
             gap[run] = results.get_gap()['gap']
         else: gap[run] = 0
     return gap
@@ -81,7 +83,7 @@ def yambo_get_gap(dataset):
     """
     Extract the value of the gap from the results dictionary of the dataset.
     The function requires that the parameters k_full and band_full are defined as
-    kwargs in the dataset, and the optional paremeters k_empty and band_empty can
+    kwargs in the dataset, and the optional parameters k_empty and band_empty can
     be provided in the same way.
 
     Args:
