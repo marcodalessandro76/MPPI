@@ -70,8 +70,11 @@ def build_histogram(values,weights=None,norm=1.0,minVal=None,maxVal=None,
 
     x = np.arange(minVal,maxVal,step)
     histo = np.zeros([len(x)])
-    for v,w in zip(values,weights):
-        histo += w*broad_func(eta,v,x)
+    # sum the broadened contributions in blocks of values, to limit the memory used
+    block = max(1,int(1e6/max(len(x),1)))
+    for start in range(0,len(values),block):
+        v, w = values[start:start+block], weights[start:start+block]
+        histo += np.dot(w,broad_func(eta,v[:,None],x[None,:]))
 
     return (x, histo)
 
@@ -98,9 +101,12 @@ def convert_PwData(evals,weights):
 
 class Dos():
     """
-    Definition of the density of state class.
-    The dos is normalized so that its integral is equal to the norm of the weights divided the step of
-    x axis sampling.
+    Definition of the density of state class. The class can contain several dos, each one is built
+    by summing the broadening functions (normalized to one) centered on the values, multiplied by their weights.
+    So the integral of each dos is equal to the sum of the weights (of the values in the [minVal,maxVal] range).
+    For the dos of a QuantumESPRESSO computation the weights of the k points sum to 2 (spin degeneracy included), so
+    the dos is the number of states per unit of energy and per cell, and its integral up to the top of the valence band
+    is the number of electrons.
 
     Attributes:
         dos (:py:class:`list`): list with the tuple (energies,histogram) for each dos appended to the class
@@ -117,6 +123,7 @@ class Dos():
         step (float) : size of the bin (in the same units used for the values array)
         eta (float) : magnitude of the broadening parameter (in the same units used for the values array)
         broad_kind (string) : type of broadening function used (lorentzian, gaussian)
+        label (string) : label of the dos
 
     """
 
@@ -129,7 +136,7 @@ class Dos():
                     step=step,eta=eta,broad_kind=broad_kind,label=label)
 
     @classmethod
-    def from_Pw(cls,results,set_gap=None,set_direct_gap=None, minVal = None, maxVal = None,
+    def from_Pw(cls,results,set_scissor=None,set_gap=None,set_direct_gap=None, minVal = None, maxVal = None,
                 step = 0.01, eta = 0.05, broad_kind = 'lorentzian',label=None):
         """
         Initialize the Dos class from the xml output file of a QuantumESPRESSO computation.
@@ -138,6 +145,7 @@ class Dos():
         Args:
             results (:py:class:`string`) : the data-file-schema.xml that contains the result of the
                             QuantumESPRESSO computation
+            set_scissor (:py:class:`float`) : add a scissor (in eV) to the energies of the empty bands
             set_gap (:py:class:`float`) : set the value of the gap (in eV) of the system
             set_direct_gap (:py:class:`float`) : set the value of the direct gap (in eV) of the system.
                             If set_gap is provided this parameter is ignored
@@ -148,11 +156,10 @@ class Dos():
             broad_kind (string) : type of broadening function used (lorentzian, gaussian)
 
         """
-        from mppi import Parsers as P
-        data = P.PwParser(results,verbose=False)
-        evals = data.get_evals(set_gap=set_gap,set_direct_gap=set_direct_gap)
-        energies, weights = convert_PwData(evals,data.weights)
-        return cls(energies,weights=weights,label=label,minVal=minVal,maxVal=maxVal,step =step,eta=eta,broad_kind=broad_kind)
+        dos = cls()
+        dos.append_fromPw(results,set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,
+            minVal=minVal,maxVal=maxVal,step=step,eta=eta,broad_kind=broad_kind,label=label)
+        return dos
 
     def append(self, energies, weights = None, norm = 1.0, minVal = None, maxVal = None,
                step = 0.01, eta = 0.05, broad_kind = 'lorentzian', label = None):
@@ -179,7 +186,7 @@ class Dos():
         lbl = label if label is not None else str(len(self.labels)+1)
         self.labels.append(lbl)
 
-    def append_fromPw(self,results,set_gap=None,set_direct_gap=None, minVal = None, maxVal = None,
+    def append_fromPw(self,results,set_scissor=None,set_gap=None,set_direct_gap=None, minVal = None, maxVal = None,
                       step = 0.01, eta = 0.05, broad_kind = 'lorentzian',label=None):
         """
         Add one element to the Dos class starting from the xml output file of a QuantumESPRESSO
@@ -188,6 +195,7 @@ class Dos():
         Args:
             results (:py:class:`string`) : the data-file-schema.xml that contains the result of the
                             QuantumESPRESSO computation
+            set_scissor (:py:class:`float`) : add a scissor (in eV) to the energies of the empty bands
             set_gap (:py:class:`float`) : set the value of the gap (in eV) of the system
             set_direct_gap (:py:class:`float`) : set the value of the direct gap (in eV) of the system.
                             If set_gap is provided this parameter is ignored
@@ -201,7 +209,7 @@ class Dos():
         """
         from mppi import Parsers as P
         data = P.PwParser(results,verbose=False)
-        evals = data.get_evals(set_gap=set_gap,set_direct_gap=set_direct_gap)
+        evals = data.get_evals(set_scissor=set_scissor,set_gap=set_gap,set_direct_gap=set_direct_gap,verbose=False)
         energies, weights = convert_PwData(evals,data.weights)
         self.append(energies,weights=weights,label=label,minVal=minVal,maxVal=maxVal,step =step,eta=eta,broad_kind=broad_kind)
 
@@ -234,7 +242,7 @@ class Dos():
 
         Args:
             plt(:py:class:`matplotlib.pyplot`) : the matplotlib object
-            plt(:py:class:`matplotlib.pyplot.axes`) : the matplotlib axes object. If provided the plot
+            axes(:py:class:`matplotlib.pyplot.axes`) : the matplotlib axes object. If provided the plot
                 is performed on the given axes
             rescale (:py:class:`bool`) : if True all the dos are rescaled to the same maximum value equal to 1.0 (useful for comparison)
             include (:py:class:`list`) : list with the indexes (as appended to the dos member ) of the dos that are plotted
