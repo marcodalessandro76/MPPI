@@ -26,6 +26,31 @@ def build_dataset():
     study.set_postprocessing_function(lambda dataset: dataset.results)
     return study
 
+class SquareRunner(Runner):
+    """Runner that returns the square of its x option, or fails if x is negative"""
+    def post_processing(self):
+        x = self.run_options['x']
+        if x < 0: raise ValueError('negative x')
+        return x**2
+
+def test_dataset_run_multiprocessing():
+    # on Windows and macOS the processes are started with spawn, so this also tests that the
+    # objects passed to the processes can be pickled
+    study = Dataset(run_dir='runs',num_tasks=2,verbose=False)
+    code = SquareRunner()
+    for x in [1,2,3,-1]:
+        study.append_run(id={'x':x},runner=code,x=x)
+    assert study.run() == {0:1,1:4,2:9,3:None}
+    study.set_postprocessing_function(lambda dataset: dataset.results)
+    assert study.fetch_results(id={'x':3}) == [9]
+
+def test_parallel_loop():
+    import math
+    import numpy as np
+    from mppi.Utilities.Parallel import loop
+    pars = np.arange(10.)
+    assert np.allclose(loop(math.sqrt,pars,ntasks=3,verbose=False),np.sqrt(pars))
+
 def test_fetch_results():
     study = build_dataset()
     assert study.fetch_results(id={'ecut':4},run_if_not_present=False) == [42,44]

@@ -40,6 +40,27 @@ def name_from_id(id):
 
     return name
 
+def calculator_run(calculator, run, irun, queue):
+    """
+    Perform a run of the dataset and put the dictionary {irun : result} in the queue. The function
+    is executed in a separate process by :meth:`Dataset.run_the_calculations` (it is defined at module level
+    so that it can be used with all the start methods of multiprocessing). If the run raises an exception
+    the error is printed and the result is None.
+
+    Args:
+        calculator (:class:`Runner`) : the calculator that performs the run
+        run (:py:class:`dict`) : the parameters of the run
+        irun (:py:class:`int`) : index of the run in the dataset
+        queue (:py:class:`multiprocessing.Queue`) : queue that collects the results
+
+    """
+    try:
+        result = calculator.run(**run)
+    except Exception as e:
+        print('Run %s failed with the error: %r'%(irun,e))
+        result = None
+    queue.put({irun : result})
+
 def id_matches(run_id, run_name, id):
     """
     Check if a run of the dataset matches the id provided as input.
@@ -78,10 +99,10 @@ def convergence_plot(**kwargs):
     plt.title('Convergence plot for dataset '+kwargs['label'],size=14)
     ax = plt.gca()
     ax.grid(color='grey', linestyle='--',linewidth=0.5)
-    ax.set_xticklabels(iruns, rotation=45)
     ax.tick_params(axis='both', which='major', labelsize=14)
     plt.plot(iruns,values)
     plt.scatter(iruns,values,color='red')
+    plt.xticks(rotation=45)
     if id_conv is not None:
         id_conv = name_from_id(id_conv)
         id_last = name_from_id(ids[-1])
@@ -211,16 +232,8 @@ class Dataset(Runner):
             selection (:py:class:`list`) : if not None only the runs in the list are computed
 
         """
-        import multiprocessing, time
-        delay = 1 # in seconds
+        import multiprocessing
         verbose = self.global_options().get('verbose')
-
-        def calculator_run(runs,calculators,iruns,queue):
-            for calc in calculators: #identify the calculator associated to the present run
-                if irun in calc['iruns']:
-                    break
-            result = calc['calc'].run(**runs[irun]) #run and append the dictionary with the result to the queue
-            queue.put({irun : result})
 
         if selection is None:
             selection = [ind for ind in range(len(self.ids))]
@@ -229,18 +242,34 @@ class Dataset(Runner):
         for task in task_groups:
             queue = multiprocessing.Queue()
             task_job = []
-            task_alive = True
             if verbose: print('Run the task %s '%task)
             for irun in task:
-                p = multiprocessing.Process(target=calculator_run, args=(self.runs,self.calculators,irun,queue,))
+                p = multiprocessing.Process(target=calculator_run,
+                        args=(self.get_calculator(irun),self.runs[irun],irun,queue,))
                 task_job.append(p)
                 p.start()
-            while task_alive: #wait the end of the task
-                task_alive = any([job.is_alive() for job in task_job])
-                time.sleep(delay)
-            while queue.qsize() != 0: #add the result to self.results
+            # collect the results before joining the processes, otherwise a process that puts a large
+            # object in the queue cannot terminate
+            for job in task_job:
                 self.results.update(queue.get())
+            for job in task_job:
+                job.join()
             if verbose: print('Task %s ended \n '%task)
+
+    def get_calculator(self, irun):
+        """
+        Return the calculator associated to a run of the dataset.
+
+        Args:
+            irun (:py:class:`int`) : index of the run
+
+        Returns:
+            :class:`Runner` : the calculator that performs the run
+
+        """
+        for calc in self.calculators:
+            if irun in calc['iruns']:
+                return calc['calc']
 
     def build_taskgroups(self,selection):
         """
