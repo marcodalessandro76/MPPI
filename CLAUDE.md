@@ -74,8 +74,16 @@ Tutorial status (all on branch `fix/bugs`):
   (2026-10-01, QE only: ecut dataset, post-processing, fetch_results, seek_convergence on k points, a slurm dataset)
   — executed in place on the cluster, NOT committed yet. The old Yambo HF dataset part of Tutorial_Datasets was
   dropped: show a Yambo dataset in the Yambo tutorials.
-- **NEXT: the Yambo tutorials**, starting from Tutorial_YamboInput, then Tutorial_YamboCalculator and
-  Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+- Tutorial_YamboInput rewritten and executed (2026-10-01): run_dir `YamboInput_tutorial` built with
+  `Tools.init_yambo_dir(yambo_dir, input_dir)` (the current API; the MoS2 notebooks use the older
+  `make_p2y(source_dir)` + `init_yambo_run_dir`, removed in March 2023). YamboInput.py was rewritten (line based
+  parser, readable writer) and checked against 14 yambo/ypp/yambo_nl/yambo_rt inputs (tests/data/yambo_inputs).
+  With `reformat=True` yambo keeps only the variables of the `-V` verbosity of args.
+- IMPORTANT for every Yambo tutorial: the nscf used for p2y must be run with `force_symmorphic=True`. With
+  non-symmorphic symmetries in the SAVE this Lumen yambo silently activates no runlevel (generated inputs contain
+  only setup variables, runs end with a report named `r-..._ypp`). Tutorial_QeCalculator now does so.
+  The new p2y always exits with MPI_ABORT after writing the wavefunctions, but the SAVE works.
+- **NEXT: Tutorial_YamboCalculator**, then Tutorial_YamboParser. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
   `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs
