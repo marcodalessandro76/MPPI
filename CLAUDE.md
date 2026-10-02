@@ -113,7 +113,9 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
 - Tutorial_YamboNLDBParser rewritten and executed (2026-10-02): parses `Reference_data/nl_results/LiF-delta_pulse`
   (tracked in git, 756 KB).
 - Analysis_Optics rewritten (2026-10-02) on the analytical anharmonic oscillator (no LiF data): linear response,
-  single frequency, frequency mixing 2nd and 3rd order vs Boyd's formulas. The old LiF version (in git history) is meant
+  single frequency, frequency mixing 2nd and 3rd order vs Boyd's formulas, third harmonic and vanishing even orders of the
+  centrosymmetric oscillator (|P_even/P(w)| ~1e-14 single frequency, ~1e-9 mixing: the noise floor of the harmonic fit;
+  the same check applies to centrosymmetric crystals such as LiF, where chi(1,+-1) must vanish). The old LiF version (in git history) is meant
   to move to the LiF repository (`~/work/LiF` on ismhpc, github marcodalessandro76/LiF), where the pump-probe
   analysis chi vs RT transient absorption continues.
 - Model_AnharmonicOscillator (2026-10-02, new, pure python: written and executed on the laptop): chi1, transient
