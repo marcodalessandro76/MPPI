@@ -42,9 +42,7 @@ The package is composed by several modules, each of which contains one or more c
 - __Parsers__: robust YamboNLDBParser (plain numpy arrays), parsing of the yambo_nl polarization files.
 - __Optics__: the non-linear susceptibilities follow the standard convention of R. W. Boyd, *Nonlinear Optics*
   (complex conjugate fields for the negative frequencies, degeneracy factors documented), the linear response includes
-  the time step in the Fourier transform. These changes modify the results of the previous versions for the negative
-  orders of the frequency mixing, the zero-th order of the monochromatic analysis and the normalization of the
-  dielectric function.
+  the time step in the Fourier transform.
 - __Models__: new AnharmonicOscillator class, used to test the Optics module against the analytical susceptibilities.
 - __Utilities__: corrected high-symmetry points of the fcc lattice, vectorized density of states with scissor.
 - Tutorials rewritten, shorter, and executed with QuantumESPRESSO 7.0 and the Lumen 2.1.0 fork of Yambo.
