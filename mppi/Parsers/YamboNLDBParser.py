@@ -17,6 +17,7 @@ class YamboNLDBParser(object):
     Time series is stored in IO_TIME_points variable
     while external fields, current and polarization of the different runs 
     are stored in Efield[x],Polarization[x],Current[x].
+
     Args:
         file (:py:class:`string`) : string with the name of the database to be parsed
         verbose (:py:class:`boolean`) : define the amount of information provided on terminal
@@ -72,14 +73,12 @@ class YamboNLDBParser(object):
              efield["peak"]  =database.variables['Field_peak_'+str(n)][0].astype(np.double)
          except:
              efield["peak"]  =10.0
-         #
+        
          # set t_initial according to Yambo 
-         #
          efield["initial_indx"] =max(round(efield["initial_time"]/RT_step)+1,2)
          efield["initial_time"] =(efield["initial_indx"]-1)*RT_step
-         #
+        
          # define the field amplitude
-         #
          efield["amplitude"]    =np.sqrt(efield["intensity"]*4.0*np.pi/Light_speed_au)
 
          return efield
@@ -116,15 +115,13 @@ class YamboNLDBParser(object):
         self.RAD_LifeTime   = database.variables['RAD_LifeTime'][0].astype(np.double)
         self.Integrator     = database.variables['Integrator'][...].tobytes().decode().strip()
         self.Correlation    = database.variables['Correlation'][...].tobytes().decode().strip()
-        #
+        
         # Time variables
-        #
         self.IO_TIME_N_points  = database.variables['IO_TIME_N_points'][0].astype('int')
         self.IO_TIME_LAST_POINT= database.variables['IO_TIME_LAST_POINT'][0].astype('int')
         self.IO_TIME_points    = database.variables['IO_TIME_points'][:].astype(np.double)
-        #
+
         # External fields
-        # 
         self.Efield_general=[]
         self.N_ext_fields=0
         for n in range(1,4):
@@ -136,9 +133,7 @@ class YamboNLDBParser(object):
                 self.Efield_general.append(efield.copy())
                 self.N_ext_fields=self.N_ext_fields+1
 
-        #
         # Read polarization and current files 
-        #
         self.Polarization=[]
         self.Current     =[]
         self.E_ext       =[]
@@ -146,7 +141,6 @@ class YamboNLDBParser(object):
         self.E_ks        =[]
         self.Efield      =[] # Store the first external field for each run at different frequencies
         self.Efield2     =[]
-        #
         if self.n_angles!=0:
             self.n_runs=self.n_angles
         if self.n_frequencies!=0:
@@ -157,7 +151,6 @@ class YamboNLDBParser(object):
         if (self.n_angles==0 and self.n_frequencies==0):
             self.n_runs=1
 
-        #
         for f in range(self.n_runs):
             try:
                 data_p_and_j= Dataset(self.nl_path+"_fragment_"+str(f+1))

@@ -27,6 +27,11 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
   clash). There: repo `~/Applications/MPPI` (pip editable install, it is the copy the user's notebooks use), miniconda
   python 3.13, `pw.x` (qe-7.0) and `yambo` (Lumen fork 2.1.0) in PATH, slurm. Edits are made on the laptop, pushed,
   then `git pull` on the cluster (the cluster never commits).
+  Python env on ismhpc: ~/miniconda3 base, python 3.13; the Jupyter stack, numpy, scipy, matplotlib, netCDF4 are
+  pip-installed there (update them with pip, not conda, to avoid duplicated copies). conda is 26.3.2: newer conda
+  (>=26.5.2) needs glibc 2.28 (CentOS 7 has 2.17). anaconda-anon-usage 0.8.1, Anaconda ToS accepted (2026-10-02).
+  Laptop: conda 26.9.0, JupyterLab 4.6.4 from conda (defaults, ToS accepted). After a conda update check `conda
+  info`: an old anaconda-anon-usage plugin breaks conda 26 (fix: update only that package, see git log/notes).
   `export OMPI_MCA_btl=^openib` is set in `~/.bashrc` and in `yambo_module`: it only hides the Open MPI
   "error initializing an OpenFabrics device" warning (openib is never used for IB: btl_openib_allow_ib=false,
   the PML is UCX). Yambo `reformat=True` (header in the inputs) must stay the default.
