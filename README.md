@@ -9,16 +9,45 @@ You can read the documentation in:
 https://mppi.readthedocs.io/en/latest/
 
 ## Features
-The package is composed by several module each of which contains one ore more classes:
+The package is composed by several modules, each of which contains one or more classes:
 
-- __InputFiles__ : create and manage input files for pw.x program of the QuantumEspresso package and for Yambo.
-- __Calculators__ : prepare and run a single QuantumESPRESSO or Yambo computation.
-- __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo.
-- __Parsers__ : classes to extract data from the output files and database QuantumESPRESSO and Yambo.
-- __Utilities__ : collect some useful low-level functions used by the other modules of the package.
-- __Optics__: compute the optical properties of a system from the analysis of the time-dependent polarization signal.
-- __Models__ : implement some physical models. Actually the module contains one tool to deal with gaussian pulses
-               and one to analyze the time dynamics of a two-level system.
+- __InputFiles__ : create and manage the input files of the pw.x and ph.x programs of the QuantumESPRESSO package
+  (PwInput, PhInput) and of Yambo (YamboInput, for yambo, ypp, yambo_nl and yambo_rt).
+- __Calculators__ : prepare and run a single QuantumESPRESSO or Yambo computation, either directly or through the slurm
+  scheduler (QeCalculator, YamboCalculator, RunRules).
+- __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo, collect their results and
+  perform convergence studies.
+- __Parsers__ : extract data from the output files and the databases of QuantumESPRESSO (data-file-schema.xml) and
+  Yambo (o- files and netCDF databases, including the ndb.Nonlinear database of yambo_nl).
+- __Utilities__ : low-level functions used by the other modules (constants, Fourier transform, density of states,
+  band structures, lattice utilities, parallel loops).
+- __Optics__ : compute the optical properties of a system from the time-dependent polarization: linear response from a
+  delta-shaped field, non-linear susceptibilities from monochromatic fields and from the frequency mixing of two fields
+  (pump and probe).
+- __Models__ : physical models. The module contains a tool to deal with gaussian pulses, one to analyze the time dynamics
+  of a two-level system and the classical anharmonic oscillator, which provides both the numerical time-dependent
+  polarization and the analytical non-linear susceptibilities.
+
+### What's new in version 1.3
+- Bug fixes in all the modules, with a test suite (`tests/`) that runs on machines with and without QuantumESPRESSO
+  and Yambo.
+- __YamboInput__ rewritten with a line based parser and a readable writer, checked on the inputs of yambo, ypp,
+  yambo_nl and yambo_rt.
+- __PwInput__: `force_symmorphic=True` is now the default (needed by Yambo), quoted strings, comments, `if_pos` flags
+  and `K_POINTS gamma` are parsed correctly.
+- __Calculators__: the `pre_processing` script of `RunRules` (e.g. a file that loads the modules) is also sourced
+  before the direct runs, and `show_environment()` prints the loaded modules and the executable.
+- __Datasets__: the parallel runs work with all the multiprocessing start methods, and `fetch_results` matches the run
+  ids exactly.
+- __Parsers__: robust YamboNLDBParser (plain numpy arrays), parsing of the yambo_nl polarization files.
+- __Optics__: the non-linear susceptibilities follow the standard convention of R. W. Boyd, *Nonlinear Optics*
+  (complex conjugate fields for the negative frequencies, degeneracy factors documented), the linear response includes
+  the time step in the Fourier transform. These changes modify the results of the previous versions for the negative
+  orders of the frequency mixing, the zero-th order of the monochromatic analysis and the normalization of the
+  dielectric function.
+- __Models__: new AnharmonicOscillator class, used to test the Optics module against the analytical susceptibilities.
+- __Utilities__: corrected high-symmetry points of the fcc lattice, vectorized density of states with scissor.
+- Tutorials rewritten, shorter, and executed with QuantumESPRESSO 7.0 and the Lumen 2.1.0 fork of Yambo.
 
 ## Installation
 The package requires python 3.8 or later. To install it, clone this repository in a local folder, e.g.
@@ -48,7 +77,9 @@ documentation is located in the file `/package_dir/sphinx_build/html/index.html`
 
 ## Tutorials and examples
 We provide many jupyter notebooks that show the functionality of each module of the package.
-The tutorials are organized as `Tutorial_$name_of_the_class`.
+The tutorials are organized as `Tutorial_$name_of_the_class`, the notebooks `Analysis_$topic` show the analysis
+tools (band structure, density of states, optical properties, ...) and the notebooks `Model_$name` the physical
+models. The notebooks are also included in the documentation.
 
 To run the notebooks you need to install the jupyter-notebook or jupyter-lab package, that can be installed as
 
