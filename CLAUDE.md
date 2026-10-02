@@ -122,8 +122,8 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
   two independent parts of the class (numerical P(t) by RK4 of the full equation; analytical chi from perturbation
   theory, Boyd's chi without D). Sections: chi1, transient e^{-gamma t}, harmonics and inversion symmetry (FFT),
   numerical harmonics vs analytical chi (centrosymmetric: chi2=0, even components ~1e-9 of the linear one), validity of
-  the perturbative regime (E0^n scaling, fields > ~1e-2 au escape the cubic well), signed frequencies. The section on
-  the resonances of chi2 and Miller's rule was removed at the user's request. When a file is added, add its rst page / notebooks.rst entry to sphinx_source.
+  the perturbative regime (E0^n scaling, fields > ~1e-2 au escape the cubic well). The sections on
+  the resonances of chi2 (Miller's rule) and on the signed frequencies were removed at the user's request. When a file is added, add its rst page / notebooks.rst entry to sphinx_source.
 - **NEXT**: Analysis_Electron-phonon, Analysis_FourierTransform and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
