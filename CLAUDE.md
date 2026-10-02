@@ -118,9 +118,12 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
   the same check applies to centrosymmetric crystals such as LiF, where chi(1,+-1) must vanish). The old LiF version (in git history) is meant
   to move to the LiF repository (`~/work/LiF` on ismhpc, github marcodalessandro76/LiF), where the pump-probe
   analysis chi vs RT transient absorption continues.
-- Model_AnharmonicOscillator (2026-10-02, new, pure python: written and executed on the laptop): chi1, transient
-  e^{-gamma t}, harmonics and inversion symmetry, perturbative scaling E0^n (fields > ~1e-2 au escape the cubic well),
-  Miller's rule, signed frequencies. When a file is added, add its rst page / notebooks.rst entry to sphinx_source.
+- Model_AnharmonicOscillator (2026-10-02, new, pure python: written and executed on the laptop): the intro explains the
+  two independent parts of the class (numerical P(t) by RK4 of the full equation; analytical chi from perturbation
+  theory, Boyd's chi without D). Sections: chi1, transient e^{-gamma t}, harmonics and inversion symmetry (FFT),
+  numerical harmonics vs analytical chi (centrosymmetric: chi2=0, even components ~1e-9 of the linear one), validity of
+  the perturbative regime (E0^n scaling, fields > ~1e-2 au escape the cubic well), signed frequencies. The section on
+  the resonances of chi2 and Miller's rule was removed at the user's request. When a file is added, add its rst page / notebooks.rst entry to sphinx_source.
 - **NEXT**: Analysis_Electron-phonon, Analysis_FourierTransform and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
