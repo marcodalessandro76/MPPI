@@ -179,6 +179,8 @@ class Xn_frequency_mixing():
             self.pol -= ref_pol
             print('Reference polarization found. The difference between the original polarization and the reference one is computed.')
         self.probes = data.Efield
+        if len(data.Efield_general) < 2 or data.Efield_general[1]['name'] == 'none':
+            raise ValueError('The frequency mixing analysis needs two external fields (probe and pump)')
         self.pump = data.Efield_general[1]
         self.nfreqs = data.n_frequencies
         self.probe_freqs = np.array([e['freq_range'][0] for e in self.probes]) 

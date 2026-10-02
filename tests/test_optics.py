@@ -39,12 +39,12 @@ def test_fit_sum_frequencies_underdetermined():
     res, B0, residual = fit_sum_frequencies(t,np.sin(t),{1:1.0,2:2.0})
     assert residual >= 0.
 
-def test_xn_single_frequency_from_file(ref_dir):
-    from mppi.Optics import Xn_single_frequency
-    folder = os.path.join(ref_dir,'nl_results','LiF-sine_pulse-time_200fs-step_10as')
-    if not os.path.isdir(folder): pytest.skip('nl_results reference data not available')
-    xn = Xn_single_frequency.from_file(os.path.join(folder,'ndb.Nonlinear'),verbose=False)
-    assert xn.X_order == 3
+def test_xn_from_file_rejects_delta_field(ref_dir):
+    # the Xn classes need sine-shaped fields, the LiF reference run uses a delta-shaped one
+    file = os.path.join(ref_dir,'nl_results','LiF-delta_pulse','ndb.Nonlinear')
+    for cls in [O.Xn_single_frequency, O.Xn_frequency_mixing]:
+        with pytest.raises(ValueError):
+            cls.from_file(file,verbose=False)
 
 @pytest.fixture(scope='module')
 def osc2():

@@ -6,6 +6,3 @@ sphinx_build/
 .pytest_cache/
 # folders written by the tutorial notebooks
 sphinx_source/tutorials/*_tutorial/
-# large non linear reference data (~1.3 GB, not in git): only the small delta pulse run is tracked
-sphinx_source/tutorials/Reference_data/nl_results/*
-!sphinx_source/tutorials/Reference_data/nl_results/LiF-delta_pulse/

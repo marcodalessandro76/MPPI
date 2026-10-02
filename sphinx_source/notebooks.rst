@@ -31,4 +31,5 @@ MPPI notebook section
   .. toctree::
     :maxdepth: 1
 
+    tutorials/Model_AnharmonicOscillator.ipynb
     tutorials/Model_TLS_optical_absorption.ipynb

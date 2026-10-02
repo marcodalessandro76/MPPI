@@ -50,6 +50,7 @@ The YamboCalculator object manage the yambo and ypp executables and also their t
 .. toctree::
    :maxdepth: 1
 
+   runner
    runRules
    qeCalculator
    yamboCalculator
@@ -128,6 +129,7 @@ The *Optics* module collects tools to perform analysis of the optical properties
    lrOptics.rst
    xnSingleFrequency.rst
    xnFrequencyMixing.rst
+   opticsUtils.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
 Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse, *TwoLevelSystems* and

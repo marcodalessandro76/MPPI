@@ -51,8 +51,8 @@ Tutorials (the de-facto documentation and integration tests) are the notebooks i
     `YamboCalculator(rr, executable='yambo_nl', activate_BeeOND=True)`
 - Tests: `python -m pytest tests` (fixtures in `tests/conftest.py`). Tests that need the executables are marked
   `@pytest.mark.requires_qe` / `@pytest.mark.requires_yambo` and are skipped when `pw.x`/`yambo` are not in PATH, so
-  the same suite runs on both machines. `Reference_data/nl_results` (~1.3 GB) is not in git except LiF-delta_pulse: the tests
-  that use the other runs are skipped when they are missing. Every bug fix gets a test.
+  the same suite runs on both machines. `Reference_data/nl_results` contains only LiF-delta_pulse (tracked in git): the heavy LiF
+  runs (~1.3 GB, never in git) were deleted on 2026-10-02, the Optics module is tested on the anharmonic oscillator. Every bug fix gets a test.
 
 ## Re-running the tutorial notebooks on the cluster
 The notebooks are executed IN PLACE in `~/Applications/MPPI/sphinx_source/tutorials` on ismhpc: their results
@@ -111,11 +111,14 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
   (2 states per band, electrons up to the gap), lorentzian vs gaussian, set_gap, JDOS from get_transitions,
   generic levels and rescale.
 - Tutorial_YamboNLDBParser rewritten and executed (2026-10-02): parses `Reference_data/nl_results/LiF-delta_pulse`
-  (now tracked in git, 756 KB; the other nl_results runs, ~1.3 GB, stay out of git and only on the laptop).
+  (tracked in git, 756 KB).
 - Analysis_Optics rewritten (2026-10-02) on the analytical anharmonic oscillator (no LiF data): linear response,
   single frequency, frequency mixing 2nd and 3rd order vs Boyd's formulas. The old LiF version (in git history) is meant
   to move to the LiF repository (`~/work/LiF` on ismhpc, github marcodalessandro76/LiF), where the pump-probe
   analysis chi vs RT transient absorption continues.
+- Model_AnharmonicOscillator (2026-10-02, new, pure python: written and executed on the laptop): chi1, transient
+  e^{-gamma t}, harmonics and inversion symmetry, perturbative scaling E0^n (fields > ~1e-2 au escape the cubic well),
+  Miller's rule, signed frequencies. When a file is added, add its rst page / notebooks.rst entry to sphinx_source.
 - **NEXT**: Analysis_Electron-phonon, Analysis_FourierTransform and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
