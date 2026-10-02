@@ -121,7 +121,7 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
   The home quota is 19.5 GB (it filled up once during the build). The user wants to give instructions before the
   first yambo tests: ask before running p2y/yambo. The old Tutorial_YamboInput uses the removed `U.build_SAVE` (now
   `mppi.Calculators.Tools.init_yambo_dir`) and the nonexistent `set_GbndRange`/`set_BndsRnXp`.
-- Still to review and run after Yambo: Tutorial_YamboNLDBParser, Analysis_* notebooks,
+- Still to review and run after Yambo: the Analysis_* notebooks,
   Model_TLS_optical_absorption.
 - Work on `master` (version 1.3). The branches v1.0, v1.1, v1.2 keep the old versions. Do NOT delete the branch
   `fix/bugs`: the user keeps it for future rounds of fixes like this one (to be merged again into master).
