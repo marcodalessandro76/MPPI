@@ -71,6 +71,22 @@ def test_nldbparser(ref_dir):
     file = os.path.join(ref_dir,NL_DELTA)
     if not os.path.isfile(file): pytest.skip('nl_results reference data not available')
     data = P.YamboNLDBParser(file,verbose=False)
-    assert data.n_runs == 1
+    assert data.n_runs == 1 and data.N_ext_fields == 1
     assert data.Efield[0]['name'] == 'DELTA'
     assert data.Polarization[0].shape == (3,len(data.IO_TIME_points))
+    # plain numpy arrays (not netCDF masked arrays)
+    assert not isinstance(data.Polarization[0],np.ma.MaskedArray)
+    assert data.E_ext[0].shape == (3,len(data.IO_TIME_points)) and np.iscomplexobj(data.E_ext[0])
+    from mppi.Utilities.Constants import FsToAu
+    assert np.allclose(data.get_time(convert_to_fs=False),data.IO_TIME_points)
+    assert np.allclose(data.get_time()*FsToAu,data.IO_TIME_points)
+
+def test_nl_output_file(ref_dir):
+    folder = os.path.join(ref_dir,'nl_results','LiF-delta_pulse')
+    out = P.YamboOutputParser.from_file(os.path.join(folder,'o-lresponse-bands_3-6-delta.NL_pol_F1'),verbose=False)
+    pol = out['NL_pol_F1']
+    assert list(pol.keys()) == ['time','Pol_x','Pol_y','Pol_z','Dip_x','Dip_y','Dip_z']
+    # the polarization of the o- file is the one of the database
+    data = P.YamboNLDBParser(os.path.join(folder,'ndb.Nonlinear'),verbose=False)
+    assert np.allclose(pol['time'],data.get_time())
+    assert np.allclose(pol['Pol_x'],data.Polarization[0][0],rtol=1e-4,atol=1e-20)

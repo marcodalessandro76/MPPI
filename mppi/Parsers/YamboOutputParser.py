@@ -43,8 +43,11 @@ eps_column_names = {
     'E_IP_q1' : ['energy','N_deg','eps'],
     'Esort_q1_slepc_bse' : ['energy','N_deg','eps']
 }
-reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**eps_column_names}
-reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut,**eps_column_names}
+# polarization of a yambo_nl computation for the field n (time in fs, polarization and dipoles)
+nl_column_names = {'NL_pol_F%d'%n : ['time','Pol_x','Pol_y','Pol_z','Dip_x','Dip_y','Dip_z'] for n in (1,2,3)}
+reference_column_names = {**rt_column_names,**hf_column_names,**qp_column_names,**eps_column_names,**nl_column_names}
+reference_column_names_extendOut = {**rt_column_names,**hf_column_names,**qp_column_names_extendOut,**eps_column_names,
+    **nl_column_names}
 
 def make_dict(columns,suffix,extendOut):
     """
