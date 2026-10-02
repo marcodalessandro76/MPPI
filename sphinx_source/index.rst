@@ -130,13 +130,15 @@ The *Optics* module collects tools to perform analysis of the optical properties
    xnFrequencyMixing.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.
-Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse and *TwoLevelSystems*.
+Actually the module contains *GaussianPulse*, a tool to deal with Gaussian shaped electromagnetic pulse, *TwoLevelSystems* and
+*AnharmonicOscillator*, the classical model of the non-linear optical response used to test the Optics module.
 
 .. toctree::
    :maxdepth: 1
 
    gaussianPulse.rst
    twoLevelSystems.rst
+   anharmonicOscillator.rst
 
 
 MPPI notebook section

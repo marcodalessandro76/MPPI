@@ -26,7 +26,7 @@ def generate_frequencies(omega1, omega2,max_order_E1=1,max_order_E2=3,include_pu
 
     Only positive frequencies are kept. The rationale behind the choice of producing positive frequencies only is that the
     only the positive frequency of the probe field is considered in the expansion of the polarization, so if for instance omega1-m*omega2 is negative, 
-    it means that there is a positve contribution at m*omega2-omega1 which is not explicitly produced in the combination of the coefficients but is selected
+    it means that there is a positive contribution at m*omega2-omega1 which is not explicitly produced in the combination of the coefficients but is selected
     by the check on the positive frequencies performed here.
 
     Args:
@@ -76,7 +76,28 @@ def generate_frequencies(omega1, omega2,max_order_E1=1,max_order_E2=3,include_pu
 
     return Omegas_dict
 
-import numpy as np
+def field_amplitude(E0, omega, t0, n):
+    r"""
+    Compute the n-th power of the complex amplitude of the sine-shaped field :math:`E_0\sin(\omega(t-t_0))` at the
+    frequency :math:`\mathrm{sign}(n)\omega`, with the convention :math:`E(t) = \sum E(\omega)e^{-i\omega t}` and
+    :math:`E(-\omega) = E(\omega)^*` (Boyd, Nonlinear Optics, Eq. (1.3.6)), that is
+
+    .. math::
+        E(\pm\omega)^{|n|} = \left(\pm\frac{i E_0}{2} e^{\pm i\omega t_0}\right)^{|n|}
+
+    Args:
+        E0 (:py:class:`float`): amplitude of the field
+        omega (:py:class:`float`): frequency of the field (Hartree)
+        t0 (:py:class:`float`): switch on time of the field (au)
+        n (:py:class:`int`): signed order. For n = 0 the function returns one
+
+    Returns:
+        :py:class:`complex`: the value of the n-th power of the field amplitude
+    """
+    if n == 0:
+        return 1.0
+    s = np.sign(n)
+    return np.power(s * 1j * E0 / 2.0 * np.exp(s * 1j * omega * t0), abs(n))
 
 def estimate_time_window(Omegas, safety_factor=8):
     """
@@ -104,9 +125,24 @@ def estimate_time_window(Omegas, safety_factor=8):
 
 
 class Xn_frequency_mixing():
-    """
-    Class to extract the non-linear susceptibility from the polarization induced by the sum of two monochromatic external fields, that 
-    represent the pump and the probe in a typical pump-probe experiment. 
+    r"""
+    Class to extract the non-linear susceptibility from the polarization induced by the sum of two monochromatic external fields, that
+    represent the pump and the probe in a typical pump-probe experiment.
+
+    Convention for the susceptibilities. Fields and polarization are expanded as :math:`E(t) = \sum_n E(\omega_n)e^{-i\omega_n t}`, with
+    :math:`E(-\omega) = E(\omega)^*`, as in R. W. Boyd, *Nonlinear Optics*, 4th ed. (2020), Section 1.3. The susceptibility of the key (n,m)
+    is the ratio between the component of the polarization at :math:`n\omega_p + m\omega_P` and the product of the field amplitudes
+    :math:`E(\pm\omega_p)^{|n|}E(\pm\omega_P)^{|m|}` (see :py:meth:`eval_Ew`), so it includes the degeneracy factor D of Boyd, Eqs. (1.3.19)
+    and (1.3.21), i.e. the number of distinct permutations of the frequencies of the fields:
+
+    .. math::
+        \chi_{(n,m)} = D\,\chi^{Boyd}(n\omega_p+m\omega_P;\pm\omega_p,\dots,\pm\omega_P,\dots)
+
+    For instance :math:`\chi_{(1,\pm1)} = 2\chi^{(2)}(\omega_p\pm\omega_P;\omega_p,\pm\omega_P)` and
+    :math:`\chi_{(1,\pm2)} = 3\chi^{(3)}(\omega_p\pm2\omega_P;\omega_p,\pm\omega_P,\pm\omega_P)`. The third order contribution to the key (1,0)
+    is :math:`6\chi^{(3)}(\omega_p;\omega_p,\omega_P,-\omega_P)|E(\omega_P)|^2`. With this choice the polarization is simply given by the
+    sum of :math:`\chi_{(n,m)}` times the product of the fields. Note that this convention differs from the one of the YamboPy
+    implementation, which does not conjugate the fields of the negative orders.
 
     Args:
         data (:py:class:`YamboNLDBParser`) : data parsed from the nlndb.Nonlineardatabase database
@@ -148,7 +184,7 @@ class Xn_frequency_mixing():
         self.probe_freqs = np.array([e['freq_range'][0] for e in self.probes]) 
         self.pump_freq = self.pump['freq_range'][0]
         self.damp = data.NL_damping
-        self.deph = 6/self.damp
+        self.deph = 12/self.damp
         self.X_order = X_order
         self.dt = self.time[1]-self.time[0]
         self.Trange = Trange
@@ -362,16 +398,23 @@ class Xn_frequency_mixing():
         return Pw_xyz
     
     def eval_Ew(self):
-        """
-        Evaluate the product of the (n_harmonic powers of) the pump and probe fields in the frequency domain for all the values of the self.fields_freqs array. 
-        The choice of the field factors is done in agreement with the one of the YamboPy implementation for the frequency mixing of the non-linear susceptibility.
-        
+        r"""
+        Evaluate the product of the (n_harmonic powers of) the probe and pump fields in the frequency domain for all the values of the
+        self.probe_freqs array. The field :math:`E_0\sin(\omega(t-t_0))` has the complex amplitudes (Boyd, Nonlinear Optics, Eq. (1.3.6))
+
+        .. math::
+            E(\omega) = \frac{i E_0}{2} e^{i\omega t_0} , \quad E(-\omega) = E(\omega)^*
+
+        and the key (n,m) is associated to the product :math:`E(\pm\omega_p)^{|n|} E(\pm\omega_P)^{|m|}`, where the signs are the
+        ones of n and m. For instance the factor of the key (1,-1) is :math:`E(\omega_p)E(\omega_P)^*`.
+        The key (0,0) (the static polarization) is not divided by any field, so its factor is set to one.
+
         Returns:
-            :py:class:`numpy.dict` : dict with the harmonic powers of the external fields in the frequency domain for all the values of the self.fields_freqs array
-                  
+            :py:class:`numpy.dict` : dict with the harmonic powers of the external fields in the frequency domain for all the values of the self.probe_freqs array
+
         """
         Ew = {}
-        Pw_x = self.eval_Pw()[0] 
+        Pw_x = self.eval_Pw()[0]
         E0_pump = self.pump['amplitude']
         t0_pump = self.pump['initial_time']
         omega_pump = self.pump_freq
@@ -379,19 +422,12 @@ class Xn_frequency_mixing():
             E0_probe = self.probes[ifreq]['amplitude']
             t0_probe = self.probes[ifreq]['initial_time']
             omega_probe = self.probe_freqs[ifreq]
-
             for key in Pw_x:
-                if key not in Ew:   
+                if key not in Ew:
                     Ew[key] = np.zeros(self.nfreqs, dtype=complex)
-                n_p,n_P = np.abs(key)
-                if n_p == 0:
-                    Ew[key][ifreq] = 1.0
-                else:
-                    Ew[key][ifreq] = np.power(1j * E0_probe / 2.0 * np.exp(1j * t0_probe * omega_probe),n_p)
-                if n_P == 0:
-                    Ew[key][ifreq] *= 1.0
-                else:
-                    Ew[key][ifreq] *= np.power(1j * E0_pump / 2.0 * np.exp(1j * t0_pump * omega_pump),n_P)
+                n_p,n_P = key
+                Ew[key][ifreq] = field_amplitude(E0_probe,omega_probe,t0_probe,n_p) * \
+                                 field_amplitude(E0_pump,omega_pump,t0_pump,n_P)
 
         return Ew
     

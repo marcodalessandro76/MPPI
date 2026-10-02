@@ -112,7 +112,11 @@ Tutorial status (on `master`, version 1.3; the work started on the branch `fix/b
   generic levels and rescale.
 - Tutorial_YamboNLDBParser rewritten and executed (2026-10-02): parses `Reference_data/nl_results/LiF-delta_pulse`
   (now tracked in git, 756 KB; the other nl_results runs, ~1.3 GB, stay out of git and only on the laptop).
-- **NEXT**: Analysis_Electron-phonon, Analysis_FourierTransform, Analysis_Optics and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
+- Analysis_Optics rewritten (2026-10-02) on the analytical anharmonic oscillator (no LiF data): linear response,
+  single frequency, frequency mixing 2nd and 3rd order vs Boyd's formulas. The old LiF version (in git history) is meant
+  to move to the LiF repository (`~/work/LiF` on ismhpc, github marcodalessandro76/LiF), where the pump-probe
+  analysis chi vs RT transient absorption continues.
+- **NEXT**: Analysis_Electron-phonon, Analysis_FourierTransform and Model_TLS_optical_absorption. They can reuse the QE results in `QeCalculator_tutorial/` on the cluster (the nscf in
   `out_nscf/si_scf.save` for p2y). Yambo runs need `pre_processing='/home/dalessandro/module_script/yambo_module'`.
   Lumen was rebuilt on 2026-10-01 (`~/Applications/Lumen`: sources in `src`, build in `gpl-gcc_10.2` from its
   `config_file`, libraries in `lumen-libs`): core, nl-project and rt-project compiled. PETSc 3.24 needs
@@ -168,8 +172,17 @@ Runnable on the laptop (done in v1.3, covered by `tests/`):
 - [x] `Constants.high_sym_fcc` was inconsistent (K=(0,1,1) equivalent to X, W not on the face of X). Fixed on
       2026-10-01 (user approved): X=(0,1,0), W=(0,1,1/2), K=(0,3/4,3/4), U=(1/4,1,1/4), L=(1/2,1/2,1/2), the same
       points of high_sym_fcc_crystal (which was already correct; U added)
-- [ ] Physics to check with the user: difference-frequency field not conjugated in `Xn_frequency_mixing.eval_Ew`;
-      dephasing 12/damp vs 6/damp in the two Xn classes; missing `dt` and t0 phase in `LRoptics`
+- [x] Optics physics (2026-10-02, user approved, checked against Boyd *Nonlinear Optics* ch. 1 and the analytical
+      anharmonic oscillator of `mppi.Models.AnharmonicOscillator`, tests in `tests/test_optics.py`):
+      `eval_Ew` now uses the signed field amplitudes E(-w)=E(w)^* (`field_amplitude`), so the keys with negative orders
+      (e.g. (1,-1), (1,-2)) and the zero-th order of `Xn_single_frequency` (now / |E|^2) changed w.r.t. v1.3 and YamboPy
+      (YamboPy does not conjugate: its odd negative orders have the opposite sign). The susceptibilities include Boyd's
+      degeneracy factor D (documented in the docstrings, user wants only the docs): chi(1,+-1)=2chi2, chi(1,+-2)=3chi3,
+      chi0=2chi2(0;w,-w), third order part of (1,0) = 6chi3(w;w,wP,-wP)|E_P|^2 with |E(wP)|^2=E_P^2/4 (in the LiF
+      notebook x11m1 must be divided by EP**2/4, not by Ew[(0,2)]). Dephasing 12/damp also in `Xn_frequency_mixing`
+      (6/damp gave ~3% errors on the 3rd order keys). `Linear_Response`: P(w) = dt*sum P(t)e^{iwt} (yambo writes the
+      DELTA field as one step of value E0/dt); the old factor 2 was ~dt only for the 0.05 fs IO step (eps-1 changes by
+      dt/2). The comparison with YamboPy is not important for the user: deviate from it when it is not standard
 - [ ] `NLanalysisYamboPy.py`: many latent NameErrors; decide whether to fix it or remove it
 
 Need the cluster (QE/Yambo/slurm):

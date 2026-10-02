@@ -51,8 +51,16 @@ def generate_frequencies(omega,n_harmonics=3,inactive_harmonics=None,tol=1e-8):
 
 
 class Xn_single_frequency():
-    """
+    r"""
     Class to extract the non-linear susceptibilities from the polarization induced by a sine-shaped external field.
+
+    Convention for the susceptibilities. Fields and polarization are expanded as :math:`E(t) = \sum_n E(\omega_n)e^{-i\omega_n t}`, with
+    :math:`E(-\omega) = E(\omega)^*`, as in R. W. Boyd, *Nonlinear Optics*, 4th ed. (2020), Section 1.3. The susceptibility of the n-th harmonic
+    is the ratio between the component of the polarization at :math:`n\omega` and :math:`E(\omega)^n`, i.e. the susceptibility
+    :math:`\chi^{(n)}(n\omega;\omega,\dots,\omega)` of Boyd (degeneracy factor D=1). The zero-th order is the ratio between the static
+    polarization and :math:`|E(\omega)|^2`, so it includes the degeneracy factor D=2 of Boyd, Eq. (1.3.19):
+    :math:`\chi_0 = 2\chi^{(2)}(0;\omega,-\omega)`. Note that the YamboPy implementation divides the zero-th order by
+    :math:`E(\omega)^2 = -|E(\omega)|^2` instead, so its value has the opposite sign.
 
     Args:
         data (:py:class:`YamboNLDBParser`) : data parsed from the nlndb.Nonlineardatabase database
@@ -281,9 +289,11 @@ class Xn_single_frequency():
         return Pw_xyz
     
     def eval_Ew(self):
-        """
-        Evaluate the (n_harmonic powers of) the external fields in the frequency domain for all the values of the self.fields_freqs array. 
-        The choice of the field factor for the zero-th order is done in agreement with the one of the YamboPy implementation of the non-linear susceptibility.
+        r"""
+        Evaluate the (n_harmonic powers of) the external fields in the frequency domain for all the values of the self.fields_freqs array.
+        The field :math:`E_0\sin(\omega(t-t_0))` has the complex amplitudes :math:`E(\omega) = (iE_0/2)e^{i\omega t_0}` and
+        :math:`E(-\omega) = E(\omega)^*` (Boyd, Nonlinear Optics, Eq. (1.3.6)). The n-th harmonic is associated to :math:`E(\omega)^n`,
+        while the zero-th order (optical rectification) is associated to :math:`E(\omega)E(-\omega) = |E(\omega)|^2 = E_0^2/4`.
         
         Returns:
             :py:class:`numpy.dict` : dict with the harmonic powers of the external fields in the frequency domain for all the values of the self.fields_freqs array
@@ -301,7 +311,7 @@ class Xn_single_frequency():
                     Ew[key] = np.zeros(self.nfreqs, dtype=complex)
                 n = abs(key)
                 if n == 0:
-                    Ew[key][ifreq] = -E0**2 / 4.0
+                    Ew[key][ifreq] = E0**2 / 4.0
                 else:
                     Ew[key][ifreq] = np.power(1j * E0 / 2.0 * np.exp(1j * t0 * omega),n)
 

@@ -41,10 +41,13 @@ def eval_Efield_w(energy,efield):
     return efield_w
 
 def Linear_Response(time, pol,efield, pol_ref=None, damp_type="LORENTZIAN", eta=0.1,time_units='au'):
-    """
+    r"""
     Compute the linear response of the system to an external delta-shaped field from the polarization in the time domain.
     The function subtract the reference polarization (if provided) and applies a damping function, if eta is not zero.
     The FT is computed through the numpy.fft.rfft function assuming  that the time array is uniformly sampled.
+    The convention for the FT is :math:`P(\omega) = \int P(t)e^{i\omega t}dt` (Boyd, Nonlinear Optics, Eq. (1.6.2a)) and the
+    delta-shaped field :math:`E(t) = E_0\delta(t-t_0)` (yambo_nl writes it as a single time step with value :math:`E_0/dt`) has
+    :math:`E(\omega) = E_0e^{i\omega t_0}`, so the dielectric function is :math:`\epsilon = 1 + 4\pi P(\omega)/E(\omega)`.
 
     Args:
         time (:py:class:`numpy.ndarray`) : array with the time values
@@ -79,7 +82,8 @@ def Linear_Response(time, pol,efield, pol_ref=None, damp_type="LORENTZIAN", eta=
     if pol_ref is not None:
         pol=pol-pol_ref
     pol_damped=damp_ft(pol,t,t_initial,damp_type=damp_type,eta=eta,time_units='au')
-    P_w = 2*np.conjugate(np.fft.rfft(pol_damped))
+    # P(w) = int P(t) exp(i*w*t) dt, with the time origin of the grid at t[0]
+    P_w = dt*np.conjugate(np.fft.rfft(pol_damped))*np.exp(1j*energy*t[0])
     efield_w = eval_Efield_w(energy,efield)    
     pol_w_along_E=np.zeros(energy.size,dtype=complex)
     for i_d in range(3):
