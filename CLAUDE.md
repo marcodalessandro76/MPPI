@@ -214,3 +214,6 @@ Refactoring: a common base class for the two calculators, `logging` instead of p
 print+return, a common base for the two Xn classes. Features (see also `Todo-list.md`): complete YamboQPParser and
 MergeQPndb, spin in Dos and `Dos.from_Yambo`, k-point expansion with weights, `update_from_remote` (rsync), Hubbard
 support in PwInput, ph.x output parser, BSE exciton parser, `pyproject.toml`.
+The k-point expansion (IBZ -> BZ) is the first one needed by the research work: `YamboDftParser.expand_kpoints` is
+commented out, and the LiF project checks the inversion symmetry of a fixsym/NoTr SAVE with an explicit loop in its
+notebook (details and reference implementation in `Todo-list.md`).
