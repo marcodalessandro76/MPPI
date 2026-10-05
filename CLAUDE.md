@@ -12,6 +12,11 @@ data-file-schema.xml, Yambo parsers on o-* files and netCDF ndb.*; `YamboParser`
 `Utilities` (Dos, BandStructure, FT, lattice utils, constants).
 Tutorials (the de-facto documentation and integration tests) are the notebooks in `sphinx_source/tutorials`.
 
+## Related project
+The research work on LiF (pump-probe, yambo_nl non-linear chi vs RT transient absorption) moved on 2026-10-05 to its
+own repository and sessions: `D:\RICERCA\DFT AND MANY BODY\SIMULATIONS\LiF` (laptop) and `~/work/LiF` (ismhpc),
+GitHub `marcodalessandro76/LiF`, with its own CLAUDE.md. Keep this file for the development of MPPI.
+
 ## Machines and workflow
 - **Windows laptop** (this repo at `D:\Projects\Research\MPPI`): no QE/Yambo. Python with deps:
   `C:/Users/Marco/miniconda3/python.exe` (the Git Bash `python` has no numpy). Work here on pure-python code
