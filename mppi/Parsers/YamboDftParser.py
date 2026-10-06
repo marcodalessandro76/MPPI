@@ -25,12 +25,12 @@ class YamboDftParser():
         lattice : array with the lattice vectors. The i-th row represents the
             i-th lattice vector in cartesian units
         alat : the lattice parameter. Yambo stores a three dimensional array in this
-            field, with the lenght of the cell in the three dimension
+            field, with the length of the cell in the three dimension
         num_electrons : number of electrons
         nbands : number of bands
         nbands_full : number of occupied bands
         nbands_empty : number of empty bands
-        nkpoints : numer of kpoints
+        nkpoints : number of kpoints
         kpoints : list of the kpoints expressed in cartesian coordinates in units of 2pi/alat. Note the Yambo uses
             a vector like alat parameter, so the components of the kpoints can differ from Pw ones
         evals : array of the ks energies for each kpoint (in Hartree)
