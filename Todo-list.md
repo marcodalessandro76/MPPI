@@ -13,20 +13,9 @@
 - Add the spin to the Dos class and add a from_Yambo method in the Dos class, this requires that the weights of the
   k points are computed by the YamboDftParser.
 
-- Complete the PwParser and YamboDftParser classes with add the expansion of the k points and the computation of the weigths.
-  We can use the attribute weights in the PwParser for a check of the results.
-  For YamboDftParser restore the commented `expand_kpoints`/`expandEigenvalues` methods (they use old names: `car_kpoints`,
-  `sym_car`, `rlat`, `car_red`, `vec_in_list`) with the current attributes: `self.syms` (cartesian, (nsym,3,3)),
-  `get_kpoints()` and `get_reciprocal_lattice(rescale=True)` (both in units of 2pi/alat), `LatticeUtils.convert_to_crystal`.
-  Store the BZ points (crystal and cartesian), the IBZ index and the symmetry index of each BZ point and the IBZ weights;
-  two points are equal if their crystal coordinates differ by an integer vector (tol ~1e-5). Time reversal is not in
-  `self.syms`: add an option `use_time_reversal` (default False). Add a helper that gives, for each BZ point, the index of
-  the point at -k, to check the inversion symmetry of the sampling of a SAVE without inversion and time reversal (e.g. the
-  fixsym/NoTr SAVEs used for a field along a given direction).
-  Use case and reference implementation (explicit loop on IBZ points and symmetries): LiF project, notebook
-  `NL_Chi/YamboNL_Analysis.ipynb`, section "Ground state: inversion symmetry of the k sampling" (fcc, 8 symmetries,
-  8x8x8 Gamma-centered grid: 100 IBZ points -> 512 BZ points, closed under k -> -k). Add a unit test (fcc lattice with a
-  few symmetries, number of BZ points and closure under k -> -k).
+- Complete the PwParser class with the expansion of the k points (the PwParser already has the weights, that can be
+  used for a check). The expansion of YamboDftParser is done (`expand_IBZ_kpoints`, `get_minus_k_indexes`): the same
+  approach can be used for PwParser, and the Dos.from_Yambo method can use the weights of YamboDftParser.
 
 - Study the getFermi method of electronsdb of YamboPy. It can be an easy addon to the fermi method of PwParser.
 

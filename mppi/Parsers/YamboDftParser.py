@@ -36,6 +36,12 @@ class YamboDftParser():
         evals : array of the ks energies for each kpoint (in Hartree)
         spin : number of spin components
         spin_degen : 1 if the number of spin components is 2, 2 otherwise
+        time_reversal : True if the time reversal symmetry is used by Yambo (as in YamboPy, it is read from the
+            tenth element of the ``DIMENSIONS`` variable)
+
+    The method :py:meth:`expand_IBZ_kpoints` expands the k points of the irreducible Brillouin zone to the full
+    Brillouin zone and adds the attributes ``kpoints_bz``, ``kpoints_bz_crystal``, ``ibz_index``, ``sym_index``
+    and ``weights``.
 
     """
 
@@ -68,6 +74,7 @@ class YamboDftParser():
         self.num_electrons  = int(dimensions[14])
         self.nkpoints    = int(dimensions[6])
         self.spin = int(dimensions[11])
+        self.time_reversal = bool(int(dimensions[9]))
         database.close()
 
         #spin degeneracy if 2 components degen 1 else degen 2
@@ -220,72 +227,105 @@ class YamboDftParser():
         return latUtils.get_yambo_kpoints(self.kpoints,self.alat,use_scalar_alat=use_scalar_alat)
 
 
-    #####################################################################################
-    #
-    # def expand_kpoints(self,atol=1e-6,verbose=0):
-    #     """
-    #     Take a list of qpoints and symmetry operations and return the full brillouin zone
-    #     with the corresponding index in the irreducible brillouin zone
-    #     """
-    #
-    #     #check if the kpoints were already expanded
-    #     kpoints_indexes  = []
-    #     kpoints_full     = []
-    #     symmetry_indexes = []
-    #
-    #     #kpoints in the full brillouin zone organized per index
-    #     kpoints_full_i = {}
-    #
-    #     #expand using symmetries
-    #     for nk,k in enumerate(self.car_kpoints):
-    #         #if the index in not in the dictionary add a list
-    #         if nk not in kpoints_full_i:
-    #             kpoints_full_i[nk] = []
-    #
-    #         for ns,sym in enumerate(self.sym_car):
-    #
-    #             new_k = np.dot(sym,k)
-    #
-    #             #check if the point is inside the bounds
-    #             k_red = car_red([new_k],self.rlat)[0]
-    #             k_bz = (k_red+atol)%1
-    #
-    #             #if the vector is not in the list of this index add it
-    #             if not vec_in_list(k_bz,kpoints_full_i[nk]):
-    #                 kpoints_full_i[nk].append(k_bz)
-    #                 kpoints_full.append(new_k)
-    #                 kpoints_indexes.append(nk)
-    #                 symmetry_indexes.append(ns)
-    #                 continue
-    #
-    #     #calculate the weights of each of the kpoints in the irreducible brillouin zone
-    #     nkpoints_full = len(kpoints_full)
-    #     weights = np.zeros([nkpoints_full])
-    #     for nk in kpoints_full_i:
-    #         weights[nk] = float(len(kpoints_full_i[nk]))/nkpoints_full
-    #
-    #     if verbose: print("%d kpoints expanded to %d"%(len(self.car_kpoints),len(kpoints_full)))
-    #
-    #     #set the variables
-    #     self.weights_ibz      = np.array(weights)
-    #     self.kpoints_indexes  = np.array(kpoints_indexes)
-    #     self.symmetry_indexes = np.array(symmetry_indexes)
-    #     self.iku_kpoints      = [k*self.alat for k in kpoints_full]
-    #
-    # def expandEigenvalues(self):
-    #     """
-    #     Expand eigenvalues to the full brillouin zone
-    #     """
-    #
-    #     self.eigenvalues = self.eigenvalues_ibz[self.lattice.kpoints_indexes]
-    #
-    #     self.nkpoints_ibz = len(self.eigenvalues_ibz)
-    #     self.weights_ibz = np.zeros([self.nkpoints_ibz],dtype=np.float32)
-    #     self.nkpoints = len(self.eigenvalues)
-    #
-    #     #counter counts the number of occurences of element in a list
-    #     for nk_ibz,inv_weight in list(collections.Counter(self.lattice.kpoints_indexes).items()):
-    #         self.weights_ibz[nk_ibz] = float(inv_weight)/self.nkpoints
-    #
-    #     #kpoints weights
-    #     self.weights = np.full((self.nkpoints), 1.0/self.nkpoints,dtype=np.float32)
+    def expand_IBZ_kpoints(self, use_time_reversal = None, atol = 1e-4, verbose = True):
+        r"""
+        Expand the k points of the irreducible Brillouin zone (IBZ) to the full Brillouin zone (BZ). Each IBZ point
+        :math:`\mathbf{k}` is rotated by all the symmetries :math:`S` of the system (and by :math:`-S` if the time
+        reversal is used) and the point :math:`S\mathbf{k}` is added to the BZ if it is not equivalent to a point
+        already found, i.e. if their crystal coordinates do not differ by an integer vector within the tolerance
+        ``atol``. Note that Yambo stores the k points in single precision, so the tolerance cannot be much smaller
+        than the default value. The method sets the attributes:
+
+        * ``kpoints_bz``: the BZ points :math:`S\mathbf{k}` in cartesian coordinates, in units of 2*np.pi/alat[0]
+          (as :py:meth:`get_kpoints`)
+        * ``kpoints_bz_crystal``: the BZ points in crystal coordinates, folded in the interval [0,1)
+        * ``ibz_index``: for each BZ point the index of the IBZ point it comes from. For instance, the energies in the
+          full BZ are given by ``evals[ibz_index]``
+        * ``sym_index``: for each BZ point the index of the symmetry used. If the time reversal is used the
+          indexes larger or equal to the number of symmetries refer to :math:`-S`, with S = syms[index-len(syms)]
+        * ``weights``: the weights of the IBZ points (normalized to one)
+
+        Args:
+            use_time_reversal (:py:class:`bool`) : if True the symmetries :math:`-S` are also used. If None (default)
+                the attribute ``time_reversal`` read from the database is used
+            atol (:py:class:`float`) : tolerance on the crystal coordinates used to identify equivalent points
+            verbose (:py:class:`bool`) : define the amount of information provided on terminal
+
+        Returns:
+            :py:class:`numpy.array` : array with the BZ points in crystal coordinates (folded in the interval [0,1))
+
+        """
+        if use_time_reversal is None: use_time_reversal = self.time_reversal
+        syms = list(self.syms)
+        if use_time_reversal: syms += [-s for s in self.syms]
+        blat = self.get_reciprocal_lattice(rescale=True)
+
+        self._bz_atol = atol
+        self._bz_cells = {}
+        kpoints_bz, kpoints_bz_crystal, ibz_index, sym_index = [], [], [], []
+        for ik, k in enumerate(self.get_kpoints()):
+            for isym, sym in enumerate(syms):
+                k_rot = np.dot(sym,k)
+                k_crys = self._fold_crystal(latUtils.convert_to_crystal(blat,k_rot))
+                if self._find_bz_point(k_crys,kpoints_bz_crystal) >= 0: continue
+                self._bz_cells.setdefault(self._bz_cell(k_crys),[]).append(len(kpoints_bz))
+                kpoints_bz.append(k_rot)
+                kpoints_bz_crystal.append(k_crys)
+                ibz_index.append(ik)
+                sym_index.append(isym)
+
+        self.kpoints_bz = np.array(kpoints_bz)
+        self.kpoints_bz_crystal = np.array(kpoints_bz_crystal)
+        self.ibz_index = np.array(ibz_index)
+        self.sym_index = np.array(sym_index)
+        self.weights = np.bincount(self.ibz_index,minlength=self.nkpoints)/len(self.ibz_index)
+        if verbose:
+            print('Number of symmetries used: %s (time reversal: %s)'%(len(syms),use_time_reversal))
+            print('%s IBZ k points expanded to %s BZ k points'%(self.nkpoints,len(self.ibz_index)))
+        return self.kpoints_bz_crystal
+
+    def get_minus_k_indexes(self):
+        r"""
+        For each point :math:`\mathbf{k}` of the BZ find the index of the BZ point equivalent to :math:`-\mathbf{k}`.
+        It can be used to check if the k sampling is closed under the inversion, for instance when the database is
+        computed without inversion and time reversal symmetries (as for a field along a given direction). The method
+        :py:meth:`expand_IBZ_kpoints` has to be called first.
+
+        Returns:
+            :py:class:`numpy.array` : for each BZ point the index of the BZ point at :math:`-\mathbf{k}`, or -1 if
+            :math:`-\mathbf{k}` is not in the BZ grid
+
+        """
+        if not hasattr(self,'ibz_index'):
+            raise AttributeError('The k points are not expanded. Call expand_IBZ_kpoints first')
+        return np.array([self._find_bz_point(self._fold_crystal(-k),self.kpoints_bz_crystal)
+                         for k in self.kpoints_bz_crystal])
+
+    def _fold_crystal(self, k_crys):
+        """
+        Fold the crystal coordinates in the interval [0,1). Values closer to one than the tolerance are mapped to zero.
+        """
+        k_crys = np.mod(k_crys,1.0)
+        k_crys[k_crys > 1.0-self._bz_atol] = 0.0
+        return k_crys
+
+    def _bz_cell(self, k_crys):
+        """
+        Index of the cell of size atol that contains the (folded) crystal coordinates k_crys.
+        """
+        ncells = int(np.ceil(1.0/self._bz_atol))
+        return tuple(np.floor(k_crys/self._bz_atol).astype(int) % ncells)
+
+    def _find_bz_point(self, k_crys, kpoints_crystal):
+        """
+        Index of the BZ point equivalent to k_crys (crystal coordinates within the tolerance, modulo integer vectors),
+        or -1 if it is not found. Only the points in the cell of k_crys and in the neighboring ones are compared.
+        """
+        ncells = int(np.ceil(1.0/self._bz_atol))
+        cell = np.array(self._bz_cell(k_crys))
+        for shift in np.ndindex(3,3,3):
+            for j in self._bz_cells.get(tuple((cell+np.array(shift)-1) % ncells),[]):
+                diff = kpoints_crystal[j]-k_crys
+                diff -= np.round(diff)
+                if np.all(np.abs(diff) < self._bz_atol): return j
+        return -1

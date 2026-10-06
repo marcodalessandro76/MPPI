@@ -31,6 +31,42 @@ def test_yambodftparser(ref_dir):
     assert data.nbands == 100
     assert data.evals.shape == (222,100)
 
+def test_yambodftparser_expand_IBZ_kpoints(ref_dir):
+    # WSe2: 12x12x3 Gamma-centered grid, 12 symmetries with inversion, no time reversal. The weights of the IBZ points
+    # are compared with the ones of pw.x (normalized to one, same order of the k points)
+    folder = os.path.join(ref_dir,'dftParsers_results','WSe2_12x12x3_100bands')
+    data = P.YamboDftParser(os.path.join(folder,'ns.db1'),verbose=False)
+    kbz = data.expand_IBZ_kpoints(verbose=False)
+    assert kbz.shape == (432,3) and data.kpoints_bz.shape == (432,3)
+    assert np.all((kbz >= 0) & (kbz < 1))
+    grid = kbz*np.array([12,12,3])
+    assert np.allclose(grid,np.round(grid),atol=1e-3)
+    assert len({tuple(g) for g in np.round(grid).astype(int)}) == 432
+    assert data.ibz_index.shape == (432,) and data.sym_index.max() < len(data.syms)
+    assert np.isclose(data.weights.sum(),1.) and np.all(data.weights > 0)
+    pw = P.PwParser(os.path.join(folder,'data-file-schema.xml'),verbose=False)
+    w_pw = np.array(pw.weights).ravel()
+    assert np.allclose(data.weights,w_pw/w_pw.sum())
+    minus = data.get_minus_k_indexes()
+    assert np.all(minus >= 0) and np.all(minus[minus] == np.arange(len(minus)))
+
+def test_yambodftparser_expand_without_inversion(ref_dir):
+    # 2 symmetries without inversion and no time reversal: the 222 IBZ points give the full 12x12x3 grid,
+    # which is closed under k -> -k
+    data = P.YamboDftParser(os.path.join(ref_dir,'rt_results','ns.db1'),verbose=False)
+    assert not data.time_reversal
+    assert not any(np.allclose(s,-np.eye(3)) for s in data.syms)
+    kbz = data.expand_IBZ_kpoints(verbose=False)
+    assert kbz.shape == (432,3)
+    assert np.isclose(data.weights.sum(),1.)
+    minus = data.get_minus_k_indexes()
+    assert np.all(minus >= 0) and np.all(minus[minus] == np.arange(len(minus)))
+
+def test_yambodftparser_minus_k_requires_expansion(ref_dir):
+    data = P.YamboDftParser(os.path.join(ref_dir,'rt_results','ns.db1'),verbose=False)
+    with pytest.raises(AttributeError):
+        data.get_minus_k_indexes()
+
 def test_dft_parsers_agree(ref_dir):
     folder = os.path.join(ref_dir,'dftParsers_results','WSe2_12x12x3_100bands')
     pw = P.PwParser(os.path.join(folder,'data-file-schema.xml'),verbose=False)
