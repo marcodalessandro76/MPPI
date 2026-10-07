@@ -15,7 +15,7 @@ or the class can be imported directly as
 import numpy as np
 from mppi.Utilities import Constants as C
 from mppi.Utilities import Utils as U
-from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies, print_sampling_warnings
+from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies, print_sampling_warnings, lorentzian_broadening
 from mppi.Parsers import YamboNLDBParser
 
 def generate_frequencies(omega1, omega2,max_order_E1=1,max_order_E2=3,include_pure_E1=True,include_pure_E2=True,include_mixing=True,tol=1e-8):
@@ -478,20 +478,31 @@ class Xn_frequency_mixing():
 
         return Ew
     
-    def compute_Xn(self,set_units_of_measure=False,plot=False,plot_dir=0):
+    def compute_Xn(self,set_units_of_measure=False,plot=False,plot_dir=0,broadening=None,renormalize=True):
         """
         Compute the non-linear susceptibility of the system at (multiple of the) frequencies of the external fields. 
         For each cartesian direction Xn is a dict with the keys of the generate_frequencies function.
-        
+
+        The broadening of the keys (1,m), linear in the probe field, can be increased a posteriori with a Lorentzian convolution
+        on the grid of the probe frequencies, which gives the susceptibilities at the complex probe frequency
+        :math:`\\omega_p+i\\Delta` (see :py:func:`mppi.Optics.Utils.lorentzian_broadening`): the broadening is added to all the
+        resonance denominators that contain the probe frequency, while the ones that contain only the pump frequency are not
+        changed (so the result is not identical to a larger dephasing in the dynamics, which broadens also the latter).
+        It requires a grid step much smaller than the broadening. The keys (0,m), which do not depend on the probe, are not
+        broadened.
+
         Args:
-            set_units_of_measure (:py:class:`bool`, optional): If True, set the units of measure of the non-linear susceptibility. Default is False. 
+            set_units_of_measure (:py:class:`bool`, optional): If True, set the units of measure of the non-linear susceptibility. Default is False.
                 The conversion factor is set in agreement with the YamboPy implementation of the non-linear susceptibility
             plot (:py:class:`bool`, optional): If True, plot the Xn in the frequency domain. Default is False
             plot_dir (:py:class:`int`, optional): Index of the cartesian direction to be plotted. Default is 0, which corresponds to the x direction
+            broadening (:py:class:`float`, optional): Lorentzian broadening (eV) added to the keys (1,m). Default is None (no broadening)
+            renormalize (:py:class:`bool`, optional): normalize the Lorentzian kernel to one on the grid of the frequencies, see
+                :py:func:`mppi.Optics.Utils.lorentzian_broadening`. Default is True
 
         Returns:
             :py:class:`numpy.list` : each element contains a cartesian direction. For each direction the function returns a dict
-                with the keys of the generate_frequencies function and the values of the Xn in the frequency domain 
+                with the keys of the generate_frequencies function and the values of the Xn in the frequency domain
         """
 
         Xn_xyz = []
@@ -507,7 +518,11 @@ class Xn_frequency_mixing():
                 Xn[key] = Pw_xyz[idir][key] / Ew[key]
                 if set_units_of_measure:
                     Xn[key] *= self.set_units_of_measure(n_p+n_P)
+                if broadening is not None and key[0] == 1:
+                    Xn[key] = lorentzian_broadening(self.probe_freqs, Xn[key], broadening/C.HaToeV, renormalize=renormalize)
             Xn_xyz.append(Xn)
+        if broadening is not None and self.verbose:
+            print(f'Lorentzian broadening of {broadening} eV applied to the keys (1,m), the other keys are not broadened')
 
         if plot:
             dir = ['x','y','z']

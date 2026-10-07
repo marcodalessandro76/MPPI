@@ -14,7 +14,7 @@ or the class can be imported directly as
 import numpy as np
 from mppi.Utilities import Constants as C
 from mppi.Utilities import Utils as U
-from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies, print_sampling_warnings
+from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies, print_sampling_warnings, lorentzian_broadening
 from mppi.Parsers import YamboNLDBParser
 
 def generate_frequencies(omega,n_harmonics=3,inactive_harmonics=None,tol=1e-8):
@@ -368,27 +368,36 @@ class Xn_single_frequency():
 
         return Ew
 
-    def compute_Xn(self,set_units_of_measure=False,plot=False,plot_dir=0):
+    def compute_Xn(self,set_units_of_measure=False,plot=False,plot_dir=0,broadening=None,renormalize=True):
         """
-        Compute the non-linear susceptibility of the system at (multiple of the) frequencies of the external fields. 
+        Compute the non-linear susceptibility of the system at (multiple of the) frequencies of the external fields.
         For each cartesian direction Xn is a dict with the keys of the generate_frequencies function.
-        
+
+        The broadening of the linear susceptibility (key 1) can be increased a posteriori with a Lorentzian convolution on the
+        grid of the frequencies of the fields, which gives :math:`\\chi^{(1)}(\\omega+i\\Delta)` (see
+        :py:func:`mppi.Optics.Utils.lorentzian_broadening`). It requires a grid step much smaller than the broadening. The
+        other keys are not broadened: for the harmonics n >= 2 the convolution would add n times the broadening to the width
+        of the n-photon resonance, and it is not defined for the zero-th order.
+
         Args:
-            set_units_of_measure (:py:class:`bool`, optional): If True, set the units of measure of the non-linear susceptibility. Default is False. 
+            set_units_of_measure (:py:class:`bool`, optional): If True, set the units of measure of the non-linear susceptibility. Default is False.
                 The conversion factor is set in agreement with the YamboPy implementation of the non-linear susceptibility
             plot (:py:class:`bool`, optional): If True, plot the Xn in the frequency domain. Default is False
             plot_dir (:py:class:`int`, optional): Index of the cartesian direction to be plotted. Default is 0, which corresponds to the x direction
+            broadening (:py:class:`float`, optional): Lorentzian broadening (eV) added to the linear susceptibility. Default is None (no broadening)
+            renormalize (:py:class:`bool`, optional): normalize the Lorentzian kernel to one on the grid of the frequencies, see
+                :py:func:`mppi.Optics.Utils.lorentzian_broadening`. Default is True
 
         Returns:
             :py:class:`numpy.list` : each element contains a cartesian direction. For each direction the function returns a dict
-                with the keys of the generate_frequencies function and the values of the Xn in the frequency domain 
+                with the keys of the generate_frequencies function and the values of the Xn in the frequency domain
         """
 
         Xn_xyz = []
         Pw_xyz = self._eval_Pw()
         Ew = self._eval_Ew(Pw_xyz[0].keys())
         self._print_sampling_warnings()
-        for idir in range(3):   
+        for idir in range(3):
             Xn = {}
             for key, res in Pw_xyz[idir].items():
                 n = abs(key)
@@ -397,7 +406,11 @@ class Xn_single_frequency():
                 Xn[key] = Pw_xyz[idir][key] / Ew[key]
                 if set_units_of_measure:
                     Xn[key] *= self.set_units_of_measure(n)
+                if broadening is not None and key == 1:
+                    Xn[key] = lorentzian_broadening(self.fields_freqs, Xn[key], broadening/C.HaToeV, renormalize=renormalize)
             Xn_xyz.append(Xn)
+        if broadening is not None and self.verbose:
+            print(f'Lorentzian broadening of {broadening} eV applied to the key 1, the other keys are not broadened')
 
         if plot:
             dir = ['x','y','z']

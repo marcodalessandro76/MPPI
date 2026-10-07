@@ -228,31 +228,16 @@ and `Xn_frequency_mixing` on yambo_nl runs with up to 201 probe frequencies (now
 damping 0.3 eV). Points found there, to be reviewed here (with tests on `mppi.Models.AnharmonicOscillator`, whose
 susceptibilities are analytic and accept complex frequencies):
 
-1. **A posteriori Lorentzian broadening of the chi.** A causal response is analytic in the upper half plane, so
-   increasing its broadening by Delta means chi(w + i Delta) = (1/pi) int dw' Delta/((w-w')^2+Delta^2) chi(w'), a
-   convolution on the grid of the field frequencies (the amplitude and phase of a single monochromatic run do not
-   contain the resonances: damping the fitted sinusoid does not change chi). It applies to chi1 and to the keys (1,m)
-   of `Xn_frequency_mixing` (linear in the probe: Delta is added to the denominators that contain the probe frequency,
-   the pump-only ones are not broadened, so it is not identical to a larger dephasing in the dynamics), not to the
-   harmonics n >= 2 of `Xn_single_frequency` (w -> w + i Delta adds k Delta to the k-th denominator) nor to the
-   pump-only keys. Prototype used in LiF:
-   ```python
-   def lorentzian_broadening(freqs, chi, delta, renormalize=True):
-       w = np.asarray(freqs)
-       kernel = delta/np.pi/((w[:,None]-w[None,:])**2 + delta**2)
-       weights = np.full(len(w),w[1]-w[0]); weights[0] = weights[-1] = (w[1]-w[0])/2   # trapezoidal rule
-       kernel = kernel*weights[None,:]
-       if renormalize: kernel /= kernel.sum(axis=1)[:,None]
-       return np.asarray(chi) @ kernel.T
-   ```
-   Validation: oscillator (omega0 0.5 Ha, gamma 0.01, Delta 0.01 Ha, probe 0.30-0.75 Ha, 136 points, pump 0.05 Ha)
-   reproduces the exact chi(w + i Delta) within ~3% for chi1, (1,+-1), (1,+-2) and the third order part of (1,0); LiF
-   (sine run broadened by 0.2 eV vs delta run with eta 0.3 eV) within 3%. The error comes from the Lorentzian tails
-   outside the frequency window (~(Delta/pi)(1/d1+1/d2)); `renormalize` replaces them with the values inside the window
-   (it overestimates peaks near the edges when the response decreases outside). Requires a grid step << Delta and keys
-   without outliers. Proposed API: `Optics.Utils.lorentzian_broadening` and an optional `broadening=None` (eV) in
-   `compute_Xn` of both classes, applied only to the allowed keys (error for the others), documented in the docstrings,
-   backward compatible; test against the exact chi(w + i Delta) of the oscillator.
+1. DONE (2026-10-07). **A posteriori Lorentzian broadening**: `Optics.Utils.lorentzian_broadening(freqs, chi, delta,
+   renormalize=True)` (trapezoidal weights, also for non uniform grids; increasing frequencies required) and the options
+   `broadening=None` (eV) and `renormalize=True` of `compute_Xn` of both classes (added at the end of the arguments, backward
+   compatible), applied only to the keys linear in the probe (key 1 of `Xn_single_frequency`, keys (1,m) of
+   `Xn_frequency_mixing`); the other keys are returned unchanged (no error, the reason is in the docstrings: n >= 2 would get
+   n*Delta on the n-photon resonance, the zero-th order and the pump-only keys are not analytic/do not depend on the probe).
+   The convolution gives chi(w + i Delta): Delta is added to the denominators that contain the probe frequency, the pump-only
+   ones are unchanged. The error of the missing tails, ~(Delta/pi)(1/d1+1/d2), affects the whole window (~3% for Delta 0.01
+   Ha on 0.30-0.75 Ha), larger if a resonance is close to an edge (10% for (1,2) in Analysis_Optics). Tests on the oscillator
+   (exact chi at the complex frequency); a short section "A posteriori broadening" at the end of Analysis_Optics.
 2.-4. DONE (2026-10-07, tests in `tests/test_optics.py`). **Outliers**: the default time sampling of
    `Xn_frequency_mixing` started at `Tend - Tw` (Tw = 8*2pi/min distance between the fitted frequencies) even before the
    dephasing time 12/damp, so the free oscillations (not in the fit) spoiled it: error 7.0 on (1,2) at 0.32 Ha, where
@@ -265,7 +250,7 @@ susceptibilities are analytic and accept complex frequencies):
    frequency started before the dephasing time). Still possible: fit the three directions with one lstsq, a
    reliability check for isolated outliers, the common base class of the two Xn classes. Note: `generate_frequencies`
    drops a key whose frequency coincides with another one (e.g. (1,-3) when w = 6wP): the component goes in the kept key.
-5. **Note on the data, no change needed:** with the INVINT integrator of yambo_nl the delta kick acts with a delay
-   dt/2 (phase w dt/2 in `Linear_Response` if dt is large) and the transition energies are red shifted as
-   E_eff = (2/dt) arctan(E dt/2); with NLstep = 0.01 fs both effects are small (~0.1 eV at 17 eV). Possibly mention it
-   in the docstring of `Linear_Response`.
+5. DONE (2026-10-07): note on the INVINT integrator of yambo_nl in the docstring of `Linear_Response` (kick effectively
+   at t0 + dt/2 with dt = NLstep, phase w*dt/2 removable by adding dt/2 to efield['initial_time']; red shift
+   E_eff = (2/dt) arctan(E dt/2); with NLstep 0.01 fs at 17 eV: shift ~0.1 eV, phase 0.13 rad, not negligible for the
+   mixing of Re and Im of eps).

@@ -49,6 +49,12 @@ def Linear_Response(time, pol,efield, pol_ref=None, damp_type="LORENTZIAN", eta=
     delta-shaped field :math:`E(t) = E_0\delta(t-t_0)` (yambo_nl writes it as a single time step with value :math:`E_0/dt`) has
     :math:`E(\omega) = E_0e^{i\omega t_0}`, so the dielectric function is :math:`\epsilon = 1 + 4\pi P(\omega)/E(\omega)`.
 
+    Note on the time integration of yambo_nl (integration step dt, i.e. NLstep, not the IO step of the polarization): with the
+    INVINT integrator the kick acts effectively at :math:`t_0 + dt/2`, which gives a phase :math:`\omega dt/2` of the dielectric
+    function (it can be removed by adding dt/2 to efield['initial_time']), and the transition energies are red shifted as
+    :math:`E_{eff} = (2/dt)\arctan(E\,dt/2) \simeq E\,(1-(E\,dt)^2/12)`. Both effects vanish for dt -> 0. For instance, with
+    NLstep = 0.01 fs at 17 eV the shift is about 0.1 eV and the phase is 0.13 rad.
+
     Args:
         time (:py:class:`numpy.ndarray`) : array with the time values
         pol (:py:class:`numpy.ndarray`) : array with the polarization of the system at each time step

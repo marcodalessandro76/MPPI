@@ -55,6 +55,51 @@ def fit_sum_frequencies(t, y, Omegas_dict, rcond=None):
 
     return results_dict, B0, np.sqrt(residuals)[0]
 
+def lorentzian_broadening(freqs, chi, delta, renormalize=True):
+    r"""
+    Increase the broadening of a response function sampled on a grid of frequencies by a Lorentzian convolution.
+    A causal response function is analytic in the upper half of the complex frequency plane, so
+
+    .. math::
+        \chi(\omega+i\Delta) = \frac{1}{\pi}\int d\omega'\,\frac{\Delta}{(\omega-\omega')^2+\Delta^2}\,\chi(\omega')
+
+    i.e. the convolution evaluates the response at the complex frequency :math:`\omega+i\Delta`. If the frequency enters
+    once in each resonance denominator, as in the linear susceptibility and in the susceptibilities linear in the probe
+    field of a frequency mixing analysis, this adds :math:`\Delta` to the width of all the resonances that involve it. The
+    convolution is not a physical broadening for the harmonics :math:`n\geq2` of a monochromatic field
+    (:math:`\omega\to\omega+i\Delta` adds :math:`n\Delta` to the width of the n-photon resonance) and it is not defined for
+    the terms that contain both :math:`E(\omega)` and :math:`E(-\omega)` (e.g. the optical rectification).
+
+    The integral is computed with the trapezoidal rule on the grid, so the step of the grid must be much smaller than
+    delta. The Lorentzian tails outside the frequency window are missing, with an error of order
+    :math:`(\Delta/\pi)(1/d_1+1/d_2)`, where :math:`d_1` and :math:`d_2` are the distances from the edges of the window
+    (so it affects the whole window, not only the frequencies close to its edges).
+    With renormalize=True the kernel is normalized to one on the grid, which replaces the missing tails with the values
+    inside the window (it overestimates the peaks close to the edges if the response decreases outside the window).
+
+    Args:
+        freqs (:py:class:`numpy.ndarray`): increasing frequencies of the grid
+        chi (:py:class:`numpy.ndarray`): values of the response function on the grid (the last axis runs over the frequencies)
+        delta (:py:class:`float`): broadening, in the same units of freqs
+        renormalize (:py:class:`bool`): if True the kernel is normalized to one on the grid. Default is True
+
+    Returns:
+        :py:class:`numpy.ndarray`: the broadened response function on the same grid
+    """
+    w = np.asarray(freqs, dtype=float)
+    if len(w) < 2:
+        raise ValueError('The Lorentzian broadening needs at least two frequencies')
+    if np.any(np.diff(w) <= 0.):
+        raise ValueError('The frequencies of the Lorentzian broadening must be increasing')
+    # trapezoidal weights, valid also for a non uniform grid
+    weights = np.empty(len(w))
+    weights[1:-1] = (w[2:] - w[:-2]) / 2.
+    weights[0], weights[-1] = (w[1] - w[0]) / 2., (w[-1] - w[-2]) / 2.
+    kernel = delta / np.pi / ((w[:, None] - w[None, :])**2 + delta**2) * weights[None, :]
+    if renormalize:
+        kernel /= kernel.sum(axis=1)[:, None]
+    return np.asarray(chi) @ kernel.T
+
 def print_sampling_warnings(warnings, nfreqs, max_shown=10):
     """
     Print a summary of the warnings raised in the choice of the time sampling of the harmonic analysis. Each warning is

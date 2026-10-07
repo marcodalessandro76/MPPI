@@ -161,8 +161,8 @@ def test_sampling_warnings_summary(osc3):
     assert 'optimal time window' in lines[0] and '(2 of 3 frequencies, indexes: 0, 2)' in lines[0]
 
 def test_single_frequency_no_spurious_warning():
-    # time grid and one of the frequencies of a yambo_nl run of the LiF project (200 fs, IO step 0.01 fs, 201 frequencies
-    # in 10-20 eV): in floating point (t[-1]-T)+T > t[-1], which raised a spurious warning on the length of the time sampling
+    # time grid of a typical yambo_nl run (200 fs, IO step 0.01 fs) and a frequency of a grid of 201 points in 10-20 eV:
+    # in floating point (t[-1]-T)+T > t[-1], which raised a spurious warning on the length of the time sampling
     from mppi.Utilities.Constants import FsToAu
     time = np.arange(20001)*0.4134137333656136
     freq = np.array([0.5667806500473366])
@@ -175,3 +175,43 @@ def test_single_frequency_no_spurious_warning():
         chi = O.Xn_single_frequency(data, X_order=1, verbose=False).compute_Xn()[0]
     assert 'Warning' not in out.getvalue()
     assert rel(chi[1], osc.chi1(freq)) < 1e-4
+
+def test_lorentzian_broadening():
+    from mppi.Optics.Utils import lorentzian_broadening
+    osc, delta = AnharmonicOscillator(omega0=0.5, gamma=0.01), 0.01
+    # on a wide grid the convolution gives chi(w + i delta) far from the edges
+    w = np.linspace(0., 2., 2001)
+    sel = (w > 0.3) & (w < 0.75)
+    assert rel(lorentzian_broadening(w, osc.chi1(w), delta, renormalize=False)[sel], osc.chi1(w[sel]+1j*delta)) < 1e-3
+    # on a narrow window the error comes from the missing tails, reduced by the normalization of the kernel
+    w = np.linspace(0.30, 0.75, 136)
+    err = [rel(lorentzian_broadening(w, osc.chi1(w), delta, renormalize=r), osc.chi1(w+1j*delta)) for r in [True, False]]
+    assert err[0] < 4e-2 and err[1] < 7e-2
+    # the last axis runs over the frequencies
+    chi = np.array([osc.chi1(w), 2*osc.chi1(w)])
+    assert np.allclose(lorentzian_broadening(w, chi, delta)[1], 2*lorentzian_broadening(w, osc.chi1(w), delta))
+    with pytest.raises(ValueError):
+        lorentzian_broadening(w[::-1], osc.chi1(w), delta)
+
+def test_compute_Xn_broadening(osc3):
+    # keys linear in the probe, compared with the analytic susceptibilities at the complex probe frequency
+    w, delta, EP = np.linspace(0.30, 0.75, 61), 0.01, 2e-3
+    pump = {'frequency': WP, 'amplitude': EP, 'initial_time': T0}
+    data = osc3.sine_response(TIME, w, amplitude=1e-5, initial_time=T0, pump=pump, substeps=2)
+    probe = osc3.sine_response(TIME, w, amplitude=1e-5, initial_time=T0, substeps=2)
+    with quiet():
+        mix = O.Xn_frequency_mixing(data, X_order=(1, 3), verbose=False)
+        single = O.Xn_single_frequency(probe, X_order=3, verbose=False)
+        chi, chi_b = mix.compute_Xn()[0], mix.compute_Xn(broadening=delta*HaToeV)[0]
+        sf, sf_b = single.compute_Xn()[0], single.compute_Xn(broadening=delta*HaToeV)[0]
+    # the Lorentzian tails outside the window give an error ~(delta/pi)(1/d1+1/d2) ~ 3% on the whole window
+    z = w + 1j*delta
+    assert rel(sf_b[1], osc3.chi1(z)) < 5e-2
+    assert rel(chi_b[(1, 2)], 3*osc3.chi3(z, WP, WP)) < 5e-2
+    assert rel(chi_b[(1, -2)], 3*osc3.chi3(z, -WP, -WP)) < 5e-2
+    assert rel((chi_b[(1, 0)]-sf_b[1])/(EP**2/4), 6*osc3.chi3(z, WP, -WP)) < 5e-2
+    # the other keys are not broadened
+    for key in [0, 2, 3]:
+        assert np.array_equal(sf_b[key], sf[key])
+    for key in [(0, 0), (0, 1), (0, 2), (0, 3)]:
+        assert np.array_equal(chi_b[key], chi[key])
