@@ -221,3 +221,54 @@ project to check the inversion symmetry of a fixsym/NoTr SAVE). Yambo stores the
 equivalent points are found with a tolerance (default 1e-4) on the crystal coordinates, not by rounding. Tests in
 `tests/test_parsers.py` (WSe2 12x12x3 with the pw.x weights, rt_results without inversion). Still to do: the same
 for PwParser.
+
+## Next work: review of the Optics chi classes (from the LiF project, 2026-10-07)
+The LiF project (`NL_Chi/NL-Chi_Analysis.ipynb` in the LiF repository) uses `Linear_Response`, `Xn_single_frequency`
+and `Xn_frequency_mixing` on yambo_nl runs with up to 201 probe frequencies (now 155 frequencies, 10-25 eV, 100 fs,
+damping 0.3 eV). Points found there, to be reviewed here (with tests on `mppi.Models.AnharmonicOscillator`, whose
+susceptibilities are analytic and accept complex frequencies):
+
+1. **A posteriori Lorentzian broadening of the chi.** A causal response is analytic in the upper half plane, so
+   increasing its broadening by Delta means chi(w + i Delta) = (1/pi) int dw' Delta/((w-w')^2+Delta^2) chi(w'), a
+   convolution on the grid of the field frequencies (the amplitude and phase of a single monochromatic run do not
+   contain the resonances: damping the fitted sinusoid does not change chi). It applies to chi1 and to the keys (1,m)
+   of `Xn_frequency_mixing` (linear in the probe: Delta is added to the denominators that contain the probe frequency,
+   the pump-only ones are not broadened, so it is not identical to a larger dephasing in the dynamics), not to the
+   harmonics n >= 2 of `Xn_single_frequency` (w -> w + i Delta adds k Delta to the k-th denominator) nor to the
+   pump-only keys. Prototype used in LiF:
+   ```python
+   def lorentzian_broadening(freqs, chi, delta, renormalize=True):
+       w = np.asarray(freqs)
+       kernel = delta/np.pi/((w[:,None]-w[None,:])**2 + delta**2)
+       weights = np.full(len(w),w[1]-w[0]); weights[0] = weights[-1] = (w[1]-w[0])/2   # trapezoidal rule
+       kernel = kernel*weights[None,:]
+       if renormalize: kernel /= kernel.sum(axis=1)[:,None]
+       return np.asarray(chi) @ kernel.T
+   ```
+   Validation: oscillator (omega0 0.5 Ha, gamma 0.01, Delta 0.01 Ha, probe 0.30-0.75 Ha, 136 points, pump 0.05 Ha)
+   reproduces the exact chi(w + i Delta) within ~3% for chi1, (1,+-1), (1,+-2) and the third order part of (1,0); LiF
+   (sine run broadened by 0.2 eV vs delta run with eta 0.3 eV) within 3%. The error comes from the Lorentzian tails
+   outside the frequency window (~(Delta/pi)(1/d1+1/d2)); `renormalize` replaces them with the values inside the window
+   (it overestimates peaks near the edges when the response decreases outside). Requires a grid step << Delta and keys
+   without outliers. Proposed API: `Optics.Utils.lorentzian_broadening` and an optional `broadening=None` (eV) in
+   `compute_Xn` of both classes, applied only to the allowed keys (error for the others), documented in the docstrings,
+   backward compatible; test against the exact chi(w + i Delta) of the oscillator.
+2. **Outliers of the harmonic fit.** On the oscillator (b = 0.1, EP = 2e-3, X_order=(1,3), probe
+   `np.linspace(0.30,0.75,136)` Ha, pump 0.05 Ha, `time = np.arange(0,3000,0.25)`, t0 = 5 au) the key (1,2) has an
+   isolated spike at 0.32 Ha (one frequency). Probably near-degenerate harmonics (e.g. w-3wP close to 3wP at low w):
+   check `estimate_time_window` / `set_time_sampling` for that case and consider a reliability check that flags
+   isolated outliers (the residual check of `check_harmonic_reliability` does not catch it).
+3. **Warnings of the time sampling.** `Xn_single_frequency` prints "the time sampling ends before it starts. Tend is
+   set to Tstart + Tperiod" (several times per `compute_Xn`, on the LiF runs with damping 0.1 eV and 200 fs) and
+   `Xn_frequency_mixing` with X_order=(1,3) prints "the time sampling is shorter than the estimated optimal time
+   window" for the lowest probe frequencies. Review the logic and the messages of `set_time_sampling` in both classes
+   (when they are harmless, when the results are affected), possibly print one summary instead of one line per call.
+4. **Efficiency.** `eval_Pw` loops over the directions and, for each direction and frequency, calls
+   `perform_harmonic_analysis(ifreq)`, which fits all the three directions; `compute_Xn` calls `eval_Pw` and `eval_Ew`,
+   and `eval_Ew` calls `eval_Pw` again only to get the keys. So the fits are repeated many times (on LiF with 155-201
+   frequencies the analysis takes minutes). Cache the results of the harmonic analysis (per frequency) and get the keys
+   from `generate_frequencies`. Natural step towards the planned common base class of the two Xn classes.
+5. **Note on the data, no change needed:** with the INVINT integrator of yambo_nl the delta kick acts with a delay
+   dt/2 (phase w dt/2 in `Linear_Response` if dt is large) and the transition energies are red shifted as
+   E_eff = (2/dt) arctan(E dt/2); with NLstep = 0.01 fs both effects are small (~0.1 eV at 17 eV). Possibly mention it
+   in the docstring of `Linear_Response`.
