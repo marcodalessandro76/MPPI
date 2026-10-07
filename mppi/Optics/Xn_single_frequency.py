@@ -14,7 +14,7 @@ or the class can be imported directly as
 import numpy as np
 from mppi.Utilities import Constants as C
 from mppi.Utilities import Utils as U
-from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies
+from mppi.Optics.Utils import fit_sum_frequencies, eval_sum_frequencies, print_sampling_warnings
 from mppi.Parsers import YamboNLDBParser
 
 def generate_frequencies(omega,n_harmonics=3,inactive_harmonics=None,tol=1e-8):
@@ -102,6 +102,8 @@ class Xn_single_frequency():
         self.inactive_harmonics = inactive_harmonics
         self.Trange_units = Trange_units
         self.tol = tol
+        self.verbose = verbose
+        self._fits = {} # results of the harmonic analysis, see _harmonic_analysis
         EFIELDS = ['SIN','SOFTSIN']
         if self.fields[0]['name'] not in EFIELDS:
             raise ValueError(f'Invalid electric field for frequency mixing analysis. Expected one of: {EFIELDS}')
@@ -138,17 +140,30 @@ class Xn_single_frequency():
     def set_time_sampling(self,ifreq):
         """
         Define the time interval in which the polarization is sampled to compute the harmonic fit.
-        The default time range is one period of the external field (T_start = time[-1] - T_period, T_end = time[-1]). 
-        Instead if positive values of Trange are provided the sampling time range is set to that values. Checks are performed to 
-        ensure that the time range is consistent with the time sampling of the polarization. Lastly, if the time sampling interval 
-        starts before the dephasing time a warning is raised since the fit of the sine function can be not accurate.
+        The default time range is the last period of the external field (T_end = time[-1], T_start = T_end - T_period).
+        Instead if positive values of Trange are provided the sampling time range is set to that values. Checks are performed to
+        ensure that the time range is consistent with the time sampling of the polarization (with a tolerance of half a time
+        step) and that it contains at least one period of the field. Lastly, if the time sampling interval starts before the
+        dephasing time a warning is raised since the fit of the sine function can be not accurate.
         
         Args:
             ifreq (:py:class:`int`) : index of the frequency of the external field
-        
+
         Returns:
             :py:class:`tuple` : tuple with the indexes of the start and end time of the sampling interval
         """
+        iTstart, iTend, warnings = self._time_sampling(ifreq)
+        print_sampling_warnings({ifreq: warnings}, self.nfreqs)
+        return iTstart, iTend
+
+    def _time_sampling(self,ifreq):
+        """
+        Compute the time sampling interval of :py:meth:`set_time_sampling`.
+
+        Returns:
+            :py:class:`tuple` : the indexes of the start and end time of the sampling interval and the list of the warnings
+        """
+        warnings = []
         if self.Trange_units == 'fs':
             time = self.time/C.FsToAu
             dt = self.dt/C.FsToAu
@@ -161,58 +176,81 @@ class Xn_single_frequency():
             deph = self.deph
         else:
             raise ValueError("Invalid time units. Please use 'fs' or 'au'.")
-        
-        if self.Trange[0] < 0.:     
-            Tstart = time[-1] - Tperiod
+        tol = dt/2. # tolerance on the comparison between times
+
+        if self.Trange[1] < 0.:
+            Tend = time[-1]
+        else:
+            Tend = self.Trange[1]
+        if Tend > time[-1] + tol:
+            Tend = time[-1]
+            warnings.append('the time sampling ends after the end of the time range. Tend is set to time[-1]')
+
+        if self.Trange[0] < 0.:
+            Tstart = Tend - Tperiod
         else:
             Tstart = self.Trange[0]
-        if Tstart < deph:
-            print('Warning: the time sampling starts before the dephasing time. The fit of the sine function can be not accurate.') 
-        if Tstart > time[-1]:
+        if Tstart > time[-1] - tol:
             Tstart = time[-1] - Tperiod
-            print('Warning: the time sampling starts after the end of the time range. Tstart is set to time[-1]-Tperiod.') 
-        
-        if self.Trange[1] < 0.:   
-            Tend = time[-1]   
-        else:            
-            Tend = self.Trange[1]
-        if Tend > time[-1]:
-            Tend = time[-1]
-            print('Warning: the time sampling ends after the end of the time range. Tend is set to time[-1].') 
-        if Tend < (Tstart + Tperiod):
+            warnings.append('the time sampling starts after the end of the time range. Tstart is set to time[-1]-Tperiod')
+        if Tstart < deph - tol:
+            warnings.append('the time sampling starts before the dephasing time. The fit of the sine function can be not accurate')
+
+        if Tend < Tstart + Tperiod - tol:
             Tend = Tstart + Tperiod
-            print('Warning: the time sampling ends before it starts. Tend is set to Tstart + Tperiod.')
-        
-        iTstart = int(np.round( Tstart / dt))
-        iTend = int(np.round( Tend / dt)) 
-        
-        return iTstart, iTend
-    
+            warnings.append('the time sampling is shorter than one period of the field. Tend is set to Tstart + Tperiod')
+
+        iTstart = int(np.round((Tstart - time[0]) / dt))
+        iTend = int(np.round((Tend - time[0]) / dt))
+
+        return iTstart, iTend, warnings
+
     def perform_harmonic_analysis(self,ifreq):
         """
         Perform harmonic analysis of the polarization using the fit_sum_frequencies function.
+        The results are stored, so the fit of each frequency is performed only once (as long as X_order, Trange,
+        Trange_units, tol and inactive_harmonics are not changed).
 
         Args:
             ifreq (:py:class:`int`) : index of the frequency of the external field
-        
+
         Returns:
             :py:class:`list` : list with the results for each  cartesian direction.
                 Each element of the list is a tuple with A,phi (organized in a dict in which the keys are the harmonic indices), B0 and
                 residuals
         """
-        X_order = self.X_order
-        inactive_harmonics = self.inactive_harmonics
-        iTstart, iTend = self.set_time_sampling(ifreq)
-        t = self.time[iTstart:iTend]
-        omega = self.fields_freqs[ifreq]
-
-        results_xyz = []
-        Omegas = generate_frequencies(omega,n_harmonics=X_order,inactive_harmonics=inactive_harmonics)
-        for idir in range(3):
-            y = self.pol[ifreq,idir,iTstart:iTend]
-            results_xyz.append(fit_sum_frequencies(t,y,Omegas,rcond=self.tol))
+        results_xyz, warnings = self._harmonic_analysis(ifreq)
+        print_sampling_warnings({ifreq: warnings}, self.nfreqs)
         return results_xyz
-    
+
+    def _harmonic_analysis(self,ifreq):
+        """
+        Perform (or read from the stored results) the harmonic analysis of :py:meth:`perform_harmonic_analysis`.
+
+        Returns:
+            :py:class:`tuple` : the results of the fit for each cartesian direction and the list of the warnings raised
+                by the choice of the time sampling
+        """
+        inactive = tuple(sorted(self.inactive_harmonics)) if self.inactive_harmonics is not None else None
+        key = (ifreq, self.X_order, tuple(self.Trange), self.Trange_units, self.tol, inactive)
+        if key not in self._fits:
+            iTstart, iTend, warnings = self._time_sampling(ifreq)
+            t = self.time[iTstart:iTend]
+            Omegas = generate_frequencies(self.fields_freqs[ifreq],n_harmonics=self.X_order,inactive_harmonics=self.inactive_harmonics)
+            results_xyz = []
+            for idir in range(3):
+                y = self.pol[ifreq,idir,iTstart:iTend]
+                results_xyz.append(fit_sum_frequencies(t,y,Omegas,rcond=self.tol))
+            self._fits[key] = (results_xyz, warnings)
+        return self._fits[key]
+
+    def _print_sampling_warnings(self):
+        """
+        Print a summary of the warnings raised by the time sampling of all the frequencies.
+        """
+        warnings = {ifreq: self._harmonic_analysis(ifreq)[1] for ifreq in range(self.nfreqs)}
+        print_sampling_warnings(warnings, self.nfreqs)
+
     def check_harmonic_reliability(self,plot_ifreq=None,plot_dir=0):
         """
         Check the reliability of multiple harmonics fit by comparing the residuals with the amplitude of the fitted sine function. 
@@ -225,7 +263,7 @@ class Xn_single_frequency():
 
         """
         for ifreq in range(self.nfreqs):
-            results_xyz = self.perform_harmonic_analysis(ifreq)
+            results_xyz = self._harmonic_analysis(ifreq)[0]
             for idir in range(3):
                 A = np.array([res["A"] for res in results_xyz[idir][0].values()])
                 A_max = max(A)
@@ -234,12 +272,13 @@ class Xn_single_frequency():
                 if ratio > 0.1:
                     print(f'Warning: Fit for frequency {ifreq} in direction {idir} is not accurate since the residuals are comparable to the amplitude.')
                     print(f'Amplitudes (for each harmonic): {A}',f'Residuals of the fit: {residuals}')
-        
+        self._print_sampling_warnings()
+
         if plot_ifreq is not None:
             time = self.time
             pol = self.pol[plot_ifreq,plot_dir]
-            iTstart, iTend = self.set_time_sampling(plot_ifreq)
-            results = self.perform_harmonic_analysis(plot_ifreq)[plot_dir]
+            iTstart, iTend = self._time_sampling(plot_ifreq)[:2]
+            results = self._harmonic_analysis(plot_ifreq)[0][plot_dir]
             pol_fit = eval_sum_frequencies(time, results[0], results[1])
             Tperiod = 2.0*np.pi/self.fields_freqs[plot_ifreq]
             Tmin,Tmax = np.max([time[iTstart]-5*Tperiod,time[0]])/C.FsToAu, np.min([time[iTend]+5*Tperiod,time[-1]])/C.FsToAu
@@ -265,20 +304,9 @@ class Xn_single_frequency():
                 with the keys of the generate_frequencies function and the values of the polarization in the frequency domain 
         """
 
-        Pw_xyz = []
+        Pw_xyz = self._eval_Pw()
+        self._print_sampling_warnings()
 
-        for idir in range(3):       
-            Pw = {}
-            Pw[0] = np.zeros(self.nfreqs, dtype=complex) 
-            for ifreq in range(self.nfreqs):
-                results = self.perform_harmonic_analysis(ifreq)[idir]
-                Pw[0][ifreq] = results[1] # constant offset
-                for key, res in results[0].items():
-                    if key not in Pw:
-                        Pw[key] = np.zeros(self.nfreqs, dtype=complex)
-                    Pw[key][ifreq] = 1j*res["A"] / 2.0 * np.exp(-1j * res["phi"])
-            Pw_xyz.append(Pw)
-        
         if plot:
             dir = ['x','y','z']
             energy = self.fields_freqs * C.HaToeV
@@ -287,7 +315,25 @@ class Xn_single_frequency():
                 U.Plot_ComplexArray(energy, Pw_xyz[plot_dir][n_harm], label=f'P_{dir[plot_dir]}[{n_harm}]')
         
         return Pw_xyz
-    
+
+    def _eval_Pw(self):
+        """
+        Compute the polarization in the frequency domain of :py:meth:`eval_Pw`, without printing the warnings.
+        """
+        Pw_xyz = []
+        for idir in range(3):
+            Pw = {}
+            Pw[0] = np.zeros(self.nfreqs, dtype=complex)
+            for ifreq in range(self.nfreqs):
+                results = self._harmonic_analysis(ifreq)[0][idir]
+                Pw[0][ifreq] = results[1] # constant offset
+                for key, res in results[0].items():
+                    if key not in Pw:
+                        Pw[key] = np.zeros(self.nfreqs, dtype=complex)
+                    Pw[key][ifreq] = 1j*res["A"] / 2.0 * np.exp(-1j * res["phi"])
+            Pw_xyz.append(Pw)
+        return Pw_xyz
+
     def eval_Ew(self):
         r"""
         Evaluate the (n_harmonic powers of) the external fields in the frequency domain for all the values of the self.fields_freqs array.
@@ -299,14 +345,19 @@ class Xn_single_frequency():
             :py:class:`numpy.dict` : dict with the harmonic powers of the external fields in the frequency domain for all the values of the self.fields_freqs array
                   
         """
+        return self._eval_Ew(self._eval_Pw()[0].keys())
+
+    def _eval_Ew(self,keys):
+        """
+        Compute the powers of the field amplitudes of :py:meth:`eval_Ew` for the given keys.
+        """
         Ew = {}
-        Pw_x = self.eval_Pw()[0] 
         for ifreq in range(self.nfreqs):
             E0 = self.fields[ifreq]['amplitude']
             t0 = self.fields[ifreq]['initial_time']
             omega = self.fields_freqs[ifreq]
-            
-            for key in Pw_x:
+
+            for key in keys:
                 if key not in Ew:   
                     Ew[key] = np.zeros(self.nfreqs, dtype=complex)
                 n = abs(key)
@@ -334,8 +385,9 @@ class Xn_single_frequency():
         """
 
         Xn_xyz = []
-        Pw_xyz = self.eval_Pw()
-        Ew = self.eval_Ew()
+        Pw_xyz = self._eval_Pw()
+        Ew = self._eval_Ew(Pw_xyz[0].keys())
+        self._print_sampling_warnings()
         for idir in range(3):   
             Xn = {}
             for key, res in Pw_xyz[idir].items():

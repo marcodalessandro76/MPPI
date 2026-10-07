@@ -55,6 +55,26 @@ def fit_sum_frequencies(t, y, Omegas_dict, rcond=None):
 
     return results_dict, B0, np.sqrt(residuals)[0]
 
+def print_sampling_warnings(warnings, nfreqs, max_shown=10):
+    """
+    Print a summary of the warnings raised in the choice of the time sampling of the harmonic analysis. Each warning is
+    printed once, together with the number and the indexes of the frequencies of the external field that raised it.
+
+    Args:
+        warnings (:py:class:`dict`): {ifreq: list of warning messages}
+        nfreqs (:py:class:`int`): total number of frequencies of the external field
+        max_shown (:py:class:`int`): maximum number of frequency indexes printed for each warning
+    """
+    summary = {}
+    for ifreq in sorted(warnings):
+        for msg in warnings[ifreq]:
+            summary.setdefault(msg, []).append(ifreq)
+    for msg, ifreqs in summary.items():
+        shown = ', '.join(str(i) for i in ifreqs[:max_shown])
+        if len(ifreqs) > max_shown:
+            shown += ', ...'
+        print(f'Warning: {msg} ({len(ifreqs)} of {nfreqs} frequencies, indexes: {shown})')
+
 def eval_sum_frequencies(t, results_dict, B0):
     """
     Evaluate:

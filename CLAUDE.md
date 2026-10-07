@@ -253,21 +253,18 @@ susceptibilities are analytic and accept complex frequencies):
    without outliers. Proposed API: `Optics.Utils.lorentzian_broadening` and an optional `broadening=None` (eV) in
    `compute_Xn` of both classes, applied only to the allowed keys (error for the others), documented in the docstrings,
    backward compatible; test against the exact chi(w + i Delta) of the oscillator.
-2. **Outliers of the harmonic fit.** On the oscillator (b = 0.1, EP = 2e-3, X_order=(1,3), probe
-   `np.linspace(0.30,0.75,136)` Ha, pump 0.05 Ha, `time = np.arange(0,3000,0.25)`, t0 = 5 au) the key (1,2) has an
-   isolated spike at 0.32 Ha (one frequency). Probably near-degenerate harmonics (e.g. w-3wP close to 3wP at low w):
-   check `estimate_time_window` / `set_time_sampling` for that case and consider a reliability check that flags
-   isolated outliers (the residual check of `check_harmonic_reliability` does not catch it).
-3. **Warnings of the time sampling.** `Xn_single_frequency` prints "the time sampling ends before it starts. Tend is
-   set to Tstart + Tperiod" (several times per `compute_Xn`, on the LiF runs with damping 0.1 eV and 200 fs) and
-   `Xn_frequency_mixing` with X_order=(1,3) prints "the time sampling is shorter than the estimated optimal time
-   window" for the lowest probe frequencies. Review the logic and the messages of `set_time_sampling` in both classes
-   (when they are harmless, when the results are affected), possibly print one summary instead of one line per call.
-4. **Efficiency.** `eval_Pw` loops over the directions and, for each direction and frequency, calls
-   `perform_harmonic_analysis(ifreq)`, which fits all the three directions; `compute_Xn` calls `eval_Pw` and `eval_Ew`,
-   and `eval_Ew` calls `eval_Pw` again only to get the keys. So the fits are repeated many times (on LiF with 155-201
-   frequencies the analysis takes minutes). Cache the results of the harmonic analysis (per frequency) and get the keys
-   from `generate_frequencies`. Natural step towards the planned common base class of the two Xn classes.
+2.-4. DONE (2026-10-07, tests in `tests/test_optics.py`). **Outliers**: the default time sampling of
+   `Xn_frequency_mixing` started at `Tend - Tw` (Tw = 8*2pi/min distance between the fitted frequencies) even before the
+   dephasing time 12/damp, so the free oscillations (not in the fit) spoiled it: error 7.0 on (1,2) at 0.32 Ha, where
+   w-3wP = 0.17 is close to 3wP = 0.15. Now it starts at max(Tend - Tw, deph) (back to ~1e-2). **Warnings**: the old ones on
+   LiF were spurious, from floating point rounding ((t[-1]-T)+T > t[-1]); times are now compared with a tolerance dt/2,
+   and `compute_Xn`/`eval_Pw`/`check_harmonic_reliability` print one summary line per warning (number and indexes of the
+   frequencies) via `Optics.Utils.print_sampling_warnings`. **Efficiency**: the fits are stored per frequency
+   (`_harmonic_analysis`, key with X_order, Trange, Trange_units, tol, inactive_harmonics): one fit per frequency and
+   direction instead of 18; LiF 201 frequencies, X_order (1,3): 13.1 s -> 2.3 s, results identical bit by bit (no LiF
+   frequency started before the dephasing time). Still possible: fit the three directions with one lstsq, a
+   reliability check for isolated outliers, the common base class of the two Xn classes. Note: `generate_frequencies`
+   drops a key whose frequency coincides with another one (e.g. (1,-3) when w = 6wP): the component goes in the kept key.
 5. **Note on the data, no change needed:** with the INVINT integrator of yambo_nl the delta kick acts with a delay
    dt/2 (phase w dt/2 in `Linear_Response` if dt is large) and the transition energies are red shifted as
    E_eff = (2/dt) arctan(E dt/2); with NLstep = 0.01 fs both effects are small (~0.1 eV at 17 eV). Possibly mention it
