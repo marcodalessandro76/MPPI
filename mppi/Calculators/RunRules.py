@@ -3,6 +3,21 @@ This module manages the parameters used to define the mpi and omp parallelizatio
 """
 import os
 
+def slurm_node_list(nodes):
+    """
+    Convert a list of nodes in the format of the slurm options --exclude and --nodelist.
+
+    Args:
+        nodes (:py:class:`string` or :py:class:`list`) : a slurm node list, e.g. 'wnode07' or 'wnode[07-08]', or a list
+            of such strings, which are joined with commas
+
+    Return:
+        :py:class:`string` : the slurm node list
+    """
+    if isinstance(nodes, (list, tuple)):
+        return ','.join(str(n) for n in nodes)
+    return str(nodes)
+
 def build_slurm_header(pars):
     """
     Define the header of the slurm script. Note that the name variable is not present in the
@@ -38,6 +53,11 @@ def build_slurm_header(pars):
         lines.append('#SBATCH --account %s'%pars['account'])
     if pars['qos'] is not None:
         lines.append('#SBATCH --qos %s'%pars['qos'])
+    # read with get, so that the dictionaries built without these keys keep working
+    if pars.get('exclude') is not None:
+        lines.append('#SBATCH --exclude=%s           ### Nodes excluded from the job'%slurm_node_list(pars['exclude']))
+    if pars.get('nodelist') is not None:
+        lines.append('#SBATCH --nodelist=%s          ### Nodes required by the job'%slurm_node_list(pars['nodelist']))
     lines.append('#SBATCH --job-name=%s'%job)
     lines.append('#SBATCH --output=%s.out'%job)
     lines.append('')
@@ -167,6 +187,10 @@ class RunRules(dict):
         partition (:py:class:`string`) : slurm partition variable
         account (:py:class:`string`) : slurm account variable
         qos (:py:class:`string`) : slurm qos variable
+        exclude (:py:class:`string` or :py:class:`list`) : nodes excluded from the job (slurm --exclude option), as a
+            slurm node list (e.g. 'wnode07' or 'wnode[07-08]') or a list of such strings. Useful to avoid a faulty node
+        nodelist (:py:class:`string` or :py:class:`list`) : nodes required by the job (slurm --nodelist option), with
+            the same format of `exclude`
         omp_places (:py:class:`string`) : the OMP_PLACES option, can be `cores` or `socket`
         omp_proc_bind (:py:class:`string`) : the OMP_PROC_BIND option, can be `close` or `spread`
         map_by (:py:class:`string`) : the mpi unit for the --map-by option of mpirun
@@ -177,12 +201,18 @@ class RunRules(dict):
             needed by the running applications. With the `slurm` scheduler the lines of the file are included
             in the slurm script, with the `direct` scheduler the file is sourced (with bash) before the run command
 
+    The parameters `exclude` and `nodelist` are used only with the `slurm` scheduler. Like the other parameters, they can
+    also be passed as options of a single run of the calculators, e.g. ``code.run(..., exclude='wnode07')``.
+
+    Example:
+        >>> rr = RunRules(scheduler='slurm',ntasks_per_node=32,partition='all12h',exclude='wnode07')
+
     """
 
     def __init__(self,scheduler='direct',omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1),mpi=1,
                 nodes=1,ntasks_per_node=1,cpus_per_task=1,gpus_per_node=None,gres_gpu=None,memory=None,
                 time=None,partition=None,account=None,qos=None,omp_places=None,omp_proc_bind=None,
-                map_by=None,pe=1,rank_by=None,pre_processing=None):
+                map_by=None,pe=1,rank_by=None,pre_processing=None,exclude=None,nodelist=None):
         if scheduler == 'direct':
             rules = dict(mpi=mpi,omp_num_threads=omp_num_threads,pre_processing=pre_processing)
             dict.__init__(self,scheduler=scheduler,**rules)
@@ -190,5 +220,6 @@ class RunRules(dict):
             rules=dict(nodes=nodes,ntasks_per_node=ntasks_per_node,cpus_per_task=cpus_per_task,
             omp_num_threads=omp_num_threads,gpus_per_node=gpus_per_node,gres_gpu=gres_gpu,memory=memory,
             time=time,partition=partition,account=account,qos=qos,omp_places=omp_places,
-            omp_proc_bind=omp_proc_bind,map_by=map_by,pe=pe,rank_by=rank_by,pre_processing=pre_processing)
+            omp_proc_bind=omp_proc_bind,map_by=map_by,pe=pe,rank_by=rank_by,pre_processing=pre_processing,
+            exclude=exclude,nodelist=nodelist)
             dict.__init__(self,scheduler=scheduler,**rules)

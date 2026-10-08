@@ -255,16 +255,10 @@ susceptibilities are analytic and accept complex frequencies):
    E_eff = (2/dt) arctan(E dt/2); with NLstep 0.01 fs at 17 eV: shift ~0.1 eV, phase 0.13 rad, not negligible for the
    mixing of Re and Im of eps).
 
-## Next work: exclude nodes in the slurm scripts (from the LiF project, 2026-10-08)
-On ismhpc the node wnode07 silently corrupts some yambo_nl runs (part of the frequencies of a run come out wrong, no
-error message; see the LiF CLAUDE.md, open point 5), so the LiF jobs must avoid it. `RunRules` has no option for this
-and today the job has to be prepared with `dry_run=True` and submitted by hand with `sbatch --exclude=wnode07`.
-To do:
-- new `RunRules` parameter `exclude=None` (slurm scheduler only), a string with the slurm node list, e.g. `'wnode07'` or
-  `'wnode[07-08]'` (a list of names could also be accepted and joined with commas); documented in the class docstring
-  with the other slurm parameters;
-- in `build_slurm_header` add `#SBATCH --exclude=%s` when it is set, next to partition/account/qos. Read it with
-  `pars.get('exclude')` (not `pars['exclude']`) so that RunRules dictionaries built without the key keep working;
-- possibly also `nodelist=None` (`#SBATCH --nodelist`), same pattern;
-- test in `tests/` on the header lines (with and without the option) and a note in the docstring examples of the two
-  calculators.
+## Exclude nodes in the slurm scripts (from the LiF project, DONE 2026-10-08)
+On ismhpc the node wnode07 silently corrupts some yambo_nl runs (see the LiF CLAUDE.md, open point 5). `RunRules` has
+the slurm-only parameters `exclude=None` and `nodelist=None` (a slurm node list such as `'wnode07'` or `'wnode[07-08]'`,
+or a list of names joined with commas); `build_slurm_header` writes `#SBATCH --exclude=...` / `#SBATCH --nodelist=...`
+reading them with `pars.get`, so old RunRules dictionaries keep working and they can also be passed as options of a
+single run (`code.run(..., exclude='wnode07')`, the run options update the RunRules). Test in `tests/test_calculators.py`,
+notes in the docstrings of RunRules and of the two calculators.

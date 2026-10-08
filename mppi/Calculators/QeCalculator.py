@@ -44,6 +44,11 @@ class QeCalculator(Runner):
      >>> code = calculator(rr,skip=True,clean_restart=True,verbose=True)
      >>> code.run(input = ..., run_dir = ...,name = ..., source_dir = ..., **kwargs)
 
+     The slurm nodes to avoid (e.g. a faulty node) are set with the `exclude` parameter of RunRules, or as an option of a
+     single run:
+
+     >>> code.run(input = ..., run_dir = ...,name = ..., exclude = 'wnode07')
+
      When the run method is called the class runs the command:
          cd run_dir ; `mpirun command` executable_name -inp name.in > name.log
 
