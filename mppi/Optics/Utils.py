@@ -100,6 +100,33 @@ def lorentzian_broadening(freqs, chi, delta, renormalize=True):
         kernel /= kernel.sum(axis=1)[:, None]
     return np.asarray(chi) @ kernel.T
 
+def time_weighted(freqs, chi, weight):
+    r"""
+    Multiply the response function of chi by a weight in time and transform back to the frequencies, i.e. compute
+
+    .. math::
+        \int dt\,e^{i\omega t}\,W(t)\,R(t) , \qquad R(t) = \frac{1}{2\pi}\int d\omega\,\chi(\omega)\,e^{-i\omega t}
+
+    The transforms are discrete Fourier transforms on the uniform grid of the frequencies, so R(t) is periodic with period
+    :math:`2\pi/\Delta\omega` (:math:`\Delta\omega` is the step of the grid), which must be much longer than the decay time of
+    the response (the step must be much smaller than the width of the resonances). The times of the transform are in
+    :math:`[-\pi/\Delta\omega,\pi/\Delta\omega)`: for a causal response R(t) vanishes at negative times, apart from the small
+    values due to the finite frequency window. With W = 1 the function returns chi.
+
+    Args:
+        freqs (:py:class:`numpy.ndarray`): uniform grid of the frequencies (the times are in the inverse units, e.g. Hartree and au)
+        chi (:py:class:`numpy.ndarray`): values of the response function on the grid (the last axis runs over the frequencies)
+        weight (:py:class:`function`): function of the array of the times that returns the weight W(t)
+
+    Returns:
+        :py:class:`numpy.ndarray`: the weighted response function on the same grid
+    """
+    w = np.asarray(freqs, dtype=float)
+    step = (w[-1] - w[0]) / (len(w) - 1)
+    t = np.fft.fftfreq(len(w), step / (2 * np.pi))
+    E = np.exp(-1j * np.outer(t, w))
+    return ((np.asarray(chi) @ E.T) * weight(t)) @ E.conj() / len(w)
+
 def print_sampling_warnings(warnings, nfreqs, max_shown=10):
     """
     Print a summary of the warnings raised in the choice of the time sampling of the harmonic analysis. Each warning is

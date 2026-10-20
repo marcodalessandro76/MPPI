@@ -215,3 +215,140 @@ def test_compute_Xn_broadening(osc3):
         assert np.array_equal(sf_b[key], sf[key])
     for key in [(0, 0), (0, 1), (0, 2), (0, 3)]:
         assert np.array_equal(chi_b[key], chi[key])
+
+# Transient response: chi^neq from the exact dynamics of the oscillator (delta probe + pump) vs Transient_Response with
+# the analytic susceptibilities (keys of Xn_frequency_mixing, which include the degeneracy factors)
+from scipy.integrate import trapezoid
+from mppi.Optics.TransientResponse import envelope_weight
+from mppi.Optics.Utils import time_weighted
+from mppi.Utilities.Constants import FsToAu
+
+TR_TIME = np.arange(0, 2800, 0.25)
+TR_GRID = np.arange(0.15, 0.85 + WP/32, WP/16)   # step wP/16 (Ha)
+
+def chi_neq_exact(osc, pumps, probe_times, w, amplitude=1e-6):
+    # (P_Pp - P_P)/E_p at the frequencies w for each pump of the list pumps, minus the linear response of the same
+    # integrator
+    def chi(data, k):
+        t, dP, tp = data.IO_TIME_points, data.Polarization[k][0], data.Efield[k]['initial_time']
+        s = t >= tp
+        return (dP[s]*np.exp(1j*np.outer(w, t[s]-tp))).sum(1)*(t[1]-t[0])/amplitude
+    eq = osc.delta_probe_response(TR_TIME, lambda t: 0., [probe_times[0]], amplitude=amplitude, substeps=2)
+    chi1 = chi(eq, 0)
+    res = []
+    for pump in pumps:
+        data = osc.delta_probe_response(TR_TIME, pump, probe_times, amplitude=amplitude, substeps=2)
+        res.append([chi(data, k) - chi1 for k in range(len(probe_times))])
+    return res
+
+def tr_keys(osc, E0P):
+    g = TR_GRID
+    if osc.a == 0.:
+        return {(1, 0): osc.chi1(g) + E0P**2/4*6*osc.chi3(g, WP, -WP), (1, 2): 3*osc.chi3(g, WP, WP),
+                (1, -2): 3*osc.chi3(g, -WP, -WP)}
+    return {(1, 1): 2*osc.chi2(g, WP), (1, -1): 2*osc.chi2(g, -WP)}
+
+def test_envelope_weight():
+    tau, sigma, t = 1.5, 3., np.array([-1., 0., 1e-8, 2., 5.])
+    f2 = np.exp(-tau**2/sigma**2)
+    assert np.allclose(envelope_weight(tau, t, sigma, 2, 'probe time'), f2)
+    W = envelope_weight(tau, t, sigma, 2)
+    assert np.allclose(W[:3], f2)
+    tt = np.linspace(0, 5, 20001)
+    assert np.isclose(W[-1], trapezoid(np.exp(-(tau+tt)**2/sigma**2), tt)/5, rtol=1e-6)
+    W1 = envelope_weight(tau, 5., sigma, 1)
+    assert np.isclose(W1, trapezoid(np.exp(-(tau+tt)**2/(2*sigma**2)), tt)/5, rtol=1e-6)
+    assert np.allclose(envelope_weight(tau, t, 1e6, 2), 1.)
+
+def test_time_weighted_identity():
+    osc = AnharmonicOscillator(omega0=0.5, gamma=0.01)
+    chi = osc.chi1(TR_GRID)
+    assert np.allclose(time_weighted(TR_GRID, chi, lambda t: np.ones_like(t)), chi)
+
+def test_transient_response_monochromatic():
+    tps = [1000., 1031.25]
+    # third order, centrosymmetric oscillator
+    osc3, E0P = AnharmonicOscillator(omega0=0.5, gamma=0.01, b=0.1), 4e-3
+    with quiet():
+        tr = O.Transient_Response(TR_GRID*HaToeV, osc3.chi1(TR_GRID), tr_keys(osc3, E0P), E0P, WP*HaToeV)
+    w, dchi = tr.dchi(np.array(tps)/FsToAu, E0P)
+    exact = chi_neq_exact(osc3, [lambda t: E0P*np.sin(WP*t)], tps, w/HaToeV)[0]
+    for k in range(len(tps)):
+        assert rel(dchi[k], exact[k]) < 1e-2
+    # second order, non-centrosymmetric oscillator: odd part in the pump field
+    osc2, E0P = AnharmonicOscillator(omega0=0.5, gamma=0.01, a=0.1), 1e-3
+    with quiet():
+        tr = O.Transient_Response(TR_GRID*HaToeV, osc2.chi1(TR_GRID), tr_keys(osc2, E0P), E0P, WP*HaToeV)
+    w, dchi = tr.dchi(np.array(tps)/FsToAu, E0P)
+    plus, minus = chi_neq_exact(osc2, [lambda t: E0P*np.sin(WP*t), lambda t: -E0P*np.sin(WP*t)], tps, w/HaToeV)
+    for k in range(len(tps)):
+        assert rel(dchi[k], (plus[k]-minus[k])/2) < 1e-2
+
+def test_transient_response_gaussian():
+    # pump width sigma = 2/gamma: the envelope at the probe time fails away from the pump maximum, the accumulated
+    # envelope reproduces the exact third order response
+    osc3, E0P, sigma, tP = AnharmonicOscillator(omega0=0.5, gamma=0.01, b=0.1), 4e-3, 200., 1000.
+    taus = np.array([-150., 0., 150.])
+    with quiet():
+        tr = O.Transient_Response(TR_GRID*HaToeV, osc3.chi1(TR_GRID), tr_keys(osc3, E0P), E0P, WP*HaToeV)
+    pump = lambda t: E0P*np.exp(-(t-tP)**2/(2*sigma**2))*np.sin(WP*(t-tP))
+    w, acc = tr.dchi(taus/FsToAu, E0P, pump='accumulated', sigma=sigma/FsToAu)
+    w, pt = tr.dchi(taus/FsToAu, E0P, pump='probe time', sigma=sigma/FsToAu)
+    exact = chi_neq_exact(osc3, [pump], tP+taus, w/HaToeV)[0]
+    for k in range(len(taus)):
+        assert rel(acc[k], exact[k]) < 0.08
+        assert rel(pt[k], exact[k]) > 2*rel(acc[k], exact[k])
+    # for a long pulse both the models give the monochromatic result with the envelope at the delay
+    w, mono = tr.dchi(taus/FsToAu, E0P)
+    for model in ['probe time', 'accumulated']:
+        assert np.allclose(tr.dchi(taus/FsToAu, E0P, pump=model, sigma=1e6)[1], mono)
+
+def test_transient_response_options():
+    osc3, osc2, E0P = AnharmonicOscillator(b=0.1), AnharmonicOscillator(a=0.1), 1e-3
+    keys = {**tr_keys(osc3, E0P), **tr_keys(osc2, E0P)}
+    chi1 = osc3.chi1(TR_GRID)
+    with quiet():
+        tr = O.Transient_Response(TR_GRID*HaToeV, chi1, keys, E0P, WP*HaToeV)
+        tr_c = O.Transient_Response(TR_GRID*HaToeV, chi1, keys, E0P, WP*HaToeV, centrosymmetric=True)
+    assert tr.orders == [2, 3] and tr_c.orders == [3]
+    assert set(tr.components()) == {'chi_0', 'chi_+', 'chi_-', 'chi2_+', 'chi2_-'}
+    assert set(tr_c.components()) == {'chi_0', 'chi_+', 'chi_-'}
+    # the output grid is at 2wP from the edges and chi_+(w) = chi_(1,2)(w-2wP)
+    assert np.allclose(tr.w, TR_GRID[32:-32]*HaToeV)
+    assert np.allclose(tr.components()['chi_+'], 3*osc3.chi3(TR_GRID[:-64], WP, WP))
+    assert np.allclose(tr.components()['chi_0'], 6*osc3.chi3(TR_GRID[32:-32], WP, -WP))
+    # the total is the sum of the orders, the centrosymmetric option drops the second order terms
+    taus = [0.3, 1.1]
+    total = tr.dchi(taus, E0P)[1]
+    assert np.allclose(total, tr.dchi(taus, E0P, orders=[2])[1] + tr.dchi(taus, E0P, orders=[3])[1])
+    assert np.allclose(tr_c.dchi(taus, E0P)[1], tr.dchi(taus, E0P, orders=[3])[1])
+    with pytest.raises(ValueError):
+        tr_c.dchi(taus, E0P, orders=[2])
+    with pytest.raises(ValueError):
+        tr_c.dchi(taus, E0P, pump='accumulated')          # sigma is needed
+    # the accumulated envelope is defined only for the third order terms
+    with pytest.raises(ValueError):
+        tr.dchi(taus, E0P, pump='accumulated', sigma=3.)
+    assert np.allclose(tr.dchi(taus, E0P, pump='accumulated', sigma=3., orders=[3])[1],
+                       tr_c.dchi(taus, E0P, pump='accumulated', sigma=3.)[1])
+    with pytest.raises(ValueError):                        # the step does not divide the pump frequency
+        O.Transient_Response(TR_GRID*HaToeV, chi1, keys, E0P, 1.1*WP*HaToeV, verbose=False)
+    with pytest.raises(ValueError):                        # no keys of the transient response
+        O.Transient_Response(TR_GRID*HaToeV, chi1, {(1, 0): chi1}, E0P, WP*HaToeV, verbose=False)
+
+def test_transient_response_from_Xn(osc3):
+    # components from the keys extracted from the simulated runs (probe step wP/4)
+    EP = 2e-3
+    w = np.arange(0.30, 0.75, WP/4)
+    pump = {'frequency': WP, 'amplitude': EP, 'initial_time': T0}
+    data = osc3.sine_response(TIME, w, amplitude=1e-5, initial_time=T0, pump=pump, substeps=4)
+    probe = osc3.sine_response(TIME, w, amplitude=1e-5, initial_time=T0, substeps=4)
+    with quiet():
+        mix = O.Xn_frequency_mixing(data, X_order=(1, 3), verbose=False)
+        single = O.Xn_single_frequency(probe, X_order=1, verbose=False)
+        tr = O.Transient_Response.from_Xn(mix, single, centrosymmetric=True)
+    assert np.isclose(tr.E0P, EP) and np.isclose(tr.wP, WP*HaToeV) and tr.orders == [3]
+    wo, comp = tr.w/HaToeV, tr.components()
+    assert rel(comp['chi_0'], 6*osc3.chi3(wo, WP, -WP)) < 1e-2
+    assert rel(comp['chi_+'], 3*osc3.chi3(wo-2*WP, WP, WP)) < 1e-2
+    assert rel(comp['chi_-'], 3*osc3.chi3(wo+2*WP, -WP, -WP)) < 1e-2

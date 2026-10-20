@@ -129,6 +129,7 @@ The *Optics* module collects tools to perform analysis of the optical properties
    lrOptics.rst
    xnSingleFrequency.rst
    xnFrequencyMixing.rst
+   transientResponse.rst
    opticsUtils.rst
 
 The *Models* module collects tools to perform analysis based on some (analytical or numerical) modeling of the systems.

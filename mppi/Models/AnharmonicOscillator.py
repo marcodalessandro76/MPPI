@@ -138,7 +138,7 @@ class AnharmonicOscillator():
         omega1, omega2, omega3 = np.asarray(omega1), np.asarray(omega2), np.asarray(omega3)
         return self.density*self.b/(self.D(omega1+omega2+omega3)*self.D(omega1)*self.D(omega2)*self.D(omega3))
 
-    def solve(self,time,field,x0=0.,v0=0.,substeps=10):
+    def solve(self,time,field,x0=0.,v0=0.,substeps=10,kick_index=None,kick_velocity=0.):
         """
         Solve the equation of motion with a fourth order Runge-Kutta method on the (uniform) time grid. The
         equation can be solved for several runs at the same time.
@@ -148,6 +148,10 @@ class AnharmonicOscillator():
             field (:py:class:`function`) : function of the time that returns the field for each run
             x0, v0 (:py:class:`float` or :py:class:`numpy.ndarray`) : initial position and velocity
             substeps (:py:class:`int`) : number of integration steps for each time step of the grid
+            kick_index (:py:class:`numpy.ndarray` or None) : for each run, index of the point of the time grid at which
+                the velocity is changed by kick_velocity (-1 for no kick), i.e. a delta-shaped field
+                :math:`E_0\\delta(t-t_k)` with kick_velocity = :math:`-E_0`. Default is None (no kick)
+            kick_velocity (:py:class:`float`) : change of the velocity of the kick
 
         Returns:
             :py:class:`numpy.ndarray` : the polarization -N*x, with shape (runs, time)
@@ -162,6 +166,8 @@ class AnharmonicOscillator():
         pos[...,0] = x
         t = time[0]
         for it in range(1,len(time)):
+            if kick_index is not None:
+                v = v + kick_velocity*(np.asarray(kick_index) == it-1)
             for _ in range(substeps):
                 k1x, k1v = v, acceleration(t,x,v)
                 k2x, k2v = v+0.5*h*k1v, acceleration(t+0.5*h,x+0.5*h*k1x,v+0.5*h*k1v)
@@ -194,6 +200,38 @@ class AnharmonicOscillator():
         pol[0,i0:] = self.solve(time[i0:],lambda t : np.zeros(1),v0=-amplitude,substeps=substeps)[0]
         efield = build_field('DELTA',amplitude=amplitude,initial_time=time[i0])
         return NLData(time,[pol],[efield],[build_field('none')],self.gamma)
+
+    def delta_probe_response(self,time,pump,probe_times,amplitude=1e-6,substeps=10):
+        r"""
+        Compute the polarization induced by a delta-shaped probe :math:`E_0\delta(t-t_p)` in presence of a pump field,
+        for each probe time: the difference :math:`P_{Pp}-P_P` between the polarization with probe and pump and the one
+        with the pump only, which defines the transient response :math:`\chi^{neq} = (P_{Pp}-P_P)/E_p` of a pump-probe
+        experiment. The :py:func:`Linear_Response` of each run gives :math:`1+4\pi\chi^{neq}`.
+
+        Args:
+            time (:py:class:`numpy.ndarray`) : uniform time grid (au)
+            pump (:py:class:`function`) : function of the time (au) that returns the pump field (au)
+            probe_times (:py:class:`float` or :py:class:`numpy.ndarray`) : times of the probe (au), rounded to the
+                closest points of the grid
+            amplitude (:py:class:`float`) : amplitude :math:`E_0` of the probe (au)
+            substeps (:py:class:`int`) : number of integration steps for each time step of the grid
+
+        Returns:
+            :py:class:`NLData` : one run for each probe time, with the polarization :math:`P_{Pp}-P_P` and the
+            parameters of the (delta-shaped) probe. The pump is not described in the result
+        """
+        idx = [int(np.argmin(np.abs(time-tp))) for tp in np.atleast_1d(probe_times)]
+        nruns = len(idx)+1
+        kick_index = np.array([-1]+idx)  # the first run has the pump only
+        pol_x = self.solve(time,lambda t : pump(t)*np.ones(nruns),substeps=substeps,kick_index=kick_index,
+                           kick_velocity=-amplitude)
+        polarization = []
+        for p in pol_x[1:]:
+            pol = np.zeros((3,len(time)))
+            pol[0] = p - pol_x[0]
+            polarization.append(pol)
+        efields = [build_field('DELTA',amplitude=amplitude,initial_time=time[i]) for i in idx]
+        return NLData(time,polarization,efields,[build_field('none')]*len(idx),self.gamma)
 
     def sine_response(self,time,frequencies,amplitude=1e-3,initial_time=0.,pump=None,substeps=10):
         r"""
