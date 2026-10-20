@@ -263,14 +263,45 @@ reading them with `pars.get`, so old RunRules dictionaries keep working and they
 single run (`code.run(..., exclude='wnode07')`, the run options update the RunRules). Test in `tests/test_calculators.py`,
 notes in the docstrings of RunRules and of the two calculators.
 
-## Planned: transient response chi^neq (from the LiF project, written 2026-10-19 — NOT started)
-The user wants to move into MPPI the construction of the pump-probe transient response from the equilibrium
-non-linear chi, now prototyped in the LiF notebooks. Do not start before the user says so (the LiF technical notes
-come first). Sources, all in the LiF repository (`D:\RICERCA\DFT AND MANY BODY\SIMULATIONS\LiF`, GitHub
-`marcodalessandro76/LiF`): the theory in Sec. 1 of `Notes/main.tex` (summarized in the LiF CLAUDE.md, section "Model of
-Sec. 1 of the notes"), the prototypes in `NL_Chi/Dchi-neq_Analysis.ipynb` and `NL_Chi/NL-Chi_Analysis.ipynb`. In the
-LiF project the model implemented in the notebook is still to be checked against the notes (LiF CLAUDE.md, "To do
-after the notes", item 1): do that check before porting the code.
+## Transient response chi^neq (from the LiF project; planned 2026-10-19, NEXT WORK from 2026-10-20)
+The user wants to implement in MPPI the construction of the pump-probe transient response dchi^neq from the
+equilibrium non-linear chi, with the possible approaches: **monochromatic pump**, **pulsed (Gaussian) pump with the
+envelope at the probe time**, **pulsed pump with the accumulated envelope**. Proposed home: a class in the `Optics`
+module (the user's idea; the design is to be agreed with the user, see below). The work is done in this MPPI session;
+the LiF technical notes are done (2026-10-20) and are the reference for the formulas.
+
+Sources, all in the LiF repository (`D:\RICERCA\DFT AND MANY BODY\SIMULATIONS\LiF`, GitHub `marcodalessandro76/LiF`):
+- theory: `Notes/main.tex` (build the PDF with `latexmk -pdf main.tex` in `Notes/`), Sec. 1.4 "Monochromatic pump"
+  (Eqs. `eq:dchi_mono`, `eq:chi2_mono`, `eq:chi3_mono`), Sec. 1.5 "Pulsed pump" (`eq:dchi2_pulse`, `eq:dchi3_pulse`,
+  envelope at the probe time `eq:dchi_probetime` with its validity hbar/eta << sigma, accumulated envelope `eq:W` and
+  `eq:dchi_accumulated`), Sec. 2 (extraction of the chi, keys chi_(n,m)), Sec. 3.2 (`eq:chi_from_keys`: chi_0, chi_+-,
+  chi2_+- from the keys), Sec. 3.3 (comparison with the RT runs, the details of the computation: output window,
+  pump frequency of the grids vs of the phases, derivative term of the pump, INVINT correction). Summary in the LiF
+  CLAUDE.md, section "Model of Sec. 1 of the notes".
+- **reference implementation, the one to port** (2026-10-20): `Notes/make_figures.py` of LiF, written directly from
+  the formulas of the notes and independent of the notebooks: `invint_correction(freqs, chi, dt)`,
+  `envelope_weight(tau, t, sigma, model)` (models 'probe time', 'local', 'accumulated'), `time_weighted(freqs, chi, W)`
+  (int dt e^{iwt} W(t) R(t) with discrete Fourier transforms on the uniform probe grid), `dchi_from_chi(freqs, chi0,
+  key_p2, key_m2, taus, E0P, sigma, wP, model)` (third order terms only; the keys (1,+-2) are time-weighted on their own
+  grid and then shifted by n = 2wP/step indices; the grids use the yambo_nl pump 1.55 eV, the phases the RT pump wP),
+  `compare` (rel. rms, ratio of the maxima, best rigid shift), `rt_even` and `fig_dchi_rt` (usage on the LiF data).
+- older prototypes: `NL_Chi/Dchi-neq_Analysis.ipynb` (`dchi_neq`, `envelope_weight`, `envelope_conv`, `dchi_neq_t`,
+  listed below) and `NL_Chi/NL-Chi_Analysis.ipynb`.
+
+Validation on LiF (kx16, bands 3-6, chi with total broadening 0.6 eV, 5 delays tau -2.91 ... +3.09 fs):
+- the reference implementation gives the same numbers as the notebook prototypes (all the weights, to the second
+  decimal), i.e. the notebook implements the model of the notes;
+- vs the third order RT response (even part in the pump field at 6e7 kW/cm^2), in 13.6-21.3 eV, rel. rms / ratio of
+  the maxima: accumulated 0.17-0.26 / 1.04-1.07, probe time 0.17-0.77 / 0.69-1.70 (good only near the pump maximum),
+  local weight f^2(tau+t) overcorrects (1.38 before, 0.65-0.84 after the maximum); residual ~5% and 0.06-0.07 eV;
+- INVINT correction: 4 pi chi1 vs eps_eq of the RT probe-only run 15.6% -> 4.4% rms (edge 0.29 -> -0.015 eV);
+- at 6e9 kW/cm^2 (beyond the third order) the chi with the accumulated envelope are 12-42% larger and 0.12-0.16 eV lower
+  than the RT even part: not a problem of the implementation (they reproduce the third order RT response).
+Open points of the check, to be handled in the port: the INVINT correction is applied to dchi at the output frequency
+(for the shifted keys the probe enters at w -+ 2wP: verify that the energy map and the dt/2 phase are consistent);
+the derivative term of the QSFIELD pump is neglected; the frequency form of the accumulated envelope (below) has not
+been coded (useful as an independent check); the second order terms with a pulse (exact, f(tau) at the probe time,
+`eq:dchi2_pulse`) were never tested on LiF (there chi_(1,+-1) is a k discretization error and is dropped).
 
 Physics (atomic units, Boyd's conventions as in Optics; delta probe at t_p, fields along x):
 - chi^neq(w,t_p) = (P_Pp(w) - P_P(w))/E_p(w) = chi1 + dchi; for the delta probe E_p(w-Omega)/E_p(w) = e^{-i Omega t_p}.
@@ -311,10 +342,16 @@ Prototypes to port (names in the LiF notebooks):
 - `NL-Chi_Analysis.ipynb`: `chi1_from_delta` (Linear_Response of the delta runs), the check of the corrupted
   frequencies of yambo_nl (|chi_(1,0) - chi1|/|chi1| > 1e-2 or max|P| vs the neighbours).
 
-Possible design (to be agreed with the user): a function or a small class in `Optics` that takes the
-`Xn_frequency_mixing` and probe-only results (or the chi dict + chi1 + the run pump amplitude) and returns chi_0,
-chi_+-, chi2_+- on the output grid, plus functions for dchi^neq with a monochromatic pump, the probe-time envelope and
-the accumulated envelope (time and frequency forms). Tests: `mppi.Models.AnharmonicOscillator` is ideal: its chi3 is
+Possible design (to be agreed with the user before coding): a class in `Optics` (e.g. `Transient_Response`) built from
+the `Xn_frequency_mixing` (P&p runs) and `Xn_single_frequency` (probe-only runs) objects, or from arrays (probe
+frequencies, the dict of the keys, chi1, the pump amplitude E0P_run and frequency wP of the runs), with the same
+`broadening` on chi1 and on the keys. It checks that the probe step divides wP and builds chi_0, chi_+- and chi2_+- on
+the output grid (w in [w_min + 2wP, w_max - 2wP] for the third order). Methods: `dchi(taus, E0P, pump='monochromatic' |
+'probe time' | 'accumulated', sigma=None, wP_phase=None, orders=(3,) or (2,3))` returning w and dchi (n_tau, n_w)
+(Delta eps = 4 pi dchi), with the sine-pump signs of the notes; an optional correction of the INVINT integrator
+(time step dt), or `invint_correction` as a function in `Optics.Utils`; the helpers `envelope_weight` and
+`time_weighted` in `Optics.Utils`. Keep the conventions of the notes (E(t) = int dw E(w) e^{-iwt}, delay tau = t_p - t_P,
+pump E0P f sin(wP(t-t_P)); a global sign of the pump does not change the third order, it changes the second). Tests: `mppi.Models.AnharmonicOscillator` is ideal: its chi3 is
 analytic for any (complex) frequencies, so Eq. (21) of the LiF notes can be integrated exactly and compared with
 the two envelope models, and `solve` accepts any field, so a delta probe + Gaussian pump dynamics gives the "RT"
 chi^neq directly (P_Pp - P_P). For the centrosymmetric oscillator chi3 ~ 1/(D(w)D(w-Omega)D(wP)D(Omega-wP)), i.e.
