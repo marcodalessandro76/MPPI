@@ -263,7 +263,7 @@ reading them with `pars.get`, so old RunRules dictionaries keep working and they
 single run (`code.run(..., exclude='wnode07')`, the run options update the RunRules). Test in `tests/test_calculators.py`,
 notes in the docstrings of RunRules and of the two calculators.
 
-## Transient response chi^neq (from the LiF project; DONE 2026-10-20, not committed yet)
+## Transient response chi^neq (from the LiF project; DONE 2026-10-20, commits f0f8add and 8e5df12)
 Port of the construction of the pump-probe transient response dchi from the equilibrium chi (theory: LiF repository,
 `Notes/main.tex` Secs. 1.4-1.5 and 3.2; reference implementation `Notes/make_figures.py`). Decisions of the user: general
 and simple implementation; the corrections of the yambo_nl INVINT integrator stay OUT of MPPI (applied in LiF to the results
