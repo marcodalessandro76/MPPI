@@ -300,6 +300,11 @@ Decisions of the user (2026-11-14):
   and the post-processing methods. It goes in `mppi/Parsers`. Name (agreed): `WfcParser` (`mppi/Parsers/WfcParser.py`,
   `WfcParser.from_qe(save_dir)`, `WfcParser.from_yambo(save_dir)`).
 - Band and k indices in the public methods start from 1, as in QE/Yambo and in the user's notebooks ("band 8").
+- The class stays GENERIC: one instance = one run. Operations between two runs are generic primitives and must work
+  between different instances (e.g. `overlap` of the states of a bilayer and of a monolayer, same k and same cell;
+  `transform` of the states of one run). The projection logic (weights P_mn = |<phi_m|psi_n>|^2, averages over
+  degenerate groups, layer energies, attribution) stays OUT of MPPI, in the notebooks of the project; a separate
+  class for projections may come later, once the procedure is stable.
 - Scope of this round (work order points 1 and 2): (1) reading, scalar products, transformations of the states;
   (2) tools for 2D systems: |psi|^2 along z and in the plane, weight of a state in a z window, real space, plots.
   NO k-space tools for now (the user has no use for them yet): implement what the projects need.
