@@ -13,6 +13,7 @@ MPPI notebook section
    tutorials/Tutorial_PwParser.ipynb
    tutorials/Tutorial_YamboParser.ipynb
    tutorials/Tutorial_YamboNLDBParser.ipynb
+   tutorials/Tutorial_WfcParser.ipynb
    tutorials/Tutorial_Datasets.ipynb
 
 * Some examples in which the functionalities of the code are used to obtain and analyze scientific results

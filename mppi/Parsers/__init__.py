@@ -7,3 +7,4 @@ from .YamboQPParser import YamboQPParser
 from .YamboRTCarriersParser import YamboRTCarriersParser
 from .YamboRTGlesserParser import YamboRTGlesserParser, buildBlochVectors
 from .YamboNLDBParser import YamboNLDBParser
+from .WfcParser import WfcParser

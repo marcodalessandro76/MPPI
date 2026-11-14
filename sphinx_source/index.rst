@@ -87,6 +87,13 @@ where the parsing of the various elements are performed by the more specific cla
    yamboRTGlesserParser
    yamboNLDBParser
 
+The Kohn-Sham wavefunctions of both QuantumESPRESSO and Yambo are read by the WfcParser class:
+
+.. toctree::
+   :maxdepth: 1
+
+   wfcParser
+
 Finally, the module ParsersUtils collects functions for the data analysis:
 
 .. toctree::

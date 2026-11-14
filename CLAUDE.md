@@ -380,3 +380,20 @@ push from the cluster (exception, for this work, to the rule "edits on the lapto
 start check that laptop, cluster and origin are at the same commit (`git pull` on the laptop first); do not edit the
 laptop copy meanwhile; at the end `git pull` on the laptop. Old git on ismhpc (1.8.3: no `git -C`, use `cd`). Write
 files on the cluster with heredocs or scp from the laptop scratchpad.
+
+Status (2026-11-14): point 1 DONE on the cluster (no spin in this round, user's decision: lsda, spinors, gamma_only and
+hdf5 files raise NotImplementedError). `mppi/Parsers/WfcParser.py`: module function `read_qe_wfc(filename, bands)`;
+`WfcParser.from_qe(save_dir)` (metadata from data-file-schema.xml through PwParser, warning if the type in the
+PP_HEADER of a UPF is not NC/SL) and `WfcParser.from_yambo(save_dir)` (ns.db1: lattice, atoms from N_ATOMS/ATOM_POS/
+atomic_numbers, k, energies, G vectors converted to Miller indices; coefficients from ns.wf or its fragments, band
+groups, the first WFC_NG[ik] of the max-ng arrays); attributes lattice and reciprocal_lattice (rows), volume, atoms
+(bohr), kpoints (bohr^-1), kpoints_crystal, evals (eV), nkpoints, nbands, num_electrons; `get_states(ik, bands)` (1-based)
+-> dict {ik, k, b, mill, bands, c (nbands, ng)}; static methods `overlap(s1, s2)` (G matched by Miller indices, k equal
+modulo a reciprocal lattice vector, check of the reciprocal lattice) and `transform(states, rotation, translation,
+time_reversal)` (psi(R^-1(r - tau)), conjugate with time reversal; checks orthogonality and Miller integrality). Tests
+`tests/test_wfcparser.py` (synthetic only). `Tutorial_WfcParser.ipynb` (executed on ismhpc, in git): Si QE orthonormal
+2e-15, QE vs Yambo SAVE = identity within 4e-8 at the 32 k (same phases), energies 1e-6 eV; graphene scf, K = ik 19
+(crystal (1/3,-1/3)): C3 about atom A or B and inversion about the bond center + time reversal map each degenerate group
+(bands 1-6) onto itself (sums 2.000000/1.000000), C3 about the bond center does not (1.05, 0.004, 0.84, 0.10). The last
+computed group (bands 7-8, 1.99997) is excluded. Next: point 2 (2D tools: z profile, z window weight, in-plane maps,
+real space, plots), then possibly spin.
