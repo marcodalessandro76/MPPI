@@ -228,8 +228,9 @@ was the inverse of the i-th operation of Yambo: the set of the BZ points and the
 the inverses: the LiF inversion check is not affected), `sym_index` and the order of `kpoints_bz` change. Checked on the Si
 SAVE of the tutorials: in crystal coordinates the Yambo matrices equal the first nsym `PwParser.syms` one by one (p2y keeps
 the QE order). New attributes `natoms` and `atomic_positions` (N_ATOMS, ATOM_POS, atomic_numbers; same atoms as PwParser).
-Note, not changed: `PwParser.syms` contains all the nrot lattice symmetries of the xml (48 for Si), of which only the
-first nsym (12) are crystal symmetries (`<info>crystal_symmetry</info>`).
+`PwParser.syms` contains all the nrot lattice symmetries of the xml (48 for Si), of which only the first nsym (12) are
+crystal symmetries (`<info>crystal_symmetry</info>`): new attributes `nsym` and `crystal_syms` (user's request, 2026-11-14;
+`syms` unchanged). Test: on WSe2 the crystal_syms equal the YamboDftParser syms in crystal coordinates, in the same order.
 
 ## Next work: review of the Optics chi classes (from the LiF project, 2026-10-07)
 The LiF project (`NL_Chi/NL-Chi_Analysis.ipynb` in the LiF repository) uses `Linear_Response`, `Xn_single_frequency`

@@ -24,7 +24,12 @@ class PwParser():
         alat : lattice parameter (in a.u.)
         lattice : array with the lattice vector. The i-th row represents the
             i-th lattice vectors in cartesian units
-        syms : list with the symmetries of the lattice
+        syms : list with the symmetries of the lattice (all the nrot rotations listed in the xml file), as 3x3 matrices
+            in crystal coordinates (they act on the crystal coordinates of the positions). Only some of them are
+            symmetries of the crystal, see crystal_syms
+        nsym : number of symmetries of the crystal
+        crystal_syms : list with the symmetries of the crystal (the elements of syms marked as crystal_symmetry in the
+            xml file, the first nsym ones)
         num_electrons : number of electrons
         nkpoints : numer of kpoints
         nbands : number of bands
@@ -99,9 +104,18 @@ class PwParser():
         self.lattice = np.array(lattice)
         symmetries = self.data.findall('output/symmetries/symmetry')
         self.syms = []
+        self.crystal_syms = []
         for sym in symmetries:
             rotation = [float(x) for x in sym.find('rotation').text.split()]
             self.syms.append(np.array(rotation).reshape(3,3))
+            info = sym.find('info')
+            if info is not None and info.text is not None and info.text.strip() == 'crystal_symmetry':
+                self.crystal_syms.append(self.syms[-1])
+        nsym = self.data.find('output/symmetries/nsym')
+        self.nsym = int(nsym.text) if nsym is not None else len(self.crystal_syms)
+        if not self.crystal_syms:
+            # xml file without the info on the kind of symmetry: the crystal symmetries are the first nsym ones
+            self.crystal_syms = self.syms[:self.nsym]
 
         #number of electrons
         self.num_electrons = float(self.data.find('output/band_structure/nelec').text)

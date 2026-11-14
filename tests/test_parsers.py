@@ -78,6 +78,11 @@ def test_yambodftparser_symmetries_and_atoms(ref_dir):
     assert data.natoms == pw.natoms == 6
     assert [n for n,p in key(data.atomic_positions)] == [n for n,p in key(pw.atomic_positions)]
     assert np.allclose([p for n,p in key(data.atomic_positions)],[p for n,p in key(pw.atomic_positions)],atol=1e-4)
+    # the crystal symmetries of PwParser (crystal coordinates) are the ones of Yambo (cartesian), in the same order
+    assert pw.nsym == len(pw.crystal_syms) == len(data.syms) and len(pw.syms) >= pw.nsym
+    A = pw.lattice
+    for S, M in zip(data.syms, pw.crystal_syms):
+        assert np.allclose(np.linalg.inv(A.T) @ S @ A.T, M, atol=1e-5)
 
 def test_yambodftparser_minus_k_requires_expansion(ref_dir):
     data = P.YamboDftParser(os.path.join(ref_dir,'rt_results','ns.db1'),verbose=False)
