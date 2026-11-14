@@ -62,6 +62,23 @@ def test_yambodftparser_expand_without_inversion(ref_dir):
     minus = data.get_minus_k_indexes()
     assert np.all(minus >= 0) and np.all(minus[minus] == np.arange(len(minus)))
 
+def test_yambodftparser_symmetries_and_atoms(ref_dir):
+    # the symmetry matrices are the ones that Yambo applies to the k points (k' = S k): the transpose of the variable
+    # SYMMETRY, as Yambo writes the Fortran array dl_sop(3,3,nsym) and netCDF reverses the order of the dimensions
+    from netCDF4 import Dataset
+    file = os.path.join(ref_dir,'dftParsers_results','WSe2_12x12x3_100bands','ns.db1')
+    data = P.YamboDftParser(file,verbose=False)
+    with Dataset(file) as d:
+        raw = np.array(d.variables['SYMMETRY'][:])
+    assert np.allclose(data.syms,np.transpose(raw,(0,2,1)))
+    assert not np.allclose(data.syms,raw)
+    # atoms (bulk 2H WSe2), the same of the QuantumESPRESSO computation (Yambo stores them in single precision)
+    pw = P.PwParser(os.path.join(ref_dir,'dftParsers_results','WSe2_12x12x3_100bands','data-file-schema.xml'),verbose=False)
+    key = lambda atoms: sorted((name,tuple(np.round(pos,3))) for name,pos in atoms)
+    assert data.natoms == pw.natoms == 6
+    assert [n for n,p in key(data.atomic_positions)] == [n for n,p in key(pw.atomic_positions)]
+    assert np.allclose([p for n,p in key(data.atomic_positions)],[p for n,p in key(pw.atomic_positions)],atol=1e-4)
+
 def test_yambodftparser_minus_k_requires_expansion(ref_dir):
     data = P.YamboDftParser(os.path.join(ref_dir,'rt_results','ns.db1'),verbose=False)
     with pytest.raises(AttributeError):

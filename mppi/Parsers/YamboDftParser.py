@@ -12,6 +12,10 @@ from mppi.Utilities.Constants import HaToeV
 from mppi.Parsers import ParsersUtils as U
 from mppi.Utilities import LatticeUtils as latUtils
 
+ELEMENTS = ('H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y '
+            'Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re '
+            'Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr').split()
+
 class YamboDftParser():
     """
     Class to read information about the lattice and electronic structure from the ``ns.db1`` database created by Yambo
@@ -21,7 +25,11 @@ class YamboDftParser():
         verbose (:py:class:`boolean`) : define the amount of information provided on terminal
 
     Attributes:
-        syms : the symmetries of the lattice
+        syms : the symmetry operations, as 3x3 matrices in cartesian coordinates that act on the (column) vectors,
+            e.g. k' = S k, as in Yambo (its matrices dl_sop). The SYMMETRY variable of the database contains their
+            transpose, since netCDF reverses the order of the dimensions of the Fortran arrays
+        natoms : number of atoms in the cell
+        atomic_positions : list with the name and the position of each atom, in cartesian coordinates (in a.u.)
         lattice : array with the lattice vectors. The i-th row represents the
             i-th lattice vector in cartesian units
         alat : the lattice parameter. Yambo stores a three dimensional array in this
@@ -61,9 +69,21 @@ class YamboDftParser():
             raise IOError("Error opening file %s in YamboDftParser"%self.filename)
 
         # lattice properties
-        self.syms = np.array(database.variables['SYMMETRY'][:])
+        # transpose of the variable SYMMETRY (see the documentation of the class)
+        self.syms = np.transpose(np.array(database.variables['SYMMETRY'][:]),(0,2,1))
         self.lattice = np.array(database.variables['LATTICE_VECTORS'][:].T)
         self.alat = np.array(database.variables['LATTICE_PARAMETER'][:])
+
+        # atoms
+        self.atomic_positions = []
+        if 'ATOM_POS' in database.variables:
+            natoms = np.array(database.variables['N_ATOMS'][:],dtype=int)
+            positions = np.array(database.variables['ATOM_POS'][:])
+            numbers = np.array(database.variables['atomic_numbers'][:],dtype=int)
+            for ispecies,z in enumerate(numbers):
+                for iatom in range(natoms[ispecies]):
+                    self.atomic_positions.append([ELEMENTS[z-1],positions[ispecies,iatom]])
+        self.natoms = len(self.atomic_positions)
 
         # electronic structure
         self.evals  = np.array(database.variables['EIGENVALUES'][0,:])

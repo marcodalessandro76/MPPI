@@ -22,10 +22,6 @@ import re
 import numpy as np
 from mppi.Utilities.Constants import HaToeV
 
-ELEMENTS = ('H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y '
-            'Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re '
-            'Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr').split()
-
 def _band_indexes(bands, nbands):
     """
     Convert the band indexes (1-based, None for all the bands) into an array of 0-based indexes and check them.
@@ -193,27 +189,26 @@ class WfcParser():
 
     def _read_yambo_metadata(self):
         """
-        Read the global data from the ``ns.db1`` database of Yambo.
+        Read the global data from the ``ns.db1`` database of Yambo, through the :py:class:`YamboDftParser` class, and
+        the G vectors of the wavefunctions of each k point.
         """
         from netCDF4 import Dataset
+        from mppi.Parsers.YamboDftParser import YamboDftParser
         db1 = os.path.join(self.save_dir, 'ns.db1')
         if not os.path.isfile(db1):
             raise IOError('File %s not found' % db1)
+        dft = YamboDftParser(db1, verbose=False)
+        if dft.spin != 1:
+            raise NotImplementedError('Computations with spin are not supported')
+        self.lattice = dft.lattice
+        self.atoms = [[name, np.array(pos)] for name, pos in dft.atomic_positions]
+        self.kpoints = dft.get_kpoints(use_scalar_alat=True) * 2 * np.pi / dft.alat[0]
+        self.evals = dft.evals * HaToeV
+        self.num_electrons = float(dft.num_electrons)
         with Dataset(db1) as d:
-            if int(d.variables['DIMENSIONS'][11]) != 1:
-                raise NotImplementedError('Computations with spin are not supported')
-            self.lattice = np.array(d.variables['LATTICE_VECTORS'][:]).T
-            alat = np.array(d.variables['LATTICE_PARAMETER'][:])
-            self.kpoints = np.array(d.variables['K-POINTS'][:]).T * 2 * np.pi / alat
-            self.evals = np.array(d.variables['EIGENVALUES'][0]) * HaToeV
-            self.num_electrons = float(d.variables['DIMENSIONS'][14])
-            natoms = np.array(d.variables['N_ATOMS'][:], dtype=int)
-            positions = np.array(d.variables['ATOM_POS'][:])
-            numbers = np.array(d.variables['atomic_numbers'][:], dtype=int)
-            gvectors = np.array(d.variables['G-VECTORS'][:]).T * 2 * np.pi / alat
+            gvectors = np.array(d.variables['G-VECTORS'][:]).T * 2 * np.pi / dft.alat
             self._wfc_ng = np.array(d.variables['WFC_NG'][:], dtype=int)
             self._wfc_grid = np.array(d.variables['WFC_GRID'][:], dtype=int)
-        self.atoms = [[ELEMENTS[z - 1], positions[s, i]] for s, z in enumerate(numbers) for i in range(natoms[s])]
         mill = gvectors @ self.lattice.T / (2 * np.pi)
         self._mill = np.rint(mill).astype(int)
         if np.abs(mill - self._mill).max() > 1e-3:

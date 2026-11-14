@@ -221,6 +221,15 @@ project to check the inversion symmetry of a fixsym/NoTr SAVE). Yambo stores the
 equivalent points are found with a tolerance (default 1e-4) on the crystal coordinates, not by rounding. Tests in
 `tests/test_parsers.py` (WSe2 12x12x3 with the pw.x weights, rt_results without inversion). Still to do: the same
 for PwParser.
+Fix (2026-11-14): `YamboDftParser.syms` is now the TRANSPOSE of the netCDF variable SYMMETRY, i.e. the cartesian matrices
+dl_sop that Yambo applies to the k points (k' = S k, `k_expand.F` with rl_sop = dl_sop*alat_i/alat_j; netCDF reverses the
+dimensions of the Fortran array dl_sop(3,3,nsym)), as in YamboPy (`np.transpose(SYMMETRY,(0,2,1))`). Before, `syms[i]`
+was the inverse of the i-th operation of Yambo: the set of the BZ points and the weights were right (the group contains
+the inverses: the LiF inversion check is not affected), `sym_index` and the order of `kpoints_bz` change. Checked on the Si
+SAVE of the tutorials: in crystal coordinates the Yambo matrices equal the first nsym `PwParser.syms` one by one (p2y keeps
+the QE order). New attributes `natoms` and `atomic_positions` (N_ATOMS, ATOM_POS, atomic_numbers; same atoms as PwParser).
+Note, not changed: `PwParser.syms` contains all the nrot lattice symmetries of the xml (48 for Si), of which only the
+first nsym (12) are crystal symmetries (`<info>crystal_symmetry</info>`).
 
 ## Next work: review of the Optics chi classes (from the LiF project, 2026-10-07)
 The LiF project (`NL_Chi/NL-Chi_Analysis.ipynb` in the LiF repository) uses `Linear_Response`, `Xn_single_frequency`
@@ -384,8 +393,8 @@ files on the cluster with heredocs or scp from the laptop scratchpad.
 Status (2026-11-14): point 1 DONE on the cluster (no spin in this round, user's decision: lsda, spinors, gamma_only and
 hdf5 files raise NotImplementedError). `mppi/Parsers/WfcParser.py`: module function `read_qe_wfc(filename, bands)`;
 `WfcParser.from_qe(save_dir)` (metadata from data-file-schema.xml through PwParser, warning if the type in the
-PP_HEADER of a UPF is not NC/SL) and `WfcParser.from_yambo(save_dir)` (ns.db1: lattice, atoms from N_ATOMS/ATOM_POS/
-atomic_numbers, k, energies, G vectors converted to Miller indices; coefficients from ns.wf or its fragments, band
+PP_HEADER of a UPF is not NC/SL) and `WfcParser.from_yambo(save_dir)` (metadata through YamboDftParser; from ns.db1
+only the G vectors, converted to Miller indices, WFC_NG and WFC_GRID; coefficients from ns.wf or its fragments, band
 groups, the first WFC_NG[ik] of the max-ng arrays); attributes lattice and reciprocal_lattice (rows), volume, atoms
 (bohr), kpoints (bohr^-1), kpoints_crystal, evals (eV), nkpoints, nbands, num_electrons; `get_states(ik, bands)` (1-based)
 -> dict {ik, k, b, mill, bands, c (nbands, ng)}; static methods `overlap(s1, s2)` (G matched by Miller indices, k equal
