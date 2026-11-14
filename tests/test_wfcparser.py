@@ -5,6 +5,7 @@ the outputs of the tutorials are not in git).
 import numpy as np
 import pytest
 from scipy.io import FortranFile
+from scipy.integrate import trapezoid
 from mppi.Parsers.WfcParser import read_qe_wfc, WfcParser, _pseudo_type
 
 A = 6.                                  # simple cubic lattice (bohr)
@@ -100,3 +101,98 @@ def test_pseudo_type(tmp_path):
     upf1.write_text('<PP_INFO>\n</PP_INFO>\n<PP_HEADER>\n   0   Version Number\n   C   Element\n'
                     '   NC  Norm - Conserving pseudopotential\n</PP_HEADER>\n<PP_GIPAW_RECONSTRUCTION_DATA>\n')
     assert _pseudo_type(str(upf1)) == 'NC'
+
+# tools for 2D systems, on a hexagonal cell with the third vector along z
+LAT2D = np.array([[4.6, 0., 0.], [2.3, 2.3 * np.sqrt(3), 0.], [0., 0., 20.]])
+B2D = 2 * np.pi * np.linalg.inv(LAT2D).T
+
+def states_2d(coefs, k=(0., 0., 0.), gmax=2, gzmax=4):
+    # states with the given coefficients {(m1, m2, m3): c} (one dict per band) on the G vectors with |m1|, |m2| <= gmax
+    # and |m3| <= gzmax
+    r, rz = np.arange(-gmax, gmax + 1), np.arange(-gzmax, gzmax + 1)
+    mill = np.array(np.meshgrid(r, r, rz, indexing='ij')).reshape(3, -1).T
+    index = {tuple(m): i for i, m in enumerate(mill)}
+    c = np.zeros((len(coefs), len(mill)), dtype=complex)
+    for ib, cb in enumerate(coefs):
+        for m, v in cb.items():
+            c[ib, index[m]] = v
+    return {'ik': 1, 'k': np.asarray(k) @ B2D, 'b': B2D, 'mill': mill, 'bands': np.arange(1, len(coefs) + 1), 'c': c}
+
+def random_states_2d(nb=2, seed=0):
+    s = states_2d([{}] * nb)
+    rng = np.random.default_rng(seed)
+    c = rng.normal(size=s['c'].shape) + 1j * rng.normal(size=s['c'].shape)
+    return dict(s, c=c / np.linalg.norm(c, axis=1)[:, None], k=np.array([0.1, 0.2, 0.]) @ B2D)
+
+def test_z_profile():
+    c, h = LAT2D[2, 2], 1 / np.sqrt(2)
+    s = states_2d([{(0, 0, 0): 1.}, {(0, 0, 0): h, (0, 0, 1): h}, {(0, 0, 0): h, (1, 0, 1): h}])
+    z, p = WfcParser.z_profile(s, nz=64)
+    assert z.min() == -c / 2 and z.max() < c / 2 and np.all(np.diff(z) > 0)
+    assert np.allclose(p[0], 1 / c)                                    # one plane wave: flat profile
+    assert np.allclose(p[1], (1 + np.cos(2 * np.pi * z / c)) / c)       # two G_z with the same G_par interfere
+    assert np.allclose(p[2], 1 / c)                                    # different G_par do not interfere
+    z, p = WfcParser.z_profile(random_states_2d())
+    assert np.allclose(p.sum(axis=1) * (z[1] - z[0]), 1.)
+    with pytest.raises(ValueError):
+        WfcParser.z_profile(s, nz=5)
+
+def test_z_weight():
+    c, h = LAT2D[2, 2], 1 / np.sqrt(2)
+    g = 2 * np.pi / c
+    s = states_2d([{(0, 0, 0): h, (0, 0, 1): h}])
+    z1, z2 = -3., 5.
+    exact = (z2 - z1) / c + (np.sin(g * z2) - np.sin(g * z1)) / (g * c)
+    assert np.isclose(WfcParser.z_weight(s, z1, z2)[0], exact)
+    s = random_states_2d()
+    assert np.allclose(WfcParser.z_weight(s, -c / 2, c / 2), 1.)
+    # the same as the integral of the profile, also for a window that crosses the boundary of the cell
+    z, p = WfcParser.z_profile(s, nz=4000)
+    zz, pp = np.concatenate([z - c, z, z + c]), np.tile(p, 3)
+    for z1, z2 in [(-2., 3.), (8., 14.)]:
+        sel = (zz >= z1) & (zz <= z2)
+        assert np.allclose(WfcParser.z_weight(s, z1, z2), trapezoid(pp[:, sel], zz[sel]), atol=2e-3)
+    with pytest.raises(ValueError):
+        WfcParser.z_weight(s, 1., -1.)
+
+def test_to_real_space_and_inplane_map():
+    s = random_states_2d()
+    psi = WfcParser.to_real_space(s, grid=(6, 7, 12))
+    volume = abs(np.linalg.det(LAT2D))
+    dV = volume / psi[0].size
+    assert np.allclose((np.abs(psi)**2).sum(axis=(1, 2, 3)) * dV, 1.)
+    # value at a point of the grid vs the direct sum over the G vectors
+    i, j, l = 2, 5, 9
+    r = i / 6 * LAT2D[0] + j / 7 * LAT2D[1] + l / 12 * LAT2D[2]
+    direct = s['c'] @ np.exp(1j * (s['k'] + s['mill'] @ B2D) @ r) / np.sqrt(volume)
+    assert np.allclose(psi[:, i, j, l], direct)
+    with pytest.raises(ValueError):
+        WfcParser.to_real_space(s, grid=(3, 7, 12))
+    # None sets the minimum number of points along a lattice vector
+    assert WfcParser.to_real_space(s, grid=(8, None, None)).shape == (2, 8, 5, 9)
+    # in-plane maps: over the whole cell they integrate to one, over a window to the weight in the window
+    m = WfcParser.inplane_map(s, grid=(6, 7, 12))
+    dA = volume / LAT2D[2, 2] / (6 * 7)
+    assert np.allclose(m.sum(axis=(1, 2)) * dA, 1.)
+    m = WfcParser.inplane_map(s, z_window=(-4., 4.), grid=(6, 7, 400))
+    assert np.allclose(m.sum(axis=(1, 2)) * dA, WfcParser.z_weight(s, -4., 4.), atol=1e-2)
+
+def test_layer_cell_check():
+    s = random_states_2d()
+    tilted = LAT2D.copy()
+    tilted[2] = [1., 0., 20.]
+    with pytest.raises(ValueError):
+        WfcParser.z_profile(dict(s, b=2 * np.pi * np.linalg.inv(tilted).T))
+
+def test_plots_2d():
+    import matplotlib
+    matplotlib.use('Agg')
+    wfc = WfcParser.__new__(WfcParser)          # only the atoms are needed by the plots
+    wfc.atoms = [['C', np.zeros(3)], ['C', np.array([2.3, 1.33, 0.])]]
+    s = random_states_2d()
+    ax = wfc.plot_z_profile(s, bands=[2])
+    assert len(ax.lines) == 2                     # the profile and one plane of atoms
+    ax = wfc.plot_inplane_map(s, 1, z_window=(-2., 2.), grid=(6, 7, 12), ncells=(2, 2))
+    assert ax.get_title() == 'band 1'
+    with pytest.raises(ValueError):
+        wfc.plot_z_profile(s, bands=[5])

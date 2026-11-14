@@ -9,7 +9,9 @@ The wavefunctions are expanded in plane waves,
 
 with :math:`\sum_\mathbf{G}|c_n(\mathbf{G})|^2 = 1` (norm-conserving pseudopotentials), and the G vectors are identified by
 their Miller indices, :math:`\mathbf{G} = m_1\mathbf{b}_1+m_2\mathbf{b}_2+m_3\mathbf{b}_3`. Only computations without spin
-(no lsda, no spinors) are supported. The module can be loaded in the notebook as follows
+(no lsda, no spinors) are supported. For 2D systems (first two lattice vectors in the xy plane, third one along z) the
+class computes the planar average of the density of the states along z, their weight in a window of z and their
+density integrated along z in the plane. The module can be loaded in the notebook as follows
 
 >>> from mppi.Parsers import WfcParser
 
@@ -341,3 +343,249 @@ class WfcParser():
             tau = np.asarray(translation, dtype=float)
             c = c * np.exp(-1j * ((k + mill @ b) @ tau))[None, :]
         return dict(states, k=k, mill=mill, c=c)
+
+    # tools for 2D systems: the first two lattice vectors are in the xy plane, the third one is along z
+
+    @staticmethod
+    def _layer_cell(states):
+        """
+        Lattice vectors (rows, bohr) of the states and length c of the cell along z. Check that the first two lattice
+        vectors are in the xy plane and that the third one is along z (with a positive z component).
+        """
+        lattice = 2 * np.pi * np.linalg.inv(np.asarray(states['b'], dtype=float)).T
+        tol = 1e-6 * np.abs(lattice).max()
+        if np.abs(lattice[:2, 2]).max() > tol or np.abs(lattice[2, :2]).max() > tol or lattice[2, 2] <= 0:
+            raise ValueError('The methods for 2D systems need the first two lattice vectors in the xy plane and the '
+                             'third one along z')
+        return lattice, lattice[2, 2]
+
+    @staticmethod
+    def _select_bands(states, bands):
+        """
+        States restricted to the chosen bands (1-based labels of the key 'bands'), None for all the bands.
+        """
+        if bands is None:
+            return states
+        labels = list(np.asarray(states['bands']))
+        try:
+            idx = [labels.index(b) for b in np.atleast_1d(bands)]
+        except ValueError:
+            raise ValueError('The bands %s are not in the states (bands %s)' % (bands, labels))
+        return dict(states, bands=np.asarray(states['bands'])[idx], c=np.asarray(states['c'])[idx])
+
+    @staticmethod
+    def z_profile(states, nz=None):
+        r"""
+        Compute the planar average of the density of each state (2D systems),
+
+        .. math::
+            p_n(z) = \int_A|\psi_n|^2\,dx\,dy = \frac{1}{c}\sum_{\mathbf{G}_\parallel}\Big|\sum_{G_z}
+            c_n(\mathbf{G}_\parallel,G_z)\,e^{iG_zz}\Big|^2 , \qquad \int_0^c p_n(z)\,dz = 1
+
+        where A is the area of the cell and c its length along z. The plane waves with different in-plane components
+        do not interfere, so only one Fourier transform along z is needed for each :math:`\mathbf{G}_\parallel`.
+
+        Args:
+            states (:py:class:`dict`) : states returned by :py:meth:`get_states`
+            nz (:py:class:`int` or None) : number of points of the uniform grid along z. Default is None, that is
+                four times the minimum number needed to represent the states (at least 200)
+
+        Returns:
+            :py:class:`tuple` : the array z (bohr) of the grid, in the interval [-c/2,c/2), and the array of the
+            profiles (bohr^-1), with shape (bands, nz)
+        """
+        lattice, c = WfcParser._layer_cell(states)
+        mill, coef = np.asarray(states['mill']), np.asarray(states['c'])
+        nmin = 2 * np.abs(mill[:, 2]).max() + 1
+        if nz is None:
+            nz = max(4 * nmin, 200)
+        if nz < nmin:
+            raise ValueError('The number of points along z must be at least %d' % nmin)
+        pairs, ipair = np.unique(mill[:, :2], axis=0, return_inverse=True)
+        ipair = np.ravel(ipair)
+        p = np.zeros((len(coef), nz))
+        for ib, cb in enumerate(coef):
+            A = np.zeros((len(pairs), nz), dtype=complex)
+            A[ipair, mill[:, 2] % nz] = cb
+            p[ib] = (np.abs(np.fft.ifft(A, axis=1) * nz)**2).sum(axis=0) / c
+        z = np.arange(nz) * c / nz
+        z = np.where(z >= c / 2, z - c, z)
+        order = np.argsort(z)
+        return z[order], p[:, order]
+
+    @staticmethod
+    def z_weight(states, z1, z2):
+        r"""
+        Compute the weight of each state in the window :math:`z_1 \leq z \leq z_2` (2D systems), i.e. the integral of the
+        planar average :math:`p_n(z)` (see :py:meth:`z_profile`) over the window, computed analytically. The window can
+        cross the boundaries of the cell (the states are periodic along z), e.g. a window centered on a layer at z = 0.
+
+        Args:
+            states (:py:class:`dict`) : states returned by :py:meth:`get_states`
+            z1, z2 (:py:class:`float`) : limits of the window (bohr), with z1 <= z2
+
+        Returns:
+            :py:class:`numpy.ndarray` : the weight of each state in the window (one for the whole cell)
+        """
+        lattice, c = WfcParser._layer_cell(states)
+        if z2 < z1:
+            raise ValueError('The window must have z1 <= z2')
+        mill, coef = np.asarray(states['mill']), np.asarray(states['c'])
+        m3 = mill[:, 2]
+        M = np.abs(m3).max()
+        pairs, ipair = np.unique(mill[:, :2], axis=0, return_inverse=True)
+        ipair = np.ravel(ipair)
+        g = 2 * np.pi / c
+        d = np.arange(-2 * M, 2 * M + 1)                       # differences m' - m of the indexes along z
+        dg = np.where(d == 0, 1., d * g)
+        integral = np.where(d == 0, z2 - z1, (np.exp(1j * dg * z2) - np.exp(1j * dg * z1)) / (1j * dg))
+        m = np.arange(2 * M + 1)
+        K = integral[m[None, :] - m[:, None] + 2 * M]          # K[m, m'] = integral of exp(i(m'-m)gz)
+        weights = np.zeros(len(coef))
+        for ib, cb in enumerate(coef):
+            C = np.zeros((len(pairs), 2 * M + 1), dtype=complex)
+            C[ipair, m3 + M] = cb
+            weights[ib] = np.einsum('pm,mn,pn->', C.conj(), K, C).real / c
+        return weights
+
+    @staticmethod
+    def to_real_space(states, grid=None):
+        r"""
+        Compute the states in real space, :math:`\psi_n(\mathbf{r}) = \Omega^{-1/2}\sum_\mathbf{G}c_n(\mathbf{G})e^{i(\mathbf{k}+\mathbf{G})\cdot\mathbf{r}}`,
+        on the uniform grid :math:`\mathbf{r}_{ijl} = (i/n_1)\mathbf{a}_1+(j/n_2)\mathbf{a}_2+(l/n_3)\mathbf{a}_3` of the cell,
+        with :math:`\sum|\psi_n|^2\Delta V = 1` (:math:`\Delta V = \Omega/(n_1n_2n_3)`).
+
+        Args:
+            states (:py:class:`dict`) : states returned by :py:meth:`get_states`
+            grid (:py:class:`tuple` or None) : the numbers of points (n1, n2, n3) along the lattice vectors. Default is
+                None, that is the minimum grid that represents the states, 2 max|m_i| + 1 points along each vector. An
+                element None of the tuple sets the minimum number of points along that vector, e.g. (36, 36, None)
+
+        Returns:
+            :py:class:`numpy.ndarray` : the states (bohr^-3/2) with shape (bands, n1, n2, n3)
+        """
+        b = np.asarray(states['b'], dtype=float)
+        lattice = 2 * np.pi * np.linalg.inv(b).T
+        mill, coef = np.asarray(states['mill']), np.asarray(states['c'])
+        nmin = 2 * np.abs(mill).max(axis=0) + 1
+        grid = nmin if grid is None else np.array([n0 if n is None else int(n) for n, n0 in zip(grid, nmin)])
+        if np.any(grid < nmin):
+            raise ValueError('The grid must have at least %s points' % (tuple(nmin),))
+        kc = np.asarray(states['k']) @ lattice.T / (2 * np.pi)   # crystal coordinates of k
+        idx = tuple((mill % grid).T)
+        psi = np.zeros((len(coef),) + tuple(grid), dtype=complex)
+        for ib, cb in enumerate(coef):
+            A = np.zeros(tuple(grid), dtype=complex)
+            A[idx] = cb
+            psi[ib] = np.fft.ifftn(A) * np.prod(grid)
+        s = [np.arange(n) / n for n in grid]
+        phase = np.exp(2j * np.pi * (kc[0] * s[0][:, None, None] + kc[1] * s[1][None, :, None] + kc[2] * s[2][None, None, :]))
+        return psi * phase[None] / np.sqrt(abs(np.linalg.det(lattice)))
+
+    @staticmethod
+    def inplane_map(states, z_window=None, grid=None):
+        r"""
+        Compute the density of each state integrated along z over a window, :math:`\int|\psi_n(x,y,z)|^2dz`, on the in-plane
+        points of the real space grid (2D systems, see :py:meth:`to_real_space`). The integral is the sum over the planes
+        of the grid with z (taken in the interval [-c/2,c/2)) inside the window, times their distance c/n3.
+
+        Args:
+            states (:py:class:`dict`) : states returned by :py:meth:`get_states`
+            z_window (:py:class:`tuple` or None) : the limits (z1, z2) of the window (bohr). Default is None (the whole cell)
+            grid (:py:class:`tuple` or None) : the grid (n1, n2, n3), see :py:meth:`to_real_space`
+
+        Returns:
+            :py:class:`numpy.ndarray` : the maps (bohr^-2) with shape (bands, n1, n2). The sum of a map times the area
+            of a pixel, A/(n1 n2), gives the weight of the state in the window
+        """
+        lattice, c = WfcParser._layer_cell(states)
+        psi = WfcParser.to_real_space(states, grid)
+        n3 = psi.shape[-1]
+        z = np.arange(n3) * c / n3
+        z = np.where(z >= c / 2, z - c, z)
+        sel = np.ones(n3, dtype=bool) if z_window is None else (z >= z_window[0]) & (z <= z_window[1])
+        return (np.abs(psi[..., sel])**2).sum(axis=-1) * c / n3
+
+    def plot_z_profile(self, states, bands=None, nz=None, ax=None):
+        """
+        Plot the planar average of the density of the states (see :py:meth:`z_profile`) as a function of z, in the
+        interval [-c/2,c/2), with the planes of the atoms marked by vertical lines.
+
+        Args:
+            states (:py:class:`dict`) : states returned by :py:meth:`get_states`
+            bands (:py:class:`list` or None) : bands to plot (1-based). Default is None (all the bands of the states)
+            nz (:py:class:`int` or None) : number of points of the grid along z, see :py:meth:`z_profile`
+            ax (:py:class:`matplotlib.axes.Axes` or None) : axes of the plot. Default is None (a new figure)
+
+        Returns:
+            :py:class:`matplotlib.axes.Axes` : the axes of the plot
+        """
+        import matplotlib.pyplot as plt
+        states = self._select_bands(states, bands)
+        z, p = self.z_profile(states, nz)
+        c = self._layer_cell(states)[1]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(6, 3))
+        for b, pb in zip(states['bands'], p):
+            ax.plot(z, pb, label='band %d' % b)
+        planes = {}
+        for name, pos in self.atoms:
+            zat = round((pos[2] + c / 2) % c - c / 2, 3)
+            planes.setdefault(zat, []).append(name)
+        for zat, names in planes.items():
+            ax.axvline(zat, color='gray', ls=':', lw=0.8)
+            ax.text(zat, 1.01, ' '.join(sorted(set(names))), transform=ax.get_xaxis_transform(), ha='center',
+                    va='bottom', fontsize=8, color='gray')
+        ax.set_xlabel('z (bohr)')
+        ax.set_ylabel(r'$p_n(z)$ (bohr$^{-1}$)')
+        ax.legend(fontsize=8)
+        return ax
+
+    def plot_inplane_map(self, states, band, z_window=None, grid=None, ncells=(3, 3), ax=None, cmap='viridis'):
+        """
+        Plot the density of a state integrated along z over a window (see :py:meth:`inplane_map`) on a few cells in
+        the xy plane, with the borders of one cell and the atoms (filled markers for the atoms in the window).
+
+        Args:
+            states (:py:class:`dict`) : states returned by :py:meth:`get_states`
+            band (:py:class:`int`) : band to plot (1-based)
+            z_window (:py:class:`tuple` or None) : the limits (z1, z2) of the window (bohr). Default is None (the whole cell)
+            grid (:py:class:`tuple` or None) : the grid (n1, n2, n3), see :py:meth:`to_real_space`
+            ncells (:py:class:`tuple`) : number of cells shown along the first two lattice vectors
+            ax (:py:class:`matplotlib.axes.Axes` or None) : axes of the plot. Default is None (a new figure)
+            cmap (:py:class:`string`) : colormap
+
+        Returns:
+            :py:class:`matplotlib.axes.Axes` : the axes of the plot
+        """
+        import matplotlib.pyplot as plt
+        states = self._select_bands(states, band)
+        lattice, c = self._layer_cell(states)
+        m = self.inplane_map(states, z_window, grid)[0]
+        n1, n2 = m.shape
+        tiled = np.tile(m, ncells)
+        s1 = (np.arange(n1 * ncells[0] + 1) - 0.5) / n1          # corners of the pixels, centered on the grid points
+        s2 = (np.arange(n2 * ncells[1] + 1) - 0.5) / n2
+        X = s1[:, None] * lattice[0, 0] + s2[None, :] * lattice[1, 0]
+        Y = s1[:, None] * lattice[0, 1] + s2[None, :] * lattice[1, 1]
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(5, 4))
+        mesh = ax.pcolormesh(X, Y, tiled, cmap=cmap, shading='flat')
+        plt.colorbar(mesh, ax=ax, label=r'$\int|\psi|^2dz$ (bohr$^{-2}$)')
+        cell = np.array([[0, 0], lattice[0, :2], lattice[0, :2] + lattice[1, :2], lattice[1, :2], [0, 0]])
+        ax.plot(cell[:, 0], cell[:, 1], 'w-', lw=1)
+        to_crystal = np.linalg.inv(lattice[:2, :2].T)            # in-plane crystal coordinates of the atoms
+        for name, pos in self.atoms:
+            zat = (pos[2] + c / 2) % c - c / 2
+            inside = z_window is None or z_window[0] <= zat <= z_window[1]
+            s12 = to_crystal @ pos[:2]
+            s12 = s12 - np.floor(s12 + 1e-6)                        # atom folded in the cell
+            for i in range(ncells[0]):
+                for j in range(ncells[1]):
+                    r = (s12[0] + i) * lattice[0, :2] + (s12[1] + j) * lattice[1, :2]
+                    ax.plot(r[0], r[1], 'o', ms=4, mec='r', mfc='r' if inside else 'none')
+        ax.set_aspect('equal')
+        ax.set_xlabel('x (bohr)')
+        ax.set_ylabel('y (bohr)')
+        ax.set_title('band %d' % states['bands'][0], fontsize=10)
+        return ax

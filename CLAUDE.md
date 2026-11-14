@@ -405,5 +405,17 @@ time_reversal)` (psi(R^-1(r - tau)), conjugate with time reversal; checks orthog
 2e-15, QE vs Yambo SAVE = identity within 4e-8 at the 32 k (same phases), energies 1e-6 eV; graphene scf, K = ik 19
 (crystal (1/3,-1/3)): C3 about atom A or B and inversion about the bond center + time reversal map each degenerate group
 (bands 1-6) onto itself (sums 2.000000/1.000000), C3 about the bond center does not (1.05, 0.004, 0.84, 0.10). The last
-computed group (bands 7-8, 1.99997) is excluded. Next: point 2 (2D tools: z profile, z window weight, in-plane maps,
-real space, plots), then possibly spin.
+computed group (bands 7-8, 1.99997) is excluded.
+Point 2 DONE (2026-11-14, on the cluster), static methods on the states (work across runs) unless noted; 2D cell required
+(a1, a2 in the xy plane, a3 along +z: `_layer_cell`, ValueError otherwise); lengths in bohr: `z_profile(states, nz)` ->
+(z in [-c/2,c/2), p (bands, nz)), one 1D FFT along z per G_par, int p dz = 1; `z_weight(states, z1, z2)` analytic (exact)
+weight in a window, also across the cell boundary; `to_real_space(states, grid)` -> psi (bands, n1, n2, n3) on the grid
+r = (i/n1)a1 + (j/n2)a2 + (l/n3)a3, sum |psi|^2 dV = 1, default grid 2 max|m_i| + 1, None in the tuple = minimum along
+that vector (e.g. (36, 36, None)); `inplane_map(states, z_window, grid)` = sum over the z planes in the window of |psi|^2
+times c/n3; instance methods (need the atoms) `plot_z_profile(states, bands, nz, ax)` (planes of the atoms marked) and
+`plot_inplane_map(states, band, z_window, grid, ncells, ax)` (pcolormesh on ncells, one cell drawn, atoms folded in the
+cell, filled if inside the window). Tests on synthetic states (flat and cosine profiles, analytic weights, real space vs
+direct sum, normalizations, plots with Agg). Tutorial, section "Tools for 2D systems": graphene at Gamma, weight within
+1 A: sigma bands 1, 3, 4 0.96-0.99, pi band 2 0.80 (node on the plane, maxima at +-0.82 bohr), bands 5-8 vacuum states
+0.02-0.05; maps of sigma (bonds) and pi (atoms, upper half); norms 1 on the (36, 36, 69) grid. Not done yet: density of
+a set of states with k weights, cube writer, spin.
