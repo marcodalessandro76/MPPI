@@ -285,3 +285,93 @@ included for non-centrosymmetric systems, dropped with `centrosymmetric=True`; u
   NOT available for the second order terms (ValueError, user's decision 2026-10-20): its natural extension (mean of the
   field envelope f) gave 6-28% on the oscillator, not derived; to be studied if needed. Tests in `tests/test_optics.py`; section "Transient response" at the end of Analysis_Optics
   (before the closing note on the units), sphinx page `transientResponse.rst`.
+
+## Next work: wavefunction parser and 2D visualization (from the 2d-layer-substrate-effective-screening project, 2026-11-14)
+Origin: project `~/work/2d-layer-substrate-effective-screening` on ismhpc (GitHub
+marcodalessandro76/2d-layer-substrate-effective-screening, own CLAUDE.md, open point "LAYER PROJECTION OF THE FULL
+SYSTEM"). There the states of a bilayer (hBN) are projected on the states of one layer, with a prototype reader of the QE
+wavefunctions in `hBN_bilayer/Projection_Analysis.ipynb` (cell 2: `read_xml`, `read_wfc`, `gkey`, `overlap`,
+`degenerate_groups`; cell 6: `top_state`, rotation/translation/time reversal of the states; validated, see below). The
+user wants general tools to read and visualize wavefunctions in MPPI, to understand where a state lives (which layer,
+which atoms); the projection itself may become an MPPI module later, built on this class.
+
+Decisions of the user (2026-11-14):
+- ONE class with TWO constructors, from the QE output (`<prefix>.save`) and from the Yambo `SAVE`; it holds the data
+  and the post-processing methods. It goes in `mppi/Parsers`. Name (agreed): `WfcParser` (`mppi/Parsers/WfcParser.py`,
+  `WfcParser.from_qe(save_dir)`, `WfcParser.from_yambo(save_dir)`).
+- Band and k indices in the public methods start from 1, as in QE/Yambo and in the user's notebooks ("band 8").
+- Scope of this round (work order points 1 and 2): (1) reading, scalar products, transformations of the states;
+  (2) tools for 2D systems: |psi|^2 along z and in the plane, weight of a state in a z window, real space, plots.
+  NO k-space tools for now (the user has no use for them yet): implement what the projects need.
+- Tests and tutorial use ONLY data produced by the MPPI tutorials (no new heavy runs, no external data); advanced
+  tests later with the data of the project.
+
+Formats (checked on ismhpc 2026-11-14 on the hBN monolayer of the project, QE 7.0 + Lumen p2y):
+- QE `<prefix>.save/wfc<ik>.dat` (`wfcup/wfcdw` with lsda; `.hdf5` if QE is built with HDF5: not our case, raise a
+  clear error), Fortran unformatted, `scipy.io.FortranFile`: record 1 `ik, xk(3), ispin, gamma_only, scalef`
+  (`'i4,3f8,i4,i4,f8'`); record 2 `ngw, igwx, npol, nbnd`; record 3 `b1, b2, b3` (reciprocal vectors); record 4 Miller
+  indices `(igwx, 3)`; then one record per band, `npol*igwx` complex (double) coefficients (spinor components stacked).
+  `xk` and `b` are cartesian in bohr^-1 (checked: k of the IBZ point K equals the yambo one; phases e^{-i(k+G).tau}
+  with tau in bohr reproduce the states of a translated run). gamma_only (half of the G stored): raise in the first
+  version. Metadata (k points, energies in Ha, lattice, atoms in bohr, nbnd, electrons) from `data-file-schema.xml`
+  (reuse PwParser where possible).
+- Yambo `SAVE` (netCDF): `ns.db1`: `LATTICE_VECTORS` (3, 3) with the lattice vectors as COLUMNS (bohr);
+  `LATTICE_PARAMETER` = the yambo vector alat (alat_x, alat_y, alat_z); `G-VECTORS` (3, nG) and `K-POINTS` (3, nk, IBZ)
+  cartesian in units of 2pi/alat_i component by component (so Miller = G_cart . a_j / 2pi, integers within 2e-5);
+  `EIGENVALUES` (spin, nk, nb) Ha; `WFC_NG` (nk) and `WFC_GRID` (nk, max ng) = 1-based indices into `G-VECTORS` of the
+  components of each k. `ns.wf`: header (`SPIN_VARS`, `FRAGMENTED`, `BAND_GROUPS`); coefficients in
+  `ns.wf_fragments_<ik>_<band group>`, variable `WF_COMPONENTS_@_SP_POL<is>_K<ik>_BAND_GRP_<ig>`, shape
+  (nb, nspinor, ng, 2) float32 (real, imaginary): single precision. Check: QE vs Yambo states of the same run, G matched
+  by Miller indices, |<qe_n|yambo_n>| = 1.000000 at Gamma and K (same states, same phases). Reference implementation:
+  yambopy `YamboWFDB` (`~/Applications/YamboPy/yambopy/dbs/wfdb.py`, also rotations to the full BZ and spinor SU(2)
+  matrices): use it as a cross-check, not as a dependency.
+
+Data model and API (proposal, MPPI style: dict-like class, Sphinx docstrings, `verbose`): global data (lattice and
+reciprocal lattice in bohr / bohr^-1, atoms, k points cartesian and crystal, energies in eV, nk, nbands, nspinor,
+electrons, source 'qe'/'yambo'); per k, read LAZILY and only for the requested bands (the save of the hBN bilayer is
+several GB): k, Miller indices (ng, 3) int, coefficients (nbands, nspinor, ng) complex. Band and k indices in the
+public methods 1-based (see above).
+1. `get_states(ik, bands)` -> object with k, Miller indices, coefficients.
+2. `overlap(states_1, states_2)`: <phi_m|psi_n> = sum_G c1_m*(G) c2_n(G), G matched by the Miller indices (same k and
+   same reciprocal lattice required: check and raise). Norm-conserving pseudopotentials only (no USPP/PAW
+   augmentation: warn).
+3. `transform(states, rotation, translation, time_reversal)`: psi'(r) = psi(R^-1(r - tau)) gives k' = Rk and
+   c'(RG) = e^{-i(Rk+RG).tau} c(G); time reversal: k -> -k, c(G) -> c*(-G). R must map the G set onto itself
+   (lattice operation: check Miller integrality). Spinors need SU(2) matrices: NotImplementedError in the first
+   version. The project uses C2z + time reversal (k -> k): c'(Gx,Gy,Gz) = e^{-i(k+G).tau} c*(Gx,Gy,-Gz).
+4. 2D tools (layer in the xy plane, third cell vector along z):
+   - z profile p_n(z) = int_A |psi_n|^2 dx dy = (1/c) sum_{G_par} |sum_{G_z} c_n(G_par, G_z) e^{i G_z z}|^2
+     (sum over spinor components; int_0^c p_n dz = 1): no 3D grid needed, one 1D transform per G_par;
+   - weight of a state in a z window, int_{z1}^{z2} p_n(z) dz (e.g. the fraction of the state on one layer of a
+     bilayer; the project computed it with pp.x + average.x);
+   - in-plane map of |psi_n|^2 integrated over a z window (or at one z), on a few cells, atoms and cell drawn;
+   - `to_real_space(ik, band, grid)`: psi(r) on an FFT grid (1/sqrt(Omega) normalization); cube writer later;
+   - plots (matplotlib): z profile with the atomic planes marked, z shown in [-c/2, c/2) so a layer at z = 0 is not
+     split at the cell edge; in-plane map.
+   - density of a set of states with k weights (planar average of the total density): later, to compare with the
+     density of QE (check with the data of the project).
+
+Tests and tutorial (data of the MPPI tutorials, on ismhpc only, `sphinx_source/tutorials/`):
+- `BandStructure_tutorial/out_graphene/graphene.save` (scf, 12x12x1, 19 IBZ k, 8 bands, ecut 60 Ry, graphene at z = 0,
+  c = 15 A) and `out_graphene_bands/graphene.save` (bands, 91 k on G-M-K-G): z profiles of sigma vs pi vs pi* states
+  (pi: node on the plane), weight within +-1 A of the plane, in-plane maps; transformation check without new runs: a
+  C3 rotation about an atom maps K onto K, so the degenerate pi pair at K must be mapped onto itself (sum of
+  |<.|.>|^2 over the pair = 2); inversion + time reversal maps K onto K as well.
+- QE vs Yambo: Si, `QeCalculator_tutorial/out_nscf/si_scf.save` and the SAVE of `Yambo_tutorial` (made from it):
+  overlaps = identity within single precision.
+- Spinors: `BandStructure_tutorial/out_gaas_so/gaas_so.save` (npol = 2): reading and normalization.
+- Unit tests in `tests/` must not depend on the tutorial outputs (not in git): synthetic coefficients (e.g. one G
+  component -> flat z profile; two G_z components -> cosine profile, analytic weights) and a tiny wfc file written in
+  the test with FortranFile in the QE format.
+- New short tutorial notebook (name after the class), MPPI tutorial rules (execution-date cell, clean run, executed in
+  place on ismhpc, rst entry in sphinx_source).
+- Later, in the project session: reproduce Projection_Analysis (top-layer states built from ML_bot vs the ML_top runs,
+  max deviation 4e-6) and the layer character of DFT_Analysis (AB at K: bands 8 and 10 on the top layer, 98-99%).
+
+Where to work (user, 2026-11-14): the session is opened on the LAPTOP, but this work is done DIRECTLY ON THE CLUSTER
+through ssh (`ssh -o BatchMode=yes -o ClearAllForwardings=yes ismhpc '...'`), in `~/Applications/MPPI`, because the
+test data (tutorial outputs) are only there: write the code there, run the tests and the tutorial there, commit and
+push from the cluster (exception, for this work, to the rule "edits on the laptop, the cluster never commits"). At the
+start check that laptop, cluster and origin are at the same commit (`git pull` on the laptop first); do not edit the
+laptop copy meanwhile; at the end `git pull` on the laptop. Old git on ismhpc (1.8.3: no `git -C`, use `cd`). Write
+files on the cluster with heredocs or scp from the laptop scratchpad.
