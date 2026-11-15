@@ -417,5 +417,6 @@ times c/n3; instance methods (need the atoms) `plot_z_profile(states, bands, nz,
 cell, filled if inside the window). Tests on synthetic states (flat and cosine profiles, analytic weights, real space vs
 direct sum, normalizations, plots with Agg). Tutorial, section "Tools for 2D systems": graphene at Gamma, weight within
 1 A: sigma bands 1, 3, 4 0.96-0.99, pi band 2 0.80 (node on the plane, maxima at +-0.82 bohr), bands 5-8 vacuum states
-0.02-0.05; maps of sigma (bonds) and pi (atoms, upper half); norms 1 on the (36, 36, 69) grid. Not done yet: density of
+0.02-0.05 (their z profiles shown too, user's request 2026-11-15: nearly free electron states over the whole vacuum,
+band 7 86% at |z| > c/4, even bands 5 and 7 / odd bands 6 and 8 under z -> -z); maps of sigma (bonds) and pi (atoms, upper half); norms 1 on the (36, 36, 69) grid. Not done yet: density of
 a set of states with k weights, cube writer, spin.
