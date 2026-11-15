@@ -181,7 +181,6 @@ Runnable on the laptop (done in v1.3, covered by `tests/`):
 - [x] `fit_sum_frequencies`: IndexError when lstsq returned an empty residual
 - [x] numpy 2: `np.array(ncVariable)` → `np.array(ncVariable[:])` (DeprecationWarning); invalid escape sequences
       in regexes and LaTeX docstrings (SyntaxWarning in py3.12+) fixed with r-prefixes
-- [ ] `MergeQPndb.merge_qp` does not close its input Datasets (do it together with the YamboQPParser work)
 - [x] `Constants.high_sym_fcc` was inconsistent (K=(0,1,1) equivalent to X, W not on the face of X). Fixed on
       2026-10-01 (user approved): X=(0,1,0), W=(0,1,1/2), K=(0,3/4,3/4), U=(1/4,1,1/4), L=(1/2,1/2,1/2), the same
       points of high_sym_fcc_crystal (which was already correct; U added)
@@ -196,7 +195,6 @@ Runnable on the laptop (done in v1.3, covered by `tests/`):
       (6/damp gave ~3% errors on the 3rd order keys). `Linear_Response`: P(w) = dt*sum P(t)e^{iwt} (yambo writes the
       DELTA field as one step of value E0/dt); the old factor 2 was ~dt only for the 0.05 fs IO step (eps-1 changes by
       dt/2). The comparison with YamboPy is not important for the user: deviate from it when it is not standard
-- [ ] `NLanalysisYamboPy.py`: many latent NameErrors; decide whether to fix it or remove it
 
 Need the cluster (QE/Yambo/slurm):
 - [x] `Dataset.run_the_calculations` and `Utilities.Parallel.loop` used nested functions with multiprocessing →
@@ -204,10 +202,38 @@ Need the cluster (QE/Yambo/slurm):
       collected before join. Tested with spawn (laptop) and fork (cluster). Note: the `verbose` (and the other
       global options) of a Dataset are passed to the runs, so they override the verbose of the calculator
 - [x] `PostProcessing.pw_get_energy`/`pw_get_gap` crashed on a failed run → None
-- [ ] slurm `run_ended`: waits forever if the job dies before `JOB_DONE`; IndexError on an empty .out; no
-      squeue/sacct check
-- [ ] `run_job`: `job` is undefined for an unknown scheduler; `os.system('rm ...')` breaks on paths with spaces
-- [ ] `RunRules`: default `omp_num_threads` is read from the environment at import time
+
+### OPEN BUGS (to fix in a future round)
+Checked again in the code on 2026-11-15 (commit a7f4e25): all still present. The user postponed them; fix them on
+`fix/bugs` (then merge into master), each with a test, ticking them here.
+
+Runnable on the laptop:
+- [ ] `RunRules.__init__` (`mppi/Calculators/RunRules.py`, signature): the default
+      `omp_num_threads=os.environ.get('OMP_NUM_THREADS', 1)` is evaluated once at import time (an `export` done after
+      the import is ignored) and it is a string when it comes from the environment. Fix: default None, resolved in the
+      body.
+- [ ] `run_job` and `run_ended` of `QeCalculator` and `YamboCalculator`: with an unknown scheduler `run_job` prints
+      'scheduler unknown' and then `return job` raises UnboundLocalError (`is_ended` is undefined in `run_ended` too).
+      Fix: raise a clear ValueError, possibly already in `RunRules`.
+- [ ] Shell commands built with `os.system` break on paths with spaces: `rm`/`rm -r` in `clean_slurm_out` and
+      `clean_run` of both calculators, and the `rm`/`cd ...; p2y`/`cd ...; yambo` strings of `Calculators/Tools.py`
+      (`init_yambo_dir` and the fixsyms helpers). Fix: `os.remove`/`shutil.rmtree`, `subprocess.run(..., cwd=...)` or
+      `shlex.quote`.
+- [ ] `MergeQPndb.merge_qp` (`mppi/Utilities/MergeQPndb.py`): opens the input netCDF files
+      (`datasets = [Dataset(f) for f in files]`) and closes only the output `fout`. Do it together with the
+      YamboQPParser/MergeQPndb work of the roadmap.
+- [ ] `mppi/Optics/NLanalysisYamboPy.py` (copy of the yambopy nl_analysis kept for comparison): imported nowhere (not
+      in `Optics/__init__`, not in tests or notebooks); undefined names `tol` and `residuals_func` in
+      `solve_lin_system`, `ifrq` in `update_time_range`, `values` in `reconstruct_signal`; the module docstring imports
+      it from `mppi.Utilities` (it is in `mppi.Optics`); it imports `tqdm`, which is not in the requirements of
+      `setup.py`. Decide whether to fix it or remove it (the comparison with YamboPy is no longer important for the
+      user, see the Optics physics item).
+
+Need the cluster (slurm):
+- [ ] slurm `run_ended` (both calculators) and the `wait` loop (1 s polling, no timeout): `wait` loops forever if the
+      job dies before writing `JOB_DONE` (time limit, OOM, node failure, scancel) or if `sbatch` itself fails (the
+      `Popen` of the submission is never checked); IndexError on an empty `.out` (`f.read().splitlines()[-1]`).
+      Fix: read the job id (`sbatch --parsable`), check `squeue`/`sacct` when `JOB_DONE` is missing, optional timeout.
 
 ## Roadmap after the bug fixes
 Refactoring: a common base class for the two calculators, `logging` instead of print, exceptions instead of
