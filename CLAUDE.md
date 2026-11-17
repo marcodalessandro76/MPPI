@@ -446,3 +446,55 @@ direct sum, normalizations, plots with Agg). Tutorial, section "Tools for 2D sys
 0.02-0.05 (their z profiles shown too, user's request 2026-11-15: nearly free electron states over the whole vacuum,
 band 7 86% at |z| > c/4, even bands 5 and 7 / odd bands 6 and 8 under z -> -z); maps of sigma (bonds) and pi (atoms, upper half); norms 1 on the (36, 36, 69) grid. Not done yet: density of
 a set of states with k weights, cube writer, spin.
+
+## Next work: band interpolation as in ypp BOLTZ (from the 2d-layer-substrate-effective-screening project, 2026-11-17)
+NOT started; to do in a future MPPI session (user, 2026-11-17). Goal: a python interpolator of any per-band quantity
+f_b(k) known on the IBZ of a regular grid (QP energies, QP corrections dE = E - Eo, energies of layer-projected states)
+onto arbitrary k points (a band path), the same as ypp `-s b` with `INTERP_mode= "BOLTZ"`, so that the projects do not
+have to write a modified ndb.QP and rerun ypp to get smooth bands.
+
+Why (project, open point LAYER PROJECTION, point 16 of its CLAUDE.md): the GW bands of the top layer extracted from the
+bilayer hBN are known only at the 37 IBZ points of the k = 18 grid (18 of them on G-M-K-G) and are plotted joined by
+straight lines; the ypp GW bands are smooth. Needs there: interpolate the corrections of bands 2-5 (valence 2-4 known at
+all 37 k; band 5 only at 22 of them: support a MASK of missing points, at least to show where the result is not
+constrained by data) and add them to the exact KS bands of a pw.x bands run on the path.
+
+Algorithm, as read in the Lumen source on ismhpc (`~/Applications/Lumen/src`, branch bug-fixes, 2026-11-17;
+`src/interpolate/INTERPOLATION_BZ_setup.F`, `INTERPOLATION_BZ_coeff.F`, `INTERPOLATION_fourier.F`,
+`src/modules/mod_interpolate.F`, `mod_interpolate_tools.F`) = Shankland-Koelling-Wood with the Pickett-Krakauer-Allen
+roughness (PRB 38, 2721 (1988); the BoltzTraP scheme):
+- Lattice vectors R (integer coordinates on the direct lattice) with |R| <= r, r^3 = INTERP_Shell_Fac * N_k(BZ) *
+  3 V / (4 pi) (V = cell volume, bohr^3; default Shell_Fac 20), sorted by |R| and grouped in stars under the symmetry
+  operations written on the direct-lattice crystal basis (int_sop, integer matrices from dl_sop). Yambo's nsym
+  INCLUDES the time-reversal operations -S (12 = 6 + 6 for the hBN monolayer); MPPI `YamboDftParser.syms` has the
+  spatial ones and `time_reversal` separately (add -S), `PwParser.crystal_syms` the crystal ones.
+- Star function S_R(k) = (1/n_star) sum_{R' in star(R)} exp(2 pi i k.R'), k in crystal (reduced) coordinates of the
+  reciprocal lattice; f(k) = Re sum_R c_R S_R(k).
+- Fit, exact at the N data points (the IBZ points), last point N as reference: delta_k = f(k) - f(k_N),
+  S~_R(k) = S_R(k) - S_R(k_N) (R != 0), rho(R) = (1 - c1 x)^2 + c2 x^3 with x = |R|^2/|R_min|^2, c1 = c2 = 0.75,
+  R_min = first non-zero shell; H_kk' = sum_R S~_R(k') conj(S~_R(k)) / rho(R) (N-1 x N-1), solve H lambda = delta,
+  c_R = sum_k conj(S~_R(k)) lambda_k / rho(R) (R != 0), c_0 = f(k_N) - sum_{R!=0} c_R S_R(k_N). After the fit yambo
+  logs the max/average error at the data points (`k_compare`), which should be ~0.
+- ypp bands with a QP database (`electrons_bands_interpolate.F`, ypp/electrons): if the energies come from a db with
+  Eo (GfnQPdb) and a circuit SAVE is given (`CIRCUIT_E_DB_path`, a pw.x bands run through `p2y -nowf`), ypp
+  interpolates only dE = E - Eo (`FILL_SEED_E`, l_INTERP_dE) and adds it to the exact KS energies of the circuit;
+  the circuit energies are first shifted by delta_align = (interpolated E of the first band at the first circuit
+  point) - (circuit KS energy there), which gives the rigid offset found in the project (592.5 meV ML hBN, removed
+  there by matching at K). MPPI should not reproduce this alignment: just KS(path) + dE_interp(path).
+- 2D cells: yambo takes R inside a SPHERE, so for hBN (c = 40 bohr, r ~ 106 bohr at k = 18) it also includes R with
+  out-of-plane components (i3 = +-1, +-2); with k_z = 0 they repeat the in-plane star functions with a different
+  roughness (583 stars in the log of the ML run). To reproduce ypp exactly keep them; a cleaner 2D option is in-plane
+  R only (circle of radius r in the plane): an option, to compare with ypp.
+- Known limit (project, GW_Analysis): the interpolation is per band index; where bands of different character cross
+  (pi*/NFE in hBN) dE jumps and the interpolation is off by 0.2-0.3 eV between grid points. Not a bug of the method.
+
+Validation data on ismhpc (project folder `~/work/2d-layer-substrate-effective-screening/hBN_bilayer/MB_analysis/`):
+`kpoints_18-nbnds_250-ML_bot` (ML, bands 2-8), `kpoints_18-nbnds_400-AA1`, `kpoints_18-nbnds_400-AB` (bands 3-14):
+full-IBZ GW run `pp-...-full_ibz-b<b0>_<b1>/ndb.QP` (37 k; read with YamboQPParser), ypp runs `ypp_bands_ks/` and
+`ypp_bands_qp/` (inputs `ypp_bands_*.in`, outputs `o-*.bands_interpolated`, logs `r-*` with the number of shells),
+circuit SAVEs `bands_path-<system>` (181 k on G-M-K-G), pw.x bands runs in `hBN_bilayer/DFT_analysis/bands-<system>.save`.
+Test: MPPI KS(path) + dE_interp(path) = ypp `bands_interpolated` minus a constant (the alignment), band by band; exact
+at the grid points that lie on the path. MPPI tools to reuse: YamboQPParser (ndb.QP), YamboDftParser (IBZ k points,
+syms, time_reversal, lattice), PwParser (bands run), BandStructure (plots; `from_Ypp` already reads the ypp output).
+API to agree with the user (e.g. an interpolator built from the IBZ k points, lattice and symmetries, with fit(values,
+mask=None) and evaluate(kpoints)), with tests on an analytic periodic function and on the hBN data.
