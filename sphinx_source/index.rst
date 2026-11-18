@@ -94,6 +94,14 @@ The Kohn-Sham wavefunctions of both QuantumESPRESSO and Yambo are read by the Wf
 
    wfcParser
 
+The screening databases of Yambo (ndb.em1s, ndb.em1d, ndb.pp) are read, transformed and written by the
+YamboScreeningParser class:
+
+.. toctree::
+   :maxdepth: 1
+
+   yamboScreeningParser
+
 Finally, the module ParsersUtils collects functions for the data analysis:
 
 .. toctree::

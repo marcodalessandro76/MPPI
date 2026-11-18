@@ -224,6 +224,17 @@
     "yambo",
     "yambo_nl",
     "yambopy",
-    "ylim"
+    "ylim",
+    "Onsager",
+    "qpg",
+    "ndb",
+    "em1s",
+    "em1d",
+    "iku",
+    "symmetrized",
+    "TDDFT",
+    "HARTREE",
+    "ALDA",
+    "RIM"
   ]
 }

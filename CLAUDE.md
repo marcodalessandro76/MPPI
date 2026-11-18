@@ -602,3 +602,25 @@ Tests and tutorial:
 
 Where to work: as for WfcParser, on the cluster in `~/Applications/MPPI` (test data only there): check first that
 laptop, cluster and origin are at the same commit; commit and push from the cluster; `git pull` on the laptop at the end.
+
+Status (2026-11-18): DONE on the cluster, name `YamboScreeningParser` (proposed name kept; the user may still rename it).
+`mppi/Parsers/YamboScreeningParser.py`, plain class like WfcParser (not a dict). Constructor as in point 1 (`save` = SAVE
+folder or its ns.db1; `cutoff` = ndb.cutoff or its folder); extra attributes `syms`, `time_reversal` (from the SAVE),
+`nfreqs`, `G_indexes(vectors)`, `get_frequencies(iq)`, `check_frequencies()`, `bare_qpg(iq)`. The derived methods
+(`eps_inv`, `chi0`, `W`, `chi`) take an optional `X=None` (a matrix of the user instead of the database). No cutoff:
+bare_qpg = |q+G|, at iq = 1 |G| and |q0| for G = 0 (as `col_driver.F`: q_pt(1) = 0, bare_qpg(1,1) = q0_def_norm).
+`transform` checks the invariance of v numerically (bare_qpg[R^-1 G] = bare_qpg[G]) when v is available, instead of a
+check on the geometry string (warning if a cutoff has no ndb.cutoff). `write(dst, X, overwrite=False, tol=1e-7)`
+returns {'written', 'copied', 'unchanged'}; only fragmented databases (NotImplementedError otherwise); with
+overwrite=True a different header in dst is replaced (its old fragments removed) and a ndb.RIM_W is removed.
+2D tools: `inplane_blocks()` (no iq: the G set is the same at every q; keys = in-plane Miller (m1, m2)),
+`inplane_Q(iq, G_par)`, `planar(M, iq, G_par, z, z2)` -> (..., len(z), len(z2)). Tests `tests/test_screeningparser.py`
+(synthetic ns.db1, ndb.pp + fragments, ndb.cutoff; slab-cut v in `planar` vs (2pi/Q) e^{-Q|z-z'|} within 2e-3 with
+1201 Gz; note: the representation is periodic in z, so "0 beyond c/2" is not testable). `Tutorial_YamboScreeningParser`
+(executed on ismhpc, gw_ppa of Yambo_tutorial, writes in `YamboScreeningParser_tutorial/`): X Hermitian 3.6e-7,
+eps_M(q->0) = 15.6 (27 G, 8 bands), Dyson round trip 3e-16, 66 direct + 66 time-reversal operations of the SAVE give X
+back within 6.4e-7 (max|dX|/max|X|; the earlier count 64 + 64 of the prototype check is not reproduced, irrelevant);
+the Si atoms are at +-p (origin = bond center): inversion 1.3e-6, translation atom 1 -> 2 and inversion about an atom
+0.54; writer round trip. The 2D tools are only tested on synthetic data (no 2D screening database among the tutorial
+outputs: a small graphene em1s run would be needed, ask the user). NEXT: in the project session, rewrite
+Embedding_Analysis on the class (numbers listed above).
