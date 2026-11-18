@@ -728,3 +728,21 @@ POSSIBLE EXTENSION (postponed by the user, 2026-11-18; do it only if the combina
 order as the screening databases, checked on the Si tutorial within 2e-8; `q_nbz`) and compute v = 4pi/|q+G|^2
 analytically (|q0| = 1e-5 for G = 0 at q = 0); clear error if ndb.kindx is missing. Do NOT use the k points of ns.db1:
 same set but 8 of the 32 Si points have a different (equivalent) representative, so iq would not match the fragments.
+Tutorial (2026-11-18, user approved the runs): `Tutorial_YamboCoulombParser.ipynb` computes its data in
+`YamboCoulombParser_tutorial/` (clean run, all on slurm all12h, 1 node, BeeOND; ~2 min of compute in total): hBN
+monolayer with the ML_bot geometry of the 2d-layer project (ibrav 4, celldm1 4.7319, c = 40 bohr, atoms at z0 = -3.146
+bohr; pseudos B/N_ONCV_PBE-1.2.upf copied in `tutorials/pseudos`), lighter parameters: ecut 60 Ry, k 12x12x1 (19 IBZ k,
+144 BZ), nscf 60 bands; yambo `-r` (slab z, RandQpts 1e6, RandGvec 101) in `yambo/ndb_rim_cutoff`, then static screening
+`-r -X s` (NOTE: for em1s the variables are NGsBlkXs, BndsRnXs, LongDrXs, NOT ...Xp: with the Xp names yambo ignores
+them and uses 1 G and LongDrXs = x) NGsBlkXs 4 Ha (313 G, 37 Gz at G_par = 0), BndsRnXs 60, LongDrXs [1,1,0], in
+`yambo/em1s` with jobname [em1s, ndb_rim_cutoff]. Results: check_slab 2.5e-7 (q != 0), 1.7e-5 (q = 0), 0.99 at
+q = 0, G = 0 with rim=False (the run uses RIM); <v>_cell/v: iq = 2 (|q| = 0.128) 0.971-1.110, iq = 5 1.000-1.010,
+iq = 1 2.2e-4 (G = 0) to 2848; ndb.RIM copied in another folder gives the same data; W_00/v_0 = eps^-1_00 = 0.767 at
+iq = 2; v(Q; z, z0) vs (2pi/Q) e^{-Q|z-z0|} for |z - z0| > 2 bohr: 2e-3 with the 109 Gz of ndb.cutoff, 1.4e-2 with the
+37 Gz of the screening (cusp smoothed); W/v on the plane of the layer: 0.46 at Q = 0.128, minimum 0.39 at Q ~ 0.3,
+0.54 at Q = 0.89. The 2D section of `Tutorial_YamboScreeningParser` now uses this em1s (execute the Coulomb tutorial
+first; notebooks.rst/README list it before the screening one): 13 G_par blocks, X(Q; z, z0) localized on the layer,
+mirror through the layer (R = diag(1,1,-1), tau = (0,0,2 z0)) gives X back within 3.5e-5 - 1.2e-4 at the 19 q (q = 0
+included, q0 along [1,1,0]); mirror through z = 0: 1.3-1.4; C2z about B: 0.68-0.71; a rotation exchanging x and z is
+refused (slab z). Points (1)-(3) of this section are complete; NEXT (project session): Embedding_Analysis with the two
+parsers.

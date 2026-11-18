@@ -92,6 +92,7 @@ All the notebooks are in the folder [sphinx_source/tutorials](sphinx_source/tuto
   - [Tutorial_YamboParser](sphinx_source/tutorials/Tutorial_YamboParser.ipynb)
   - [Tutorial_YamboNLDBParser](sphinx_source/tutorials/Tutorial_YamboNLDBParser.ipynb)
   - [Tutorial_WfcParser](sphinx_source/tutorials/Tutorial_WfcParser.ipynb)
+  - [Tutorial_YamboCoulombParser](sphinx_source/tutorials/Tutorial_YamboCoulombParser.ipynb)
   - [Tutorial_YamboScreeningParser](sphinx_source/tutorials/Tutorial_YamboScreeningParser.ipynb)
   - [Tutorial_Datasets](sphinx_source/tutorials/Tutorial_Datasets.ipynb)
 - Analysis tools:
