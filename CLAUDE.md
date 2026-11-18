@@ -624,3 +624,79 @@ the Si atoms are at +-p (origin = bond center): inversion 1.3e-6, translation at
 0.54; writer round trip. The 2D tools are only tested on synthetic data (no 2D screening database among the tutorial
 outputs: a small graphene em1s run would be needed, ask the user). NEXT: in the project session, rewrite
 Embedding_Analysis on the class (numbers listed above).
+
+## Next work: Coulomb parser, and the screening parser without v (from the 2d-layer-substrate-effective-screening project, 2026-11-18)
+Decisions of the user (2026-11-18), after the first version of `YamboScreeningParser` (commit 17d1271):
+- `YamboScreeningParser` must NOT handle the Coulomb interaction: it mixes two different databases. Everything
+  intrinsic to the screening database needs no v, because the matrices are symmetrized: eps^-1 = 1 + X,
+  chi0~ = 1 - (1 + X)^-1, transform, write, the 2D tools (`planar` works on any matrix), also eps_M = 1/(eps^-1)_00
+  (diagonal elements are the same in the symmetrized and in the physical form). v is needed only to go to physical
+  units (chi = v^-1/2 X v^-1/2, W = v^1/2 (1 + X) v^1/2, v_emb in Ha bohr^3): that is a combination of two parsers and
+  is done in the user's code, e.g. `s = np.sqrt(coul.coulomb(iq, scr.ng)); W = s[:, None] * (1 + X) * s[None, :]`
+  (the v^1/2 inside X are exactly those of ndb.cutoff: X_redux.F multiplies by 4pi/(bare_qpg(G) bare_qpg(G'))).
+  => REMOVE from YamboScreeningParser: the `cutoff` argument, `_read_cutoff`, `bare_qpg`, `coulomb`, `W`, `chi`
+  (breaking change of a class used so far only by the project notebook `hBN_bilayer/Embedding_Analysis.ipynb`, which
+  is updated afterwards in the project session; tutorial and tests to update here).
+  `transform` keeps the check that R leaves v invariant, but from the geometry in the header of the screening
+  database (`cutoff_geometry`, the CUTOFF of ndb.<kind>) instead of the numbers: 'none' -> any orthogonal R that maps
+  the G set onto itself; 'slab <axis>' -> R must map the axis onto +-itself (slab z: R[2, :2] = R[:2, 2] = 0); other
+  geometries (box, cylinder, sphere, ws) -> raise NotImplementedError unless the user disables the check explicitly
+  (to agree in the MPPI session).
+- NEW class for the Coulomb interaction of a run: `YamboCoulombParser` (`mppi/Parsers/YamboCoulombParser.py`, name
+  agreed). It reads `ndb.cutoff` and/or `ndb.RIM` (both describe the cut Coulomb interaction of the run, depend only
+  on the geometry: cell, k grid, cutoff, RandQpts/RandGvec; a run may have one, the other or none). In the project
+  both are in the shared folder `ndb_rim_cutoff`, written by the same `yambo -r` run, but in general they MAY BE IN
+  TWO DIFFERENT FOLDERS (user, 2026-11-18): the constructor takes their paths independently (below).
+
+Formats (checked 2026-11-18 on the Lumen source and on the hBN ML_bot run of the project, Lumen 5.4 r27515):
+- `ndb.cutoff` (written by `coulomb/cutoff_driver.F`; slab: `coulomb/cutoff_slab.F`): `GEOMETRY`, `DESCRIPTION` (char,
+  'slab z'), `PARS` ([5] = ng_cut, 12311 = FFTGvecs for hBN), `HEAD_QPT` (3, nq) iku, `HEAD_R_LATT` ([nqibz, nqbz, ...]
+  = [37, 324, 37, 324]), `CUT_BARE_QPG` netCDF (ng_cut, nq, 2) float32 = Fortran bare_qpg(iq, ig) complex (imaginary
+  part 0 for the slab): v_G(q) = 4pi / bare_qpg^2. G = the first ng_cut G of the global list of `SAVE/ns.db1`
+  (`G-VECTORS`, cartesian bohr^-1 = iku * 2pi/alat_i) -- ndb.cutoff has NO G list: the correspondence relies on the
+  global order (cutoff_slab.F loops ig = 1..wf_ng over g_vec). Slab formula: bare_qpg = |q+G| / sqrt(1 - e^{-Q_par lcut}
+  cos(q_z lcut)), lcut = c/2, Q_par regularized to >= q0_def_norm (1e-5); at iq = 1 the code uses q = 0 for G != 0
+  (|q+G| = |G|) and |q0| for G = 0; without RIM, bare_qpg(1,1) is replaced by an average over a circle (RIM_qpg not
+  allocated). Checked: file = analytic formula within 2e-7 (q != 0), 2e-5 at iq = 1.
+- `ndb.RIM` (`io/io_RIM.F`, `coulomb/rim.F`, `coulomb/rim_integrate_v.F`): `PARS` (10) = [RIM_ng (101 = RandGvec),
+  RIM_is_diagonal (1 for the slab), RIM_n_rand_pts (5e6), RIM_RL_vol (Monte Carlo BZ volume, 0.31984), RL_vol (true BZ
+  volume, 0.31980), RIM_id_epsm1_reference, RIM_epsm1 (3), RIM_anisotropy] (eps^-1 anisotropy entries 0 when Em1Anys
+  is not set); `HEAD_QPT`, `HEAD_R_LATT` as above; `CUTOFF` (char): UNRELIABLE, it says 'none' in the hBN file although
+  the content is slab-cut (checked numerically, below): do not use it; `RIM_qpg` netCDF (RIM_ng, RIM_ng, nq) float32 =
+  Fortran RIM_qpg(iq, G, G'): transpose (2, 1, 0) -> [iq, G, G']; with RIM_is_diagonal only the diagonal is filled
+  (3737 = 37 x 101 nonzero entries). Meaning: Monte Carlo average over the small cell of the BZ around q (volume
+  d3q_factor = RL_vol / nqbz) of 1/b_G(q + q')^2 (slab-cut), instead of the value at q. Normalization
+  (`wf_and_fft/scatter_Gamp.F`): with RIM, gamp = RIM_qpg/2 replaces q_weight/(bare_qpg(G) bare_qpg(G')), q_weight =
+  d3q_factor/(2pi)^3, so the cell-averaged Coulomb interaction is <v>_cell(q, G) = 4pi RIM_qpg(q, G, G) / (2 q_weight).
+  Head at q = 0 (iq = 1, G = 0): the integrable divergence (analytic integral on a small circle for the slab + Monte
+  Carlo outside). Checked on hBN (<1/b^2>_cell / (1/b^2) with b from ndb.cutoff): 1.000-1.009 for iq >= 5 or large G,
+  1.085 at G = 0 of the smallest q (iq = 2); at iq = 1 the point value is not usable (G = 0: at q0; G along z with even
+  n: the slab-cut point value at q0 almost vanishes, the cell average is finite, ratio ~2160): that is what RIM is for.
+  Used by Yambo in Sigma_x (scatter_Gamp), in the head of the BSE kernel (K_screened_interaction) and to build
+  ndb.RIM_W (QP_interpolate_W); NOT in the screening (X_redux uses bare_qpg). ndb.RIM depends only on the geometry, so
+  it can be shared with a modified screening database (unlike ndb.RIM_W, built from X).
+
+API (proposal, to refine in the MPPI session; same style as YamboScreeningParser):
+- `YamboCoulombParser(save, cutoff=None, rim=None, verbose=True)`: `save` = the SAVE (or its ns.db1), for alat and the
+  G list; `cutoff` = the ndb.cutoff file or the folder that contains it; `rim` = the ndb.RIM file or the folder that
+  contains it. The two paths are INDEPENDENT (the files may be in different folders; passing the same folder to both
+  is the common case). At least one of the two is required (error otherwise); a path given but without the file ->
+  error naming the missing file. If both are given, check that their q points (HEAD_QPT, HEAD_R_LATT) agree with each
+  other (same run/geometry). Attributes: geometry (from
+  ndb.cutoff; 'none' if only ndb.RIM), q (cartesian bohr^-1), nq, nqbz, G (first ng_cut G of ns.db1, cartesian), ng_cut,
+  and for the RIM: rim_ng, rim_is_diagonal, rim_points, RL volumes.
+- `bare_qpg(iq, ng=None)` and `coulomb(iq, ng=None)`: point values on the first ng G (v = 4pi/b^2). Without
+  ndb.cutoff (no cutoff): 4pi/|q+G|^2 computed from G and q, with |q0| for G = 0 at iq = 1 (q0 norm as an argument,
+  default 1e-5 = q0_def_norm of Yambo; as `col_driver.F`).
+- `coulomb_rim(iq)`: the cell average <v>_cell for the rim_ng G (vector if diagonal, matrix otherwise).
+- `check_slab()`: comparison of bare_qpg with the analytic slab formula above (this also checks the correspondence
+  with the G list of the SAVE, which the file does not store).
+
+Work order (user, 2026-11-18): (1) remove v from YamboScreeningParser (and update its tests and tutorial); (2) write
+YamboCoulombParser; (3) the user then reviews the new class (API and checks) before the project notebook is updated.
+
+Tests: no ndb.cutoff / ndb.RIM among the MPPI tutorial outputs (Yambo_tutorial is 3D without cutoff and without RIM):
+synthetic files in `tests/` (same netCDF variables); tutorial: a small 2D run with slab cutoff and RIM would be needed
+(ask the user), otherwise the hBN data of the project in the project session (values above).
+Then in the project session: Embedding_Analysis with YamboScreeningParser (no cutoff) + YamboCoulombParser for the
+quantities in physical units (Sec. 1 table, Sec. 3 v_emb, Sec. 4 W/v on the top plane); numbers must not change.
