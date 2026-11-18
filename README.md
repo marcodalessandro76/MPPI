@@ -82,9 +82,26 @@ models. The notebooks are also included in the documentation.
 
 All the notebooks are in the folder [sphinx_source/tutorials](sphinx_source/tutorials/) and can be opened directly on GitHub:
 
-- Tutorials of the classes: [Tutorial_PwInput](sphinx_source/tutorials/Tutorial_PwInput.ipynb), [Tutorial_YamboInput](sphinx_source/tutorials/Tutorial_YamboInput.ipynb), [Tutorial_QeCalculator](sphinx_source/tutorials/Tutorial_QeCalculator.ipynb), [Tutorial_YamboCalculator](sphinx_source/tutorials/Tutorial_YamboCalculator.ipynb), [Tutorial_PwParser](sphinx_source/tutorials/Tutorial_PwParser.ipynb), [Tutorial_YamboParser](sphinx_source/tutorials/Tutorial_YamboParser.ipynb), [Tutorial_YamboNLDBParser](sphinx_source/tutorials/Tutorial_YamboNLDBParser.ipynb), [Tutorial_WfcParser](sphinx_source/tutorials/Tutorial_WfcParser.ipynb), [Tutorial_YamboScreeningParser](sphinx_source/tutorials/Tutorial_YamboScreeningParser.ipynb), [Tutorial_Datasets](sphinx_source/tutorials/Tutorial_Datasets.ipynb)
-- Analysis tools: [Analysis_FourierTransform](sphinx_source/tutorials/Analysis_FourierTransform.ipynb), [Analysis_BandStructure](sphinx_source/tutorials/Analysis_BandStructure.ipynb), [Analysis_Dos](sphinx_source/tutorials/Analysis_Dos.ipynb), [Analysis_Electron-phonon](sphinx_source/tutorials/Analysis_Electron-phonon.ipynb), [Analysis_Optics](sphinx_source/tutorials/Analysis_Optics.ipynb)
-- Physical models: [Model_AnharmonicOscillator](sphinx_source/tutorials/Model_AnharmonicOscillator.ipynb), [Model_TLS_optical_absorption](sphinx_source/tutorials/Model_TLS_optical_absorption.ipynb)
+- Tutorials of the classes:
+  - [Tutorial_PwInput](sphinx_source/tutorials/Tutorial_PwInput.ipynb)
+  - [Tutorial_YamboInput](sphinx_source/tutorials/Tutorial_YamboInput.ipynb)
+  - [Tutorial_QeCalculator](sphinx_source/tutorials/Tutorial_QeCalculator.ipynb)
+  - [Tutorial_YamboCalculator](sphinx_source/tutorials/Tutorial_YamboCalculator.ipynb)
+  - [Tutorial_PwParser](sphinx_source/tutorials/Tutorial_PwParser.ipynb)
+  - [Tutorial_YamboParser](sphinx_source/tutorials/Tutorial_YamboParser.ipynb)
+  - [Tutorial_YamboNLDBParser](sphinx_source/tutorials/Tutorial_YamboNLDBParser.ipynb)
+  - [Tutorial_WfcParser](sphinx_source/tutorials/Tutorial_WfcParser.ipynb)
+  - [Tutorial_YamboScreeningParser](sphinx_source/tutorials/Tutorial_YamboScreeningParser.ipynb)
+  - [Tutorial_Datasets](sphinx_source/tutorials/Tutorial_Datasets.ipynb)
+- Analysis tools:
+  - [Analysis_FourierTransform](sphinx_source/tutorials/Analysis_FourierTransform.ipynb)
+  - [Analysis_BandStructure](sphinx_source/tutorials/Analysis_BandStructure.ipynb)
+  - [Analysis_Dos](sphinx_source/tutorials/Analysis_Dos.ipynb)
+  - [Analysis_Electron-phonon](sphinx_source/tutorials/Analysis_Electron-phonon.ipynb)
+  - [Analysis_Optics](sphinx_source/tutorials/Analysis_Optics.ipynb)
+- Physical models:
+  - [Model_AnharmonicOscillator](sphinx_source/tutorials/Model_AnharmonicOscillator.ipynb)
+  - [Model_TLS_optical_absorption](sphinx_source/tutorials/Model_TLS_optical_absorption.ipynb)
 
 To run the notebooks you need to install the jupyter-notebook or jupyter-lab package, that can be installed as
 
