@@ -498,3 +498,107 @@ at the grid points that lie on the path. MPPI tools to reuse: YamboQPParser (ndb
 syms, time_reversal, lattice), PwParser (bands run), BandStructure (plots; `from_Ypp` already reads the ypp output).
 API to agree with the user (e.g. an interpolator built from the IBZ k points, lattice and symmetries, with fit(values,
 mask=None) and evaluate(kpoints)), with tests on an analytic periodic function and on the hBN data.
+
+## Next work: screening database parser (from the 2d-layer-substrate-effective-screening project, 2026-11-18)
+Origin: project `~/work/2d-layer-substrate-effective-screening` on ismhpc (own CLAUDE.md, entry "YAMBO SCREENING
+DATABASES"). There a prototype in `hBN_bilayer/Embedding_Analysis.ipynb` (sections 1, 2, 4) reads the Yambo screening
+databases, moves a layer by a rotation/translation, builds the W of a layer with a substrate and writes a new database
+that yambo then uses for GW. The user wants the GENERAL tools in MPPI, then the project notebook rewritten on top of them.
+
+Decisions of the user (2026-11-18):
+- ONE class for a screening database, in `mppi/Parsers`; one instance = one database. Proposed name
+  `YamboScreeningParser` (`mppi/Parsers/YamboScreeningParser.py`; to confirm with the user).
+- In MPPI: reading, quantities derived from X, Coulomb interaction from `ndb.cutoff`, symmetry transformation, writer,
+  2D tools (list below). NOT in MPPI in this phase: the construction of the new W of a layer with a substrate (the
+  Dyson equation W = vt + vt chi0^L W of the project notes, Eq. 19, symmetrized as
+  X_new = (1 - (1 + X^S) chi0~^L)^-1 (1 + X^S) - 1), the choice of what is layer and what is substrate, the R and tau
+  of a given system, the analysis (g(Q), real space, comparisons): it stays in the project notebook and may move to
+  MPPI later, once the procedure is stable. The writer takes any X, whatever built it.
+- Indices of q in the public methods start from 1, as in yambo (`ndb.pp_fragment_<iq>`) and in the notebooks.
+
+Formats (checked 2026-11-17/18 on the Lumen source and on the hBN runs of the project, Lumen 5.4 r27515):
+- Same layout for `ndb.em1s` (static, 1 frequency), `ndb.em1d` (n frequencies) and `ndb.pp` (PPA, 2 frequencies):
+  `src/io/io_X.F` (db_desc from X%whoami = 2, 3, 4). Header `ndb.<kind>`: `X_PARS_1` = [ng, first band, last band,
+  ...]; `X_PARS_3[3:6]` = "Field direction" q0 (the direction of q -> 0, LongDrXp; |q0| = 1e-5 in the hBN runs:
+  (7.07e-6, 7.07e-6, 0) for LongDrXp [1,1,0]); `X_RL_vecs` (3, ng) = the first ng G vectors of the global list of
+  `SAVE/ns.db1` (`G-VECTORS`, same order), in yambo units (cartesian, 2pi/alat_i component by component: cartesian
+  bohr^-1 = iku * 2pi/alat with the alat VECTOR `LATTICE_PARAMETER` of ns.db1; the header has no alat, so the SAVE is
+  needed); `HEAD_QPT` (3, nq) the IBZ q points, same units; `X_TDDFT_KERNEL` (char, 'HARTREE' = RPA); `CUTOFF` (char,
+  e.g. 'slab z', 'none'). Read char variables as b''.join(np.ma.filled(var[:], b' ').ravel()).decode().strip().
+- Fragments `ndb.<kind>_fragment_<iq>`: `X_Q_<iq>` with netCDF shape (n_freq, ng, ng, 2) float32 (re, im) written
+  from the Fortran array X(G, G', w): the two G axes must be TRANSPOSED when read with netCDF4
+  (X[w, G, G'] = x[w, G', G]); `FREQ_sec_iq<iq>` (n_freq, 2) in Ha (hBN PPA: 0 and i 27.211 eV).
+- Content (`pol_function/X_redux.F`): Dyson X = (1 - chi0 v)^-1 chi0 in the ng block, then multiplied by
+  4pi/(bare_qpg(G) bare_qpg(G')): X = v^1/2 chi v^1/2 = eps^-1 - 1 (symmetrized), v = the (cut) Coulomb interaction,
+  v(q+G) = 4pi/bare_qpg^2. chi0 is not stored, but it is recovered exactly in the same block (RPA kernel only):
+  chi0~ = v^1/2 chi0 v^1/2 = 1 - (1 + X)^-1.
+- `ndb.cutoff` (written by the run that computes the Coulomb cutoff; in the project it is in the shared folder
+  `ndb_rim_cutoff`, NOT in the screening folder: pass its path explicitly): `GEOMETRY`, `DESCRIPTION` (char, 'slab z'),
+  `PARS` ([5] = ng_cut, 12311 for hBN), `HEAD_QPT` (same q), `CUT_BARE_QPG` (ng_cut, nq, 2) float32, real part only
+  (imaginary 0 for the slab); its first ng G are those of X (same global order). Slab cutoff (`coulomb/cutoff_slab.F`):
+  bare_qpg = |q+G| / sqrt(1 - e^{-Q_par lcut} cos(q_z lcut)), lcut = c/2, Q_par = |q+G|_par regularized to
+  >= q0_def_norm; at iq = 1 the |q+G| use q0; without RIM, bare_qpg(1,1) is replaced by an average over a circle
+  (RIM_qpg not allocated). Checked on hBN: file = analytic formula within 2e-7 (q != 0), 2e-5 at iq = 1 (with q0).
+  => read the file (exact values of yambo, any geometry: slab, box, cylinder), the analytic slab formula only as a test.
+  No cutoff ('none'): v = 4pi/|q+G|^2 computed from G and q, with q0 for G = 0 at iq = 1.
+- `ndb.RIM_W` (in the same folder as the screening when RIM_W is used) is built by `qp/QP_interpolate_W.F` FROM the X
+  of the screening database, and a file with a matching header is reused without checking X: a database with a
+  modified X must NEVER carry an old ndb.RIM_W (yambo recomputes it if absent).
+- Other yambo screening databases may live in the same folder (e.g. ndb.dipoles, ndb.RIM_W): copy only what is needed.
+- Reference implementation (cross-check only, not a dependency): yambopy `YamboStaticScreeningDB`
+  (`~/Applications/YamboPy/yambopy/dbs/em1sdb.py`): reads only the static frequency, reads ndb.cutoff, its writer
+  `saveDBS` deletes the destination folder (rmtree): do not copy that behaviour.
+
+API (proposal, MPPI style: dict-like class, Sphinx docstrings, `verbose`):
+1. Constructor `YamboScreeningParser(folder, save, cutoff=None, verbose=True)`: `folder` with ndb.em1s / ndb.em1d /
+   ndb.pp (kind detected, error if more than one or none), `save` = the SAVE (alat, lattice through YamboDftParser),
+   `cutoff` = path of ndb.cutoff (warn if CUTOFF != 'none' and no path given). Attributes: kind, ng, bands, kernel,
+   cutoff geometry, G (cartesian bohr^-1, and in crystal coordinates), q (IBZ, cartesian bohr^-1), nq, q0, frequencies
+   (complex, eV; from fragment 1, check that all fragments agree only on request).
+2. `get_X(iq)` -> complex array (n_freq, ng, ng), order [w, G, G'], read lazily, netCDF file CLOSED after reading
+   (prototype pitfall: a file left open makes a later 'r+' open in the same process fail with an HDF error).
+3. Derived, no v needed: `eps_inv(iq)` = 1 + X; `chi0(iq)` = chi0~ = 1 - (1 + X)^-1 (symmetrized; raise if the
+   kernel is not HARTREE). With v: `coulomb(iq)` -> v(q+G) for the ng G (from ndb.cutoff or 3D); `W(iq)` =
+   v^1/2 (1 + X) v^1/2 (W of the system the database describes, a.u.); `chi(iq)` = v^-1/2 X v^-1/2.
+4. `transform(X, iq, rotation=None, translation=None)`: X of the system moved by r -> R r + tau (R cartesian
+   orthogonal, tau in bohr): chi'(r, r') = chi(R^-1(r - tau), R^-1(r' - tau)) gives
+   X'_GG'(q) = e^{-i(G-G').tau} X_{R^-1 G, R^-1 G'}(R^-1 q). Implemented cases: R^-1 q = q (direct) and R^-1 q = -q
+   (time reversal / Onsager, X_GG'(-q) = X_{-G',-G}(q): X'_GG' = e^{-i(G-G').tau} X_{-R^-1 G', -R^-1 G}(q)); otherwise
+   NotImplementedError (X outside the IBZ needed: from the symmetries of the database, later). At iq = 1 use the q0
+   DIRECTION, not q = 0 (C2z maps q0 -> -q0: the time-reversal branch; treating iq = 1 as q = 0 gave 5e-3 on hBN AA').
+   Checks: the G set closed under R (error naming the missing G), R maps the cutoff geometry onto itself (slab: R z =
+   +-z; then v(q+G) is invariant and the symmetrized X transforms as chi). A translation along z is a pure phase.
+   Prototype `move_layer` (Embedding_Analysis Sec. 2): hBN ML_bot -> ML_top_AB (R = 1) and ML_top_AA1 (R = C2z, i.e.
+   X'_GG' = e^{-i(G-G').tau} X_{sG', sG}, s = (Gx, Gy, -Gz)) vs the computed ML_top databases: relative error
+   1.5-2.1e-5 (w = 0) and 1.0-1.3e-5 (i 27 eV) at q != 0, 1.5-1.7e-4 at q -> 0, all 37 q; controls: layer not moved
+   1.35-1.41, AA' with the translation only 0.70-0.76.
+5. Writer `write(dst, X)` (method of the TEMPLATE instance; X = dict iq -> array (n_freq, ng, ng), or a callable):
+   copies the header and all the fragments of the template (only ndb.<kind>* files, NEVER ndb.RIM_W) into `dst`,
+   replaces `X_Q_<iq>` (float32, G axes transposed back), refuses dst = the template folder, refuses an existing dst
+   with different content unless asked; rewrites a fragment only if it differs by more than a tolerance (prototype:
+   1e-7); reads back and checks (float32: ~1.5e-8). The header (bands, ng, cutoff, PPA energy) stays the template's:
+   document that yambo then believes the template parameters. Return a summary (fragments written / unchanged).
+6. 2D tools (a1, a2 in the xy plane, a3 along +z, as in WfcParser): `inplane_blocks(iq)` -> dict G_par -> indices of
+   the G with that in-plane part (sorted by Gz); `planar(M, iq, G_par, z, z2)` -> M(Q; z, z') =
+   (1/c) sum_{Gz, Gz'} e^{i Gz z} M_{GG'} e^{-i Gz' z'} on the G_par = G_par' block, Q = q + G_par (convention:
+   M(r, r') = (1/V) sum_q sum_GG' e^{i(q+G).r} M_GG' e^{-i(q+G').r'} and in-plane (1/A) sum_Q e^{iQ.rho} M(Q; z, z')).
+   Check: the slab-cut v gives (2pi/Q) e^{-Q|z - z'|} for |z - z'| < c/2 and 0 beyond. The prototype `along_z(M, iq,
+   idx, z, z2, left)` and `on_top_plane` (Embedding_Analysis Sec. 3) are the same with M = v^1/2 X v^1/2 etc.
+
+Tests and tutorial:
+- MPPI tutorial data (ismhpc): `sphinx_source/tutorials/Yambo_tutorial/gw_ppa/ndb.pp` (+ 31 fragments; 27 G, 32 q,
+  bands 1-8, kernel HARTREE, cutoff 'none', q0 = (1e-5, 0, 0)) with `Yambo_tutorial/SAVE` (12 symmetry matrices).
+  Reading, X Hermitian at both frequencies (2-3e-8), eps_inv, chi0 round trip (Dyson back to X), writer round trip in
+  a temporary folder. Symmetry test without new runs (checked 2026-11-18 with the prototype logic): for every q and
+  every operation of `ns.db1` SYMMETRY with R^-1 q = +-q, transform(X, iq, R) = X: 64 direct + 64 time-reversal cases,
+  max relative deviation 6.4e-7; a lattice translation must give X back too.
+- Unit tests in `tests/`: synthetic only (a tiny database written in the test with the same netCDF variables; X with
+  known structure for transform and planar; analytic slab v for `planar`).
+- Tutorial notebook (name after the class), MPPI tutorial rules (execution-date cell, executed in place on ismhpc,
+  rst entry).
+- Later, in the project session: rewrite Embedding_Analysis on the class and check that the numbers do not change
+  (move_layer errors above; new databases `..._emb_ML_bot` identical; vt/v on the top plane 0.757 at Q = 0.085
+  bohr^-1); slab part: ndb.cutoff of the project vs the analytic formula.
+
+Where to work: as for WfcParser, on the cluster in `~/Applications/MPPI` (test data only there): check first that
+laptop, cluster and origin are at the same commit; commit and push from the cluster; `git pull` on the laptop at the end.
