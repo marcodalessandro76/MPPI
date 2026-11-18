@@ -18,7 +18,8 @@ The package is composed by several modules, each of which contains one or more c
 - __Datasets__ : organize and run several computations for both QuantumESPRESSO and Yambo, collect their results and
   perform convergence studies.
 - __Parsers__ : extract data from the output files and the databases of QuantumESPRESSO (data-file-schema.xml) and
-  Yambo (o- files and netCDF databases, including the ndb.Nonlinear database of yambo_nl).
+  Yambo (o- files and netCDF databases, including the ndb.Nonlinear database of yambo_nl), read the Kohn-Sham
+  wavefunctions (WfcParser) and read, transform and write the screening databases of Yambo (YamboScreeningParser).
 - __Utilities__ : low-level functions used by the other modules (constants, Fourier transform, density of states,
   band structures, lattice utilities, parallel loops).
 - __Optics__ : compute the optical properties of a system from the time-dependent polarization: linear response from a
@@ -78,6 +79,12 @@ We provide many jupyter notebooks that show the functionality of each module of 
 The tutorials are organized as `Tutorial_$name_of_the_class`, the notebooks `Analysis_$topic` show the analysis
 tools (band structure, density of states, optical properties, ...) and the notebooks `Model_$name` the physical
 models. The notebooks are also included in the documentation.
+
+All the notebooks are in the folder [sphinx_source/tutorials](sphinx_source/tutorials/) and can be opened directly on GitHub:
+
+- Tutorials of the classes: [Tutorial_PwInput](sphinx_source/tutorials/Tutorial_PwInput.ipynb), [Tutorial_YamboInput](sphinx_source/tutorials/Tutorial_YamboInput.ipynb), [Tutorial_QeCalculator](sphinx_source/tutorials/Tutorial_QeCalculator.ipynb), [Tutorial_YamboCalculator](sphinx_source/tutorials/Tutorial_YamboCalculator.ipynb), [Tutorial_PwParser](sphinx_source/tutorials/Tutorial_PwParser.ipynb), [Tutorial_YamboParser](sphinx_source/tutorials/Tutorial_YamboParser.ipynb), [Tutorial_YamboNLDBParser](sphinx_source/tutorials/Tutorial_YamboNLDBParser.ipynb), [Tutorial_WfcParser](sphinx_source/tutorials/Tutorial_WfcParser.ipynb), [Tutorial_YamboScreeningParser](sphinx_source/tutorials/Tutorial_YamboScreeningParser.ipynb), [Tutorial_Datasets](sphinx_source/tutorials/Tutorial_Datasets.ipynb)
+- Analysis tools: [Analysis_FourierTransform](sphinx_source/tutorials/Analysis_FourierTransform.ipynb), [Analysis_BandStructure](sphinx_source/tutorials/Analysis_BandStructure.ipynb), [Analysis_Dos](sphinx_source/tutorials/Analysis_Dos.ipynb), [Analysis_Electron-phonon](sphinx_source/tutorials/Analysis_Electron-phonon.ipynb), [Analysis_Optics](sphinx_source/tutorials/Analysis_Optics.ipynb)
+- Physical models: [Model_AnharmonicOscillator](sphinx_source/tutorials/Model_AnharmonicOscillator.ipynb), [Model_TLS_optical_absorption](sphinx_source/tutorials/Model_TLS_optical_absorption.ipynb)
 
 To run the notebooks you need to install the jupyter-notebook or jupyter-lab package, that can be installed as
 
