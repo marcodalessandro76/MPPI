@@ -721,6 +721,10 @@ the q = 0, G = 0 value is the circle average 2pi/S * sum_n (-1)^(n+1) (R lcut)^n
 with rim=False); coulomb_rim/coulomb on the 101 RIM G: iq = 2 0.980-1.085, iq = 5 0.999-1.009, iq = 10 1.000-1.002,
 iq = 1 up to 2184 (as in the formats above); screening G = first 591 G of ns.db1. Tests `tests/test_coulombparser.py`
 (synthetic; imports the helpers of test_screeningparser; planar slab v test moved there, built with the two parsers).
-No tutorial (no ndb.cutoff/ndb.RIM among the tutorial outputs). Open point for the user: a 3D run without cutoff and
-without RIM has no file at all, so the class cannot be built (the plan requires at least one path): e.g. allow
-`YamboCoulombParser(save, q=scr)` taking the q points from a screening database, if needed.
+No tutorial (no ndb.cutoff/ndb.RIM among the tutorial outputs).
+POSSIBLE EXTENSION (postponed by the user, 2026-11-18; do it only if the combination of the two parsers is needed for
+3D systems): a 3D run without cutoff and without RIM has neither file, so the class cannot be built. Then, with no
+`cutoff` and no `rim`, read the q points from `SAVE/ndb.kindx` (written by the yambo setup: `Qpts` (3, nq) iku, same
+order as the screening databases, checked on the Si tutorial within 2e-8; `q_nbz`) and compute v = 4pi/|q+G|^2
+analytically (|q0| = 1e-5 for G = 0 at q = 0); clear error if ndb.kindx is missing. Do NOT use the k points of ns.db1:
+same set but 8 of the 32 Si points have a different (equivalent) representative, so iq would not match the fragments.
