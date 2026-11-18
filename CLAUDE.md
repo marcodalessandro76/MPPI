@@ -228,6 +228,11 @@ Runnable on the laptop:
       it from `mppi.Utilities` (it is in `mppi.Optics`); it imports `tqdm`, which is not in the requirements of
       `setup.py`. Decide whether to fix it or remove it (the comparison with YamboPy is no longer important for the
       user, see the Optics physics item).
+- [ ] `YamboDftParser.expand_IBZ_kpoints` with time reversal appends `-s for s in self.syms`, but `syms` (SYMMETRY of
+      ns.db1) already contains the -S in its second half when DIMENSIONS[9] = 1 (found 2026-11-18 on the hBN SAVE): the
+      list has duplicates (prints 24 symmetries instead of 12). BZ points, weights and ibz_index are right (the first
+      match wins, the duplicates are never used); the docstring of `sym_index` ("indexes >= len(syms) refer to -S") is
+      misleading. Fix: add the -S only when they are not already in `syms`, document the layout of `syms`.
 
 Need the cluster (slurm):
 - [ ] slurm `run_ended` (both calculators) and the `wait` loop (1 s polling, no timeout): `wait` loops forever if the
@@ -466,8 +471,11 @@ roughness (PRB 38, 2721 (1988); the BoltzTraP scheme):
 - Lattice vectors R (integer coordinates on the direct lattice) with |R| <= r, r^3 = INTERP_Shell_Fac * N_k(BZ) *
   3 V / (4 pi) (V = cell volume, bohr^3; default Shell_Fac 20), sorted by |R| and grouped in stars under the symmetry
   operations written on the direct-lattice crystal basis (int_sop, integer matrices from dl_sop). Yambo's nsym
-  INCLUDES the time-reversal operations -S (12 = 6 + 6 for the hBN monolayer); MPPI `YamboDftParser.syms` has the
-  spatial ones and `time_reversal` separately (add -S), `PwParser.crystal_syms` the crystal ones.
+  INCLUDES the time-reversal operations -S (12 = 6 + 6 for the hBN monolayer); MPPI `YamboDftParser.syms` is the
+  SYMMETRY variable of ns.db1, so it ALREADY contains them: with `time_reversal` True the first half are the spatial
+  operations S and the second half the -S (checked 2026-11-18 on the hBN SAVE of the Coulomb tutorial: 12 = 6 C3v +
+  6 -S; the Si SAVE has inversion, time_reversal False, 12 spatial operations). `PwParser.crystal_syms` has the
+  crystal ones only.
 - Star function S_R(k) = (1/n_star) sum_{R' in star(R)} exp(2 pi i k.R'), k in crystal (reduced) coordinates of the
   reciprocal lattice; f(k) = Re sum_R c_R S_R(k).
 - Fit, exact at the N data points (the IBZ points), last point N as reference: delta_k = f(k) - f(k_N),
@@ -617,13 +625,10 @@ overwrite=True a different header in dst is replaced (its old fragments removed)
 `inplane_Q(iq, G_par)`, `planar(M, iq, G_par, z, z2)` -> (..., len(z), len(z2)). Tests `tests/test_screeningparser.py`
 (synthetic ns.db1, ndb.pp + fragments, ndb.cutoff; slab-cut v in `planar` vs (2pi/Q) e^{-Q|z-z'|} within 2e-3 with
 1201 Gz; note: the representation is periodic in z, so "0 beyond c/2" is not testable). `Tutorial_YamboScreeningParser`
-(executed on ismhpc, gw_ppa of Yambo_tutorial, writes in `YamboScreeningParser_tutorial/`): X Hermitian 3.6e-7,
-eps_M(q->0) = 15.6 (27 G, 8 bands), Dyson round trip 3e-16, 66 direct + 66 time-reversal operations of the SAVE give X
-back within 6.4e-7 (max|dX|/max|X|; the earlier count 64 + 64 of the prototype check is not reproduced, irrelevant);
-the Si atoms are at +-p (origin = bond center): inversion 1.3e-6, translation atom 1 -> 2 and inversion about an atom
-0.54; writer round trip. The 2D tools are only tested on synthetic data (no 2D screening database among the tutorial
-outputs: a small graphene em1s run would be needed, ask the user). NEXT: in the project session, rewrite
-Embedding_Analysis on the class (numbers listed above).
+(executed on ismhpc; first version on the Si gw_ppa of Yambo_tutorial, REWRITTEN on 2026-11-18 on the hBN em1s of
+the Coulomb tutorial, see the end of the next section: the Si database, 27 G and 8 bands, was too far from convergence,
+eps_M = 15.6, user's request). The 2D tools are tested on synthetic data and shown on the hBN em1s. NEXT: in the
+project session, rewrite Embedding_Analysis on the class (numbers listed above).
 
 ## Next work: Coulomb parser, and the screening parser without v (from the 2d-layer-substrate-effective-screening project, 2026-11-18)
 Decisions of the user (2026-11-18), after the first version of `YamboScreeningParser` (commit 17d1271):
@@ -740,9 +745,16 @@ q = 0, G = 0 with rim=False (the run uses RIM); <v>_cell/v: iq = 2 (|q| = 0.128)
 iq = 1 2.2e-4 (G = 0) to 2848; ndb.RIM copied in another folder gives the same data; W_00/v_0 = eps^-1_00 = 0.767 at
 iq = 2; v(Q; z, z0) vs (2pi/Q) e^{-Q|z-z0|} for |z - z0| > 2 bohr: 2e-3 with the 109 Gz of ndb.cutoff, 1.4e-2 with the
 37 Gz of the screening (cusp smoothed); W/v on the plane of the layer: 0.46 at Q = 0.128, minimum 0.39 at Q ~ 0.3,
-0.54 at Q = 0.89. The 2D section of `Tutorial_YamboScreeningParser` now uses this em1s (execute the Coulomb tutorial
-first; notebooks.rst/README list it before the screening one): 13 G_par blocks, X(Q; z, z0) localized on the layer,
-mirror through the layer (R = diag(1,1,-1), tau = (0,0,2 z0)) gives X back within 3.5e-5 - 1.2e-4 at the 19 q (q = 0
-included, q0 along [1,1,0]); mirror through z = 0: 1.3-1.4; C2z about B: 0.68-0.71; a rotation exchanging x and z is
-refused (slab z). Points (1)-(3) of this section are complete; NEXT (project session): Embedding_Analysis with the two
+0.54 at Q = 0.89. The WHOLE `Tutorial_YamboScreeningParser` uses this em1s since 2026-11-18 (Si dropped, user's
+request; execute the Coulomb tutorial first; notebooks.rst/README list it before the screening one): X Hermitian up to
+3.4e-4 (max|A|/max|X|: time ordered X, GrFnTpXs = "T", with the 1 meV damping DmRngeXs, so an anti-Hermitian part
+~ damping/transition energy is expected; imaginary parts of the diagonal ~1e-5 relative); Dyson round trip 5e-16;
+1/eps^-1_00 along G-M (iq 1-7) and G-K (iq 1, 8, 13, 17, 19): 1 at q -> 0 (2D, slab cutoff), 1.30 at |q| = 0.128,
+then down to 1.08 at K, the two directions on the same curve (the maximum is not resolved by the grid: q = 0 plotted
+apart); the 6 spatial operations of the SAVE (syms[:6], the other 6 are -S, see the BOLTZ section; applied as
+rotations they give 0.7-1.5) give X back within 4.4e-6 (25 direct + 4 time-reversal cases); mirror through the layer
+(R = diag(1,1,-1), tau = (0,0,2 z0)) 3.5e-5 - 1.2e-4 at the 19 q (q = 0 included, q0 along [1,1,0]), lattice
+translation 1e-16; mirror through z = 0: 1.3-1.4; C2z about B: 0.68-0.71; translation B -> N 0.62-0.64; a rotation
+exchanging x and z is refused (slab z); writer: X translated B -> N written in `em1s_translated`, read back 5.7e-10,
+second call 19 unchanged; 2D: 13 G_par blocks, X(Q; z, z0) localized on the layer. Points (1)-(3) of this section are complete; NEXT (project session): Embedding_Analysis with the two
 parsers.
