@@ -102,6 +102,13 @@ YamboScreeningParser class:
 
    yamboScreeningParser
 
+and the Coulomb interaction of a Yambo run (ndb.cutoff, ndb.RIM) by the YamboCoulombParser class:
+
+.. toctree::
+   :maxdepth: 1
+
+   yamboCoulombParser
+
 Finally, the module ParsersUtils collects functions for the data analysis:
 
 .. toctree::

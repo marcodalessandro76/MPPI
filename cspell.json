@@ -235,6 +235,10 @@
     "TDDFT",
     "HARTREE",
     "ALDA",
-    "RIM"
+    "RIM",
+    "nqbz",
+    "Ein",
+    "RandQpts",
+    "RandGvec"
   ]
 }

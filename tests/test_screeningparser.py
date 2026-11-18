@@ -22,11 +22,14 @@ def write_text(d, name, text):
     v = d.createVariable(name, 'S1', ('D_1', 'D_100'))
     v[0, :] = np.array(list(text.ljust(100)), dtype='S1')
 
-def write_db1(folder, lattice=LATTICE):
+def write_db1(folder, lattice=LATTICE, G=None):
+    """G: global list of the G vectors in yambo units (default gvectors(), the Miller indexes for LATTICE)."""
+    G = gvectors() if G is None else G
     os.makedirs(folder, exist_ok=True)
     with Dataset(os.path.join(folder, 'ns.db1'), 'w') as d:
-        for n, s in [('D_3', 3), ('D_1', 1), ('D_nsym', 2), ('D_20', 20)]:
+        for n, s in [('D_3', 3), ('D_1', 1), ('D_nsym', 2), ('D_20', 20), ('D_ng', len(G))]:
             d.createDimension(n, s)
+        d.createVariable('G-VECTORS', 'f4', ('D_3', 'D_ng'))[:] = np.asarray(G).T
         sym = d.createVariable('SYMMETRY', 'f4', ('D_nsym', 'D_3', 'D_3'))
         sym[:] = np.array([np.eye(3), np.diag([-1., -1., 1.])])
         d.createVariable('LATTICE_VECTORS', 'f8', ('D_3', 'D_3'))[:] = lattice.T
@@ -62,17 +65,6 @@ def write_screening(folder, X, G=None, kind='pp', cutoff='none', kernel='HARTREE
             d.createVariable('FREQ_sec_iq%d' % iq, 'f4', ('D_nw', 'D_2'))[:] = np.stack([FREQS.real, FREQS.imag], -1)
             x = np.transpose(X[iq], (0, 2, 1))          # Fortran X(G, G', w) seen by netCDF as [w, G', G]
             d.createVariable('X_Q_%d' % iq, 'f4', ('D_nw', 'D_ng', 'D_ng', 'D_2'))[:] = np.stack([x.real, x.imag], -1)
-
-def write_cutoff(filename, bare_qpg, description='slab z'):
-    """bare_qpg: array (nq, ng)."""
-    with Dataset(filename, 'w') as d:
-        for n, s in [('D_1', 1), ('D_2', 2), ('D_3', 3), ('D_100', 100), ('D_ng', bare_qpg.shape[1]),
-                     ('D_nq', len(QCRYS))]:
-            d.createDimension(n, s)
-        d.createVariable('HEAD_QPT', 'f4', ('D_3', 'D_nq'))[:] = QCRYS.T
-        write_text(d, 'DESCRIPTION', description)
-        b = bare_qpg.T
-        d.createVariable('CUT_BARE_QPG', 'f4', ('D_ng', 'D_nq', 'D_2'))[:] = np.stack([b.real, b.imag], -1)
 
 def random_X(ng, seed=0):
     rng = np.random.default_rng(seed)
@@ -121,14 +113,6 @@ def test_derived_quantities(db):
         assert np.allclose(s.eps_inv(iq), I + X[iq])
         chi0 = s.chi0(iq)
         assert np.allclose(np.linalg.solve(I - chi0, chi0), X[iq])          # Dyson: X = (1 - chi0)^-1 chi0
-        v = s.coulomb(iq)
-        assert np.allclose(s.W(iq), np.diag(v) + v[:, None] * s.chi(iq) * v[None, :])
-    q2 = s.q[1]
-    assert np.allclose(s.coulomb(2), 4 * np.pi / np.linalg.norm(q2 + s.G, axis=1)**2)
-    v1 = s.coulomb(1)
-    g0 = np.all(s.G_crystal == 0, axis=1)
-    assert np.isclose(v1[g0][0], 4 * np.pi / 1e-10, rtol=1e-5)
-    assert np.allclose(v1[~g0], 4 * np.pi / np.linalg.norm(s.G[~g0], axis=1)**2)
     # a matrix given by the user is used instead of the one of the database
     assert np.allclose(s.eps_inv(2, X=np.zeros((s.ng, s.ng))), I)
 
@@ -138,20 +122,6 @@ def test_chi0_needs_rpa(tmp_path):
     s = YamboScreeningParser(str(tmp_path / 'scr'), str(tmp_path / 'SAVE'), verbose=False)
     with pytest.raises(ValueError):
         s.chi0(1)
-
-def test_cutoff(tmp_path, capsys):
-    write_db1(str(tmp_path / 'SAVE'))
-    G = gvectors()
-    write_screening(str(tmp_path / 'scr'), random_X(len(G)), G=G, cutoff='slab z')
-    s = YamboScreeningParser(str(tmp_path / 'scr'), str(tmp_path / 'SAVE'), verbose=False)
-    assert 'Warning' in capsys.readouterr().out
-    with pytest.raises(ValueError):
-        s.coulomb(2)
-    b = 1 + np.random.default_rng(1).random((3, len(G) + 5))           # ndb.cutoff can have more G vectors
-    write_cutoff(str(tmp_path / 'ndb.cutoff'), b)
-    s = YamboScreeningParser(str(tmp_path / 'scr'), str(tmp_path / 'SAVE'), cutoff=str(tmp_path), verbose=False)
-    for iq in (1, 2, 3):
-        assert np.allclose(s.coulomb(iq), 4 * np.pi / b[iq - 1, :len(G)]**2, rtol=1e-6)
 
 def test_transform_translation(db):
     s, X, _ = db
@@ -193,15 +163,25 @@ def test_transform_checks(tmp_path):
     s = YamboScreeningParser(str(tmp_path / 'scr'), str(tmp_path / 'SAVE'), verbose=False)
     with pytest.raises(ValueError, match='not in the G list'):
         s.transform(None, 2, rotation=np.diag([1., 1., -1.]))
-    # a cut Coulomb interaction that is not invariant under the rotation
+
+def test_transform_cutoff_geometry(tmp_path):
+    # the invariance of the cut Coulomb interaction is checked from the cutoff geometry of the database
+    write_db1(str(tmp_path / 'SAVE'))
     G = gvectors()
-    write_screening(str(tmp_path / 'scr2'), random_X(len(G)), G=G, cutoff='slab z')
-    b = 1 + np.random.default_rng(2).random((3, len(G)))
-    write_cutoff(str(tmp_path / 'ndb.cutoff'), b)
-    s = YamboScreeningParser(str(tmp_path / 'scr2'), str(tmp_path / 'SAVE'), cutoff=str(tmp_path / 'ndb.cutoff'),
-                             verbose=False)
-    with pytest.raises(ValueError, match='invariant'):
+    write_screening(str(tmp_path / 'slab'), random_X(len(G)), G=G, cutoff='slab z')
+    s = YamboScreeningParser(str(tmp_path / 'slab'), str(tmp_path / 'SAVE'), verbose=False)
+    X = s.get_X(2)
+    s.transform(X, 2, rotation=np.diag([1., 1., -1.]))                    # z -> -z: allowed
+    s.transform(X, 2, rotation=np.diag([1., -1., 1.]))                    # in-plane mirror (R^-1 q = q): allowed
+    xz = np.array([[0., 0., 1.], [0., 1., 0.], [1., 0., 0.]])           # exchanges x and z
+    with pytest.raises(ValueError, match='axis'):
+        s.transform(X, 2, rotation=xz)
+    write_screening(str(tmp_path / 'box'), random_X(len(G)), G=G, cutoff='box xyz')
+    s = YamboScreeningParser(str(tmp_path / 'box'), str(tmp_path / 'SAVE'), verbose=False)
+    with pytest.raises(NotImplementedError):
         s.transform(None, 2, rotation=np.diag([1., 1., -1.]))
+    s.transform(None, 2, rotation=np.diag([1., 1., -1.]), check_cutoff=False)
+    s.transform(None, 2, translation=[0., 0., 1.])                       # no rotation: always allowed
 
 def test_write(db):
     s, X, tmp = db
@@ -251,32 +231,6 @@ def test_inplane_blocks_and_planar(db):
     assert np.allclose(s.planar(M, 2, (1, 0), z, z2), 0)
     with pytest.raises(ValueError):
         s.planar(M, 2, (5, 0), z, z2)
-
-def test_planar_slab_coulomb(tmp_path):
-    # slab-cut Coulomb interaction: v(Q; z, z') = (2 pi/Q) e^{-Q|z - z'|} for |z - z'| < c/2
-    write_db1(str(tmp_path / 'SAVE'))
-    N = 600
-    G = np.array([[0, 0, m] for m in range(-N, N + 1)])
-    zeros = {iq: np.zeros((len(FREQS), len(G), len(G))) for iq in (1, 2, 3)}
-    write_screening(str(tmp_path / 'scr'), zeros, G=G, cutoff='slab z')
-    Gc = G * 2 * np.pi / np.array([A, A, C])
-    b = np.zeros((3, len(G)))
-    for iq in (1, 2, 3):
-        qG = QCRYS[iq - 1] * 2 * np.pi / A + Gc
-        Qp = np.linalg.norm(qG[:, :2], axis=1)
-        with np.errstate(divide='ignore', invalid='ignore'):
-            b[iq - 1] = np.linalg.norm(qG, axis=1) / np.sqrt(1 - np.exp(-Qp * C / 2) * np.cos(qG[:, 2] * C / 2))
-    b[0, N] = 1.                                     # q = 0, G = 0 (not used)
-    write_cutoff(str(tmp_path / 'ndb.cutoff'), b)
-    s = YamboScreeningParser(str(tmp_path / 'scr'), str(tmp_path / 'SAVE'), cutoff=str(tmp_path / 'ndb.cutoff'),
-                             verbose=False)
-    iq = 2
-    W = s.W(iq)[0]                                   # X = 0: W = v
-    z = np.linspace(-8.5, 9, 15)                     # |z - z'| < c/2 = 10 (the representation is periodic in z)
-    P = s.planar(W, iq, (0, 0), z, 1.0).real[:, 0]
-    Q = np.linalg.norm(s.inplane_Q(iq)[:2])
-    exact = 2 * np.pi / Q * np.exp(-Q * np.abs(z - 1.0))
-    assert np.allclose(P, exact, rtol=2e-3)
 
 def test_wrong_save(tmp_path):
     lattice = np.array([[A, 0, 0], [0, A, 0], [1., 0, C]])

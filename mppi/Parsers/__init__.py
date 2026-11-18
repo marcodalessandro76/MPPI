@@ -9,3 +9,4 @@ from .YamboRTGlesserParser import YamboRTGlesserParser, buildBlochVectors
 from .YamboNLDBParser import YamboNLDBParser
 from .WfcParser import WfcParser
 from .YamboScreeningParser import YamboScreeningParser
+from .YamboCoulombParser import YamboCoulombParser

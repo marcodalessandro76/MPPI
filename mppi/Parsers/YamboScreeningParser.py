@@ -9,10 +9,14 @@ The databases contain, for each q point of the IBZ and each frequency, the symme
     X_{\mathbf{G}\mathbf{G}'}(\mathbf{q},\omega) = v^{1/2}_\mathbf{G}(\mathbf{q})\,\chi_{\mathbf{G}\mathbf{G}'}(\mathbf{q},\omega)\,
     v^{1/2}_{\mathbf{G}'}(\mathbf{q}) = \epsilon^{-1}_{\mathbf{G}\mathbf{G}'}(\mathbf{q},\omega) - \delta_{\mathbf{G}\mathbf{G}'}
 
-where :math:`\chi` is the reducible response function and :math:`v_\mathbf{G}(\mathbf{q}) = 4\pi/b_\mathbf{G}(\mathbf{q})^2`
-is the (possibly cut) Coulomb interaction, with :math:`b_\mathbf{G}(\mathbf{q})` the ``bare_qpg`` of Yambo
-(:math:`|\mathbf{q}+\mathbf{G}|` without cutoff). The cut Coulomb interaction is read from the ``ndb.cutoff`` database
-written by the run that computed it.
+where :math:`\chi` is the reducible response function and :math:`v_\mathbf{G}(\mathbf{q})` the (possibly cut) Coulomb
+interaction of the run. Since the matrices are symmetrized, all the quantities intrinsic to the screening (inverse
+dielectric matrix, independent particle response, symmetry transformations, writing of a new database) do not need v,
+which is read by the :py:class:`YamboCoulombParser` class from the ``ndb.cutoff`` database (the v^1/2 contained in X
+are those of ``ndb.cutoff``). The quantities in physical units are a combination of the two parsers, e.g.
+
+>>> s = np.sqrt(coul.coulomb(iq, scr.ng))
+>>> W = s[:, None] * (1 + X) * s[None, :]
 
 The module can be loaded in the notebook as follows
 
@@ -56,16 +60,13 @@ class YamboScreeningParser():
     database with :py:meth:`write`.
 
     The first q point is q = 0. Yambo computes it at the small vector q0 (the 'Field direction' of the database, with
-    norm 1e-5): q0 is used for the Coulomb interaction of G = 0 and its direction for the symmetry transformations.
+    norm 1e-5): its direction is used in the symmetry transformations.
 
     Args:
         folder (:py:class:`string`) : folder with the database (``ndb.em1s``, ``ndb.em1d`` or ``ndb.pp`` and its
             fragments). It must contain only one of the three databases
         save (:py:class:`string`) : the ``SAVE`` folder of the computation (or its ``ns.db1`` file), needed for the
             lattice and the lattice parameters of Yambo, which convert the G vectors and the q points
-        cutoff (:py:class:`string`) : the ``ndb.cutoff`` database with the cut Coulomb interaction used by the run (or
-            the folder that contains it). Needed for the methods that use v if the database has a Coulomb cutoff.
-            Without cutoff v is computed as :math:`4\pi/|\mathbf{q}+\mathbf{G}|^2`
         verbose (:py:class:`boolean`) : define the amount of information provided on terminal
 
     Attributes:
@@ -92,7 +93,7 @@ class YamboScreeningParser():
         nfreqs (:py:class:`int`) : number of frequencies
     """
 
-    def __init__(self, folder, save, cutoff=None, verbose=True):
+    def __init__(self, folder, save, verbose=True):
         from netCDF4 import Dataset
         from mppi.Parsers.YamboDftParser import YamboDftParser
         self.folder = folder
@@ -137,13 +138,6 @@ class YamboScreeningParser():
         self.frequencies = self.get_frequencies(1)
         self.nfreqs = len(self.frequencies)
 
-        self.cutoff = None
-        self._bare_qpg = None
-        if cutoff is not None:
-            self._read_cutoff(cutoff)
-        elif self.cutoff_geometry.lower() != 'none':
-            print('Warning: the database uses the Coulomb cutoff "%s" but no ndb.cutoff is given: the methods that '
-                  'need v are not available' % self.cutoff_geometry)
         if verbose:
             self.get_info()
 
@@ -255,96 +249,6 @@ class YamboScreeningParser():
         I = np.eye(self.ng)
         return I - np.linalg.inv(I + self._get(iq, X))
 
-    def _read_cutoff(self, cutoff):
-        """
-        Read the cut Coulomb interaction (bare_qpg) from the ndb.cutoff database.
-        """
-        from netCDF4 import Dataset
-        filename = os.path.join(cutoff, 'ndb.cutoff') if os.path.isdir(cutoff) else cutoff
-        if not os.path.isfile(filename):
-            raise IOError('File %s not found' % filename)
-        with Dataset(filename) as d:
-            description = _read_text(d, 'DESCRIPTION') if 'DESCRIPTION' in d.variables else ''
-            q_iku = np.array(d['HEAD_QPT'][:], dtype=float).T
-            b = _complex(d['CUT_BARE_QPG'][:])          # shape (ng_cut, nq)
-        if len(q_iku) != self.nq or not np.allclose(q_iku * 2 * np.pi / self.alat, self.q, atol=1e-5):
-            raise ValueError('The q points of %s are not those of the screening database' % filename)
-        if b.shape[0] < self.ng:
-            raise ValueError('%s contains only %d G vectors, the screening database %d' % (filename, b.shape[0], self.ng))
-        if description.lower() != self.cutoff_geometry.lower():
-            print('Warning: the cutoff of %s is "%s", the screening database has "%s"' % (filename, description,
-                                                                                          self.cutoff_geometry))
-        self.cutoff = filename
-        bqpg = b[:self.ng].T
-        self._bare_qpg = bqpg.real if np.abs(bqpg.imag).max() == 0 else bqpg
-
-    def bare_qpg(self, iq):
-        r"""
-        The ``bare_qpg`` of Yambo for the G vectors of the database, :math:`b_\mathbf{G}(\mathbf{q})` with
-        :math:`v_\mathbf{G}(\mathbf{q}) = 4\pi/b_\mathbf{G}(\mathbf{q})^2`: read from ndb.cutoff, or
-        :math:`|\mathbf{q}+\mathbf{G}|` without cutoff (at q = 0, :math:`|\mathbf{q}_0|` for G = 0, as in Yambo).
-
-        Args:
-            iq (:py:class:`int`) : index of the q point (1-based)
-
-        Returns:
-            :py:class:`numpy.ndarray` : array with shape (ng,) (bohr^-1)
-        """
-        iq = self._check_iq(iq)
-        if self._bare_qpg is not None:
-            return self._bare_qpg[iq - 1]
-        if self.cutoff_geometry.lower() != 'none':
-            raise ValueError('The database uses the Coulomb cutoff "%s": give its ndb.cutoff to the constructor'
-                             % self.cutoff_geometry)
-        b = np.linalg.norm(self.q[iq - 1] + self.G, axis=1)
-        if iq == 1:
-            b[np.all(self.G_crystal == 0, axis=1)] = np.linalg.norm(self.q0)
-        return b
-
-    def coulomb(self, iq):
-        r"""
-        Coulomb interaction :math:`v_\mathbf{G}(\mathbf{q})` (cut if the run used a cutoff) for the G vectors of the
-        database (Ha bohr^3, i.e. :math:`4\pi/|\mathbf{q}+\mathbf{G}|^2` without cutoff).
-
-        Args:
-            iq (:py:class:`int`) : index of the q point (1-based)
-
-        Returns:
-            :py:class:`numpy.ndarray` : array with shape (ng,)
-        """
-        return 4 * np.pi / self.bare_qpg(iq)**2
-
-    def W(self, iq, X=None):
-        r"""
-        Screened interaction :math:`W = v^{1/2}(1 + X)v^{1/2}` of the system described by the database (atomic units,
-        Ha bohr^3, same normalization as v).
-
-        Args:
-            iq (:py:class:`int`) : index of the q point (1-based)
-            X (:py:class:`numpy.ndarray`) : the matrix X to use (shape (..., ng, ng)). Default None (the X of the
-                database)
-
-        Returns:
-            :py:class:`numpy.ndarray` : array with the shape of X
-        """
-        s = np.sqrt(4 * np.pi) / self.bare_qpg(iq)
-        return s[:, None] * self.eps_inv(iq, X) * s[None, :]
-
-    def chi(self, iq, X=None):
-        r"""
-        Reducible response function :math:`\chi = v^{-1/2} X v^{-1/2}` (atomic units, bohr^-3 Ha^-1).
-
-        Args:
-            iq (:py:class:`int`) : index of the q point (1-based)
-            X (:py:class:`numpy.ndarray`) : the matrix X to use (shape (..., ng, ng)). Default None (the X of the
-                database)
-
-        Returns:
-            :py:class:`numpy.ndarray` : array with the shape of X
-        """
-        s = self.bare_qpg(iq) / np.sqrt(4 * np.pi)
-        return s[:, None] * self._get(iq, X) * s[None, :]
-
     def G_indexes(self, vectors, name='vectors'):
         """
         Index in the G list of the database of each of the given cartesian vectors (bohr^-1). Raise a ValueError if a
@@ -368,7 +272,24 @@ class YamboScreeningParser():
                              % (name, mi[idx < 0][:5].tolist()))
         return idx
 
-    def transform(self, X, iq, rotation=None, translation=None):
+    def _check_cutoff_invariance(self, R):
+        """
+        Check, from the cutoff geometry of the database, that the rotation R leaves the Coulomb interaction invariant.
+        """
+        words = self.cutoff_geometry.lower().split()
+        if not words or words[0] == 'none' or np.allclose(R, np.eye(3), atol=1e-6):
+            return
+        if words[0] == 'slab' and len(words) > 1 and words[1] in ('x', 'y', 'z'):
+            a = 'xyz'.index(words[1])
+            others = [i for i in range(3) if i != a]
+            if np.abs(R[a, others]).max() > 1e-6 or np.abs(R[others, a]).max() > 1e-6:
+                raise ValueError('The rotation does not map the %s axis onto +-itself: it does not leave the Coulomb '
+                                 'interaction with the cutoff "%s" invariant' % (words[1], self.cutoff_geometry))
+            return
+        raise NotImplementedError('The invariance of the Coulomb interaction with the cutoff "%s" under the rotation '
+                                  'is not checked: use check_cutoff=False to skip the check' % self.cutoff_geometry)
+
+    def transform(self, X, iq, rotation=None, translation=None, check_cutoff=True):
         r"""
         Matrix X of the system moved by :math:`\mathbf{r}\to R\mathbf{r}+\boldsymbol{\tau}`, i.e.
         :math:`\chi'(\mathbf{r},\mathbf{r}') = \chi(R^{-1}(\mathbf{r}-\boldsymbol{\tau}), R^{-1}(\mathbf{r}'-\boldsymbol{\tau}))`,
@@ -382,14 +303,19 @@ class YamboScreeningParser():
         reconstructed): if :math:`R^{-1}\mathbf{q} = -\mathbf{q}` the time reversal (Onsager) relation
         :math:`X_{\mathbf{G}\mathbf{G}'}(-\mathbf{q}) = X_{-\mathbf{G}',-\mathbf{G}}(\mathbf{q})` is used. At q = 0 the
         direction of q0 is used. The G set of the database must be closed under R, and R must leave the Coulomb
-        interaction invariant (e.g. R z = +-z for a slab cutoff along z, checked on v when it is available): then the
-        symmetrized X transforms as chi.
+        interaction invariant, so that the symmetrized X transforms as chi. The invariance is checked from the cutoff
+        geometry written in the database: without cutoff ('none') any lattice operation is allowed, with a slab cutoff
+        ('slab z', ...) R must map the normal axis onto itself or onto its opposite; for the other geometries (box,
+        cylinder, sphere, ws) the check is not implemented and the method raises an error, unless the check is disabled
+        with check_cutoff=False (the user is then responsible for the invariance of v).
 
         Args:
             X (:py:class:`numpy.ndarray`) : the matrix X of the q point iq, shape (..., ng, ng)
             iq (:py:class:`int`) : index of the q point (1-based)
             rotation (:py:class:`numpy.ndarray`) : orthogonal 3x3 matrix R in cartesian coordinates. Default None (identity)
             translation (:py:class:`numpy.ndarray`) : the vector tau in cartesian coordinates (bohr). Default None (zero)
+            check_cutoff (:py:class:`boolean`) : check that R leaves the cut Coulomb interaction invariant (from the
+                cutoff geometry of the database). Default True
 
         Returns:
             :py:class:`numpy.ndarray` : the transformed matrix, with the shape of X
@@ -400,6 +326,8 @@ class YamboScreeningParser():
         tau = np.zeros(3) if translation is None else np.asarray(translation, dtype=float)
         if not np.allclose(R @ R.T, np.eye(3), atol=1e-6):
             raise ValueError('The rotation must be an orthogonal matrix')
+        if check_cutoff:
+            self._check_cutoff_invariance(R)
         Rinv = R.T
         if iq == 1:
             if not np.linalg.norm(self.q0) > 0:
@@ -419,14 +347,6 @@ class YamboScreeningParser():
             Xm = np.swapaxes(X[..., m, :][..., :, m], -1, -2)
         else:
             raise NotImplementedError('R^-1 q is not q or -q at the q point %d: the X outside the IBZ is needed' % iq)
-        if self._bare_qpg is not None or self.cutoff_geometry.lower() == 'none':
-            b = self.bare_qpg(iq)
-            if np.abs(b[m] - b).max() > 1e-4 * np.abs(b).max():
-                raise ValueError('The rotation does not leave the Coulomb interaction invariant (cutoff "%s")'
-                                 % self.cutoff_geometry)
-        elif self.verbose:
-            print('Warning: the invariance of the cut Coulomb interaction under the rotation is not checked (no '
-                  'ndb.cutoff)')
         ph = np.exp(-1j * self.G @ tau)
         return ph[:, None] * Xm * ph.conj()[None, :]
 

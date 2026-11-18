@@ -19,7 +19,8 @@ The package is composed by several modules, each of which contains one or more c
   perform convergence studies.
 - __Parsers__ : extract data from the output files and the databases of QuantumESPRESSO (data-file-schema.xml) and
   Yambo (o- files and netCDF databases, including the ndb.Nonlinear database of yambo_nl), read the Kohn-Sham
-  wavefunctions (WfcParser) and read, transform and write the screening databases of Yambo (YamboScreeningParser).
+  wavefunctions (WfcParser), read, transform and write the screening databases of Yambo (YamboScreeningParser)
+  and read the Coulomb interaction of a Yambo run, with cutoff and RIM (YamboCoulombParser).
 - __Utilities__ : low-level functions used by the other modules (constants, Fourier transform, density of states,
   band structures, lattice utilities, parallel loops).
 - __Optics__ : compute the optical properties of a system from the time-dependent polarization: linear response from a

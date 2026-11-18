@@ -700,3 +700,27 @@ synthetic files in `tests/` (same netCDF variables); tutorial: a small 2D run wi
 (ask the user), otherwise the hBN data of the project in the project session (values above).
 Then in the project session: Embedding_Analysis with YamboScreeningParser (no cutoff) + YamboCoulombParser for the
 quantities in physical units (Sec. 1 table, Sec. 3 v_emb, Sec. 4 W/v on the top plane); numbers must not change.
+
+Status (2026-11-18): points (1) and (2) DONE on the cluster; (3) the user reviews `YamboCoulombParser` next.
+(1) `YamboScreeningParser(folder, save, verbose=True)`: `cutoff`, `_read_cutoff`, `bare_qpg`, `coulomb`, `W`, `chi`
+removed (BREAKING for `Embedding_Analysis`, to update in the project session; the Status paragraph of the previous
+section about v is superseded). `transform(..., check_cutoff=True)`: 'none' -> any R; 'slab <axis>' -> R must map the
+axis onto +-itself (R[a, others] = R[others, a] = 0, ValueError otherwise); other geometries -> NotImplementedError
+unless check_cutoff=False; the identity (pure translation) is always allowed. Tutorial updated (example of the
+combination of the two parsers in the intro, W_00/v_0 = eps^-1_00 noted).
+(2) `mppi/Parsers/YamboCoulombParser.py`: `YamboCoulombParser(save, cutoff=None, rim=None, verbose=True)` (paths
+independent, file or folder, at least one; q points and HEAD_R_LATT[:2] of the two files must agree). Attributes:
+geometry (DESCRIPTION of ndb.cutoff, 'none' with ndb.RIM only, warning that the point values are then 3D), G and
+G_crystal (the whole G list of ns.db1), q, q_crystal, nq, nqbz, ng_cut, rim_ng, rim_is_diagonal, rim_points,
+rim_RL_volume, RL_volume ((2pi)^3/volume without ndb.RIM). Methods: `bare_qpg(iq, ng=None, q0_norm=1e-5)`,
+`coulomb(iq, ng=None, q0_norm=1e-5)`, `coulomb_rim(iq)` = 4pi RIM_qpg / (2 q_weight), q_weight = RL_volume/nqbz/(2pi)^3
+(vector if diagonal), `slab_bare_qpg(iq, ng=None, rim=None)` (analytic cutoff_slab.F, lcut = alat_axis/2; without RIM
+the q = 0, G = 0 value is the circle average 2pi/S * sum_n (-1)^(n+1) (R lcut)^n/(n n!), n <= 15, = 2pi/S Ein(R lcut)),
+`check_slab(rim=None)` -> {'q', 'q=0', 'q=0,G=0'} max relative deviations. Checked on the hBN ML_bot run of the project
+(read only): 2.4e-7 (q != 0), 1.7e-5 (q = 0, G != 0), 1.6e-5 (q = 0, G = 0 with rim=True: the run used the RIM; 0.98
+with rim=False); coulomb_rim/coulomb on the 101 RIM G: iq = 2 0.980-1.085, iq = 5 0.999-1.009, iq = 10 1.000-1.002,
+iq = 1 up to 2184 (as in the formats above); screening G = first 591 G of ns.db1. Tests `tests/test_coulombparser.py`
+(synthetic; imports the helpers of test_screeningparser; planar slab v test moved there, built with the two parsers).
+No tutorial (no ndb.cutoff/ndb.RIM among the tutorial outputs). Open point for the user: a 3D run without cutoff and
+without RIM has no file at all, so the class cannot be built (the plan requires at least one path): e.g. allow
+`YamboCoulombParser(save, q=scr)` taking the q points from a screening database, if needed.
